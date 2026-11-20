@@ -39,6 +39,7 @@ class ScanCreateRequest(BaseModel):
     auth_token: Optional[str] = Field(default=None)
     test_user_roles: List[str] = Field(default_factory=lambda: ["admin", "buyer_a", "buyer_b"])
     active_testing_consented: bool = Field(default=True)
+    scan_categories: Optional[List[str]] = Field(default_factory=list)
 
 class ScanProgressEvent(BaseModel):
     scan_id: str

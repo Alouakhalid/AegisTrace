@@ -469,6 +469,26 @@ def analyze_repository(repo_path: str, max_files: int = 200, include_globs: Opti
     for finding in security_findings:
         warnings.append(f"[{finding['severity']}] {finding['rule_id']} in {finding['file']}:{finding['line']}: {finding['message']}")
 
+    seen_route_ids = {}
+    unique_routes = []
+    for r in all_routes:
+        base_id = r["route_id"]
+        if base_id in seen_route_ids:
+            seen_route_ids[base_id] += 1
+            stem = os.path.splitext(os.path.basename(r.get("file", "route")))[0]
+            stem_clean = re.sub(r"[^a-zA-Z0-9_]+", "_", stem).strip("_").lower()
+            cand_id = f"{base_id}_{stem_clean}"
+            if cand_id in seen_route_ids:
+                seen_route_ids[cand_id] += 1
+                cand_id = f"{cand_id}_{seen_route_ids[cand_id]}"
+            else:
+                seen_route_ids[cand_id] = 1
+            r["route_id"] = cand_id
+        else:
+            seen_route_ids[base_id] = 1
+        unique_routes.append(r)
+    all_routes = unique_routes
+
     return {
         "files_analyzed": len(py_files),
         "frameworks": sorted(list(frameworks)) if frameworks else ["python"],
