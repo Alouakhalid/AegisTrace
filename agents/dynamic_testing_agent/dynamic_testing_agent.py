@@ -12,11 +12,7 @@ workspace_root = os.path.abspath(os.path.join(current_dir, "..", ".."))
 if workspace_root not in sys.path:
     sys.path.insert(0, workspace_root)
 
-agent_dir = os.path.dirname(os.path.abspath(__file__))
-if agent_dir not in sys.path:
-    sys.path.insert(0, agent_dir)
-
-from validation import (
+from agents.dynamic_testing_agent.validation import (
     validate_dynamic_request,
     validate_dynamic_response,
     create_error_response,

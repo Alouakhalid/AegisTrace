@@ -1,439 +1,400 @@
 export async function renderWizard(container, navigate, state, api, toast) {
-  let activeTab = "quick";
-  let step = 1;
-  let projects = [];
-  try {
-    projects = await api.listProjects();
-  } catch (e) {
-    projects = [{ id: "prj_default", name: "Enterprise Core API" }];
-  }
+  let initialUrl = state.targetRepoUrl || "https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI";
+  let isAnalyzing = false;
+  let analysisReport = null;
+  let assessmentMode = "full"; // "full" or "custom"
+  let selectedCategories = ["idor_access_control", "data_security", "api_security", "dependencies"];
+  let targetDirFilter = "";
+  let customInstructions = "";
+  let authToken = "";
 
-  const formData = {
-    projectId: state.currentProjectId || (projects[0] ? projects[0].id : "prj_default"),
-    projectName: "Autonomous Repository Security Audit",
-    targetType: "github",
-    assessmentMode: "full",
-    githubUrl: "https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI",
-    githubBranch: "main",
-    sourcePath: "/Users/alikhalidalikhalid/AegisTrace/dummy_web",
-    webTargetUrl: "http://127.0.0.1:5050",
-    openapiUrl: "",
-    allowedHosts: "127.0.0.1, localhost",
-    excludedPaths: "",
-    roles: "admin, buyer_a, buyer_b",
-    authToken: "",
-    consented: true,
-    scanCategories: ["secrets", "cors", "deserialization", "idor_auth", "tavily", "ai_security"]
-  };
-
-  const categoryOptions = [
-    { id: "secrets", icon: "🔑", name: "Exposed Secrets & API Keys", desc: "Hardcoded tokens, HuggingFace/OpenAI keys, and committed .env credentials" },
-    { id: "cors", icon: "🌐", name: "API Misconfiguration & CORS", desc: "Permissive wildcard CORS with credentials, header security, and routing flaws" },
-    { id: "deserialization", icon: "🧪", name: "Insecure Deserialization", desc: "Joblib, Pickle, unauthenticated ML model weights, and code execution risks" },
-    { id: "idor_auth", icon: "🛡️", name: "Broken Access Control & IDOR", desc: "Missing authentication on state-changing API endpoints and invariant violations" },
-    { id: "tavily", icon: "🔍", name: "Live Threat & CVE Intelligence (Tavily)", desc: "Real-time query of Tavily API for newly published CVEs on detected dependencies" },
-    { id: "ai_security", icon: "🤖", name: "AI / LLM Model Security", desc: "Prompt injection surface, system prompt extraction, and unconstrained LLM calls" }
+  const availableCategories = [
+    { id: "idor_access_control", icon: "🛡️", name: "Access Control & IDOR", desc: "BOLA/IDOR, missing ownership verification, multi-tenant boundary checks" },
+    { id: "data_security", icon: "🧪", name: "Data Security & Deserialization", desc: "Python pickle/joblib deserialization, source code leaks, file upload flaws" },
+    { id: "api_security", icon: "🌐", name: "API & Interface Security", desc: "CORS misconfiguration, excessive data exposure, shadow endpoints" },
+    { id: "dependencies", icon: "🔍", name: "Dependencies & Threat Intel", desc: "Correlate third-party libraries in real-time with Tavily live CVE intelligence" },
+    { id: "authentication", icon: "🔑", name: "Authentication & Session", desc: "Auth bypass vectors, JWT cryptographic validation, session hijacking" },
+    { id: "injection", icon: "⚡", name: "Injection Vectors", desc: "SQL injection, remote code execution (RCE), template injection (SSTI)" },
+    { id: "business_logic", icon: "⚙️", name: "Business Logic Flaws", desc: "Race conditions, inconsistent state transitions, price/parameter tampering" },
+    { id: "ai_security", icon: "🤖", name: "AI / LLM Model Security", desc: "Prompt injection, unsafe model weights loading, unconstrained tool use" }
   ];
 
   function render() {
     container.innerHTML = `
-      <div style="max-width: 900px; margin: 0 auto;">
+      <div style="max-width: 960px; margin: 0 auto;">
+        
+        <!-- Page Header -->
         <div class="page-header" style="text-align: center; flex-direction: column; align-items: center; margin-bottom: 28px;">
-          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: rgba(121, 59, 255, 0.12); border: 1px solid rgba(121, 59, 255, 0.3); border-radius: 999px; margin-bottom: 12px;">
-            <span style="font-size: 11px; font-weight: 700; color: #793BFF; text-transform: uppercase; letter-spacing: 1.2px;">Autonomous Multi-Agent Security Engine</span>
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(121, 59, 255, 0.12); border: 1px solid rgba(121, 59, 255, 0.3); border-radius: 999px; margin-bottom: 12px;">
+            <span style="font-size: 11px; font-weight: 700; color: #793BFF; text-transform: uppercase; letter-spacing: 1.2px;">Repository-to-Security Intelligence Engine</span>
           </div>
-          <h1 class="page-title" style="font-size: 2.1rem; margin-bottom: 8px;">New Security Assessment</h1>
-          <p class="page-subtitle" style="font-size: 0.95rem; max-width: 640px; margin: 0 auto; color: var(--text-muted);">
-            Provide any GitHub repository link. AegisTrace will clone the code, extract AST structures, execute BugHunter audits, and correlate live Tavily CVE intelligence.
+          <h1 class="page-title" style="font-size: 2.2rem; margin-bottom: 8px;">Repository Security Assessment</h1>
+          <p class="page-subtitle" style="font-size: 0.95rem; max-width: 680px; margin: 0 auto; color: var(--text-muted);">
+            Paste any GitHub repository link. AegisTrace inspects the architecture, extracts AST code invariants, correlates Tavily CVE threat advisories, and launches the 7 official agents.
           </p>
         </div>
 
-        <!-- Mode Tabs -->
-        <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 28px;">
-          <button class="btn ${activeTab === "quick" ? "btn-primary" : "btn-secondary"}" id="tab-quick-btn" style="padding: 10px 24px; font-size: 0.9rem; font-weight: 600;">
-            ⚡ One-Click GitHub Audit
-          </button>
-          <button class="btn ${activeTab === "advanced" ? "btn-primary" : "btn-secondary"}" id="tab-advanced-btn" style="padding: 10px 24px; font-size: 0.9rem; font-weight: 600;">
-            ⚙️ Advanced Multi-Target Wizard
-          </button>
+        <!-- Repository Input Card -->
+        <div class="card card-central-glow" style="padding: 32px; border: 1px solid var(--border-accent); background: rgba(13, 16, 34, 0.9); border-radius: var(--radius-xl); margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <label style="font-weight: 700; color: #fff; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;">
+              <span>🐙</span> GitHub Repository URL <span style="color: var(--cyan-accent);">*</span>
+            </label>
+            <span style="font-size: 0.76rem; color: var(--text-muted); font-family: var(--font-mono);">Public or Private with Token</span>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="text" class="form-control" id="repo-url-input" value="${initialUrl}" 
+                   placeholder="https://github.com/owner/repository" 
+                   style="flex: 1; font-size: 1rem; padding: 14px 16px; font-family: var(--font-mono); background: rgba(0,0,0,0.5); border-color: rgba(66, 107, 255, 0.4);">
+            <button class="btn btn-primary" id="btn-analyze-repo" style="padding: 14px 28px; font-size: 0.95rem; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 8px;">
+              ${isAnalyzing ? `<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Analyzing...` : `<span>⚡</span> Analyze Repository`}
+            </button>
+          </div>
+
+          <!-- Quick Presets -->
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px;">
+            <span style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Quick Targets:</span>
+            <button class="repo-preset-btn" data-url="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" style="background: rgba(121,59,255,0.15); border: 1px solid rgba(121,59,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
+              🧠 Neurovain-Data-Analysis-AI
+            </button>
+            <button class="repo-preset-btn" data-url="https://github.com/Alouakhalid/chess_RL" style="background: rgba(66,107,255,0.15); border: 1px solid rgba(66,107,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
+              ♟️ chess_RL
+            </button>
+            <button class="repo-preset-btn" data-url="https://github.com/ebraheembinessa-E-vias/community-reels-engine" style="background: rgba(36,200,245,0.15); border: 1px solid rgba(36,200,245,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
+              🎬 community-reels-engine
+            </button>
+          </div>
+
+          <!-- Private Repo Auth Collapsible -->
+          <details style="margin-top: 16px; font-size: 0.82rem; color: var(--text-muted);">
+            <summary style="cursor: pointer; color: var(--cyan-accent); font-weight: 600;">Optional: Private Repository Access Token</summary>
+            <div style="margin-top: 10px; max-width: 500px;">
+              <input type="password" class="form-control" id="repo-auth-token" placeholder="ghp_... (GitHub Personal Access Token)" value="${authToken}" style="font-size: 0.85rem; padding: 8px 12px;">
+              <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">Tokens are never stored or logged in responses.</div>
+            </div>
+          </details>
         </div>
 
-        ${activeTab === "quick" ? renderQuickAuditCard() : renderAdvancedWizardCard()}
+        <!-- Dynamic Intelligence Report Area -->
+        ${renderIntelligenceArea()}
+
       </div>
     `;
 
     bindEvents();
   }
 
-  function renderQuickAuditCard() {
+  function renderIntelligenceArea() {
+    if (isAnalyzing) {
+      return `
+        <div class="card" style="padding: 48px; text-align: center; background: rgba(13, 16, 34, 0.7); border: 1px dashed var(--border-accent); border-radius: var(--radius-xl);">
+          <div class="spinner" style="width: 44px; height: 44px; margin: 0 auto 20px auto; border-color: var(--cyan-accent); border-top-color: transparent;"></div>
+          <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 8px;">Understanding Repository Architecture</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 500px; margin: 0 auto;" id="analysis-step-text">
+            Validating repository URL & pinning Git commit SHA...
+          </p>
+        </div>
+      `;
+    }
+
+    if (!analysisReport) {
+      return `
+        <div class="card" style="padding: 36px; text-align: center; background: rgba(255, 255, 255, 0.01); border: 1px dashed var(--border-subtle); border-radius: var(--radius-xl);">
+          <div style="font-size: 2rem; margin-bottom: 12px; opacity: 0.6;">🔍</div>
+          <div style="font-weight: 700; color: #fff; font-size: 1rem; margin-bottom: 6px;">Ready for Repository Understanding</div>
+          <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 540px; margin: 0 auto;">
+            Click <strong>Analyze Repository</strong> above to automatically discover languages, entry points, API routes, data models, and potential security risk areas.
+          </p>
+        </div>
+      `;
+    }
+
+    const r = analysisReport;
     return `
-      <div class="card card-central-glow" style="padding: 38px; border: 1px solid var(--border-gold); background: rgba(16, 15, 14, 0.9); border-radius: var(--radius-xl);">
-        
-        <!-- GitHub Input Section -->
-        <div style="margin-bottom: 28px;">
-          <label style="display: block; font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 10px;">
-            GitHub Repository URL <span style="color: var(--cyan-accent);">*</span>
-          </label>
-          <div style="position: relative;">
-            <input type="text" class="form-control" id="quick-github-url" value="${formData.githubUrl}" 
-                   placeholder="https://github.com/organization/repository" 
-                   style="font-size: 1rem; padding: 14px 16px; font-family: IBM Plex Mono, monospace; background: rgba(0,0,0,0.4); border-color: rgba(66, 107, 255, 0.4);">
+      <!-- REPOSITORY INTELLIGENCE REPORT -->
+      <div class="card" style="padding: 28px; border: 1px solid var(--border-accent); background: rgba(15, 18, 38, 0.95); border-radius: var(--radius-xl); margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h2 style="font-size: 1.4rem; color: #fff; font-weight: 800; margin: 0;">${r.owner} / ${r.repository_name}</h2>
+              <span class="badge badge-success" style="font-size: 0.72rem;">ACTIVE</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);">
+              <span>Branch: <strong style="color: #fff;">${r.branch}</strong></span>
+              <span>&bull;</span>
+              <span>Commit: <strong style="color: var(--cyan-accent);">${r.commit_sha.slice(0, 8)}</strong></span>
+            </div>
           </div>
-          
-          <!-- Presets -->
-          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px;">
-            <span style="font-size: 0.76rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px;">Quick Test Targets:</span>
-            <button class="badge-btn" data-url="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" style="background: rgba(121,59,255,0.15); border: 1px solid rgba(121,59,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; cursor: pointer;">
-              🧠 Neurovain-Data-Analysis-AI
-            </button>
-            <button class="badge-btn" data-url="https://github.com/Alouakhalid/chess_RL" style="background: rgba(66,107,255,0.15); border: 1px solid rgba(66,107,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; cursor: pointer;">
-              ♟️ chess_RL
-            </button>
-            <button class="badge-btn" data-url="https://github.com/ebraheembinessa-E-vias/community-reels-engine" style="background: rgba(36,200,245,0.15); border: 1px solid rgba(36,200,245,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; cursor: pointer;">
-              🎬 community-reels-engine
-            </button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" id="btn-reanalyze">Re-Analyze</button>
           </div>
         </div>
 
-        <!-- Assessment Mode -->
-        <div style="margin-bottom: 28px;">
-          <label style="display: block; font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 12px;">
-            Assessment Scope
-          </label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div class="card" id="quick-mode-full" style="cursor: pointer; padding: 18px; border: 1px solid ${formData.assessmentMode === "full" ? "var(--cyan-accent)" : "var(--border-subtle)"}; background: ${formData.assessmentMode === "full" ? "rgba(36,200,245,0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg);">
-              <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #fff; margin-bottom: 6px;">
-                <span style="color: var(--cyan-accent);">⚡</span> Full Assessment (التقييم الشامل)
-              </div>
-              <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
-                Runs all 7 agents across all vulnerability vectors: AST Code Intel, Exposed Secrets, CORS/API Misconfig, Insecure Deserialization, Broken Auth, and Tavily Live CVEs.
-              </div>
+        <!-- Tech & Metrics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+          <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Languages</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+              ${r.languages.map(l => `<span class="badge badge-cyan" style="font-size: 10px;">${l}</span>`).join("")}
             </div>
-
-            <div class="card" id="quick-mode-targeted" style="cursor: pointer; padding: 18px; border: 1px solid ${formData.assessmentMode === "targeted" ? "var(--cyan-accent)" : "var(--border-subtle)"}; background: ${formData.assessmentMode === "targeted" ? "rgba(36,200,245,0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg);">
-              <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #fff; margin-bottom: 6px;">
-                <span style="color: #793BFF;">🎯</span> Targeted Assessment (فحص مخصص ومحدد)
-              </div>
-              <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
-                Select precisely which vulnerability categories you want the agents to hunt for. Other checks remain disabled.
-              </div>
+          </div>
+          <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Frameworks</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+              ${r.frameworks.length ? r.frameworks.map(f => `<span class="badge badge-low" style="font-size: 10px;">${f}</span>`).join("") : `<span style="font-size: 11px; color: var(--text-muted);">Standard Library</span>`}
+            </div>
+          </div>
+          <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Discovered Endpoints</div>
+            <div style="font-size: 1.4rem; font-weight: 800; color: var(--success); margin-top: 4px;">
+              ${r.discovered_endpoints.length}
+            </div>
+          </div>
+          <div style="background: rgba(0,0,0,0.35); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Code Files Analyzed</div>
+            <div style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-top: 4px;">
+              ${r.analyzed_files_count} <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 400;">(${r.skipped_files_count} noise skipped)</span>
             </div>
           </div>
         </div>
 
-        <!-- Targeted Categories Grid -->
-        <div id="targeted-categories-section" style="${formData.assessmentMode === "targeted" ? "display: block;" : "display: none;"} margin-bottom: 28px;">
-          <label style="display: block; font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 12px;">
-            Select Target Security Vectors:
-          </label>
+        <!-- Architecture Summary Banner -->
+        <div style="background: rgba(121, 59, 255, 0.08); border-left: 3px solid var(--primary); padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+          <strong>Architecture Map:</strong> ${r.architecture_summary}
+        </div>
+
+        <!-- Potential Risk Areas Highlight -->
+        ${r.potential_risk_areas.length ? `
+          <div style="margin-bottom: 8px;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--warning); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;">
+              Detected Security Risk Areas (${r.potential_risk_areas.length}):
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              ${r.potential_risk_areas.map(ra => `
+                <div style="background: rgba(255, 181, 71, 0.06); border: 1px solid rgba(255, 181, 71, 0.25); border-radius: var(--radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <strong style="color: #fff; font-size: 0.86rem;">${ra.title}</strong>
+                    <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">${ra.description}</div>
+                  </div>
+                  <span class="badge ${ra.severity === 'critical' ? 'badge-critical' : (ra.severity === 'high' ? 'badge-high' : 'badge-warning')}" style="font-size: 10px; text-transform: uppercase;">
+                    ${ra.severity}
+                  </span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        ` : ""}
+      </div>
+
+      <!-- ASSESSMENT SCOPE SELECTION (Section 4) -->
+      <div class="card" style="padding: 32px; border: 1px solid var(--border-gold); background: rgba(13, 16, 34, 0.95); border-radius: var(--radius-xl); margin-bottom: 28px;">
+        <h3 style="font-size: 1.25rem; color: #fff; font-weight: 800; margin-bottom: 6px;">Choose Assessment Scope</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Select how you want AegisTrace and the seven official agents to investigate this repository.
+        </p>
+
+        <!-- Two Main Options Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+          <!-- Option A: Full -->
+          <div class="card" id="scope-option-full" style="cursor: pointer; padding: 22px; border: 2px solid ${assessmentMode === "full" ? "var(--cyan-accent)" : "var(--border-subtle)"}; background: ${assessmentMode === "full" ? "rgba(36, 200, 245, 0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg); transition: all 0.2s ease;">
+            <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 8px;">
+              <span style="color: var(--cyan-accent); font-size: 1.2rem;">⚡</span> OPTION A — Full Security Assessment
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+              Perform a comprehensive authorized security assessment across all supported vulnerability categories and relevant application components.
+            </div>
+            <div style="font-size: 0.74rem; color: var(--cyan-accent); font-weight: 600;">
+              ✓ Automatically constructs an assessment plan tailored to detected technologies.
+            </div>
+          </div>
+
+          <!-- Option B: Custom -->
+          <div class="card" id="scope-option-custom" style="cursor: pointer; padding: 22px; border: 2px solid ${assessmentMode === "custom" ? "var(--primary)" : "var(--border-subtle)"}; background: ${assessmentMode === "custom" ? "rgba(121, 59, 255, 0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg); transition: all 0.2s ease;">
+            <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 8px;">
+              <span style="color: var(--primary); font-size: 1.2rem;">🎯</span> OPTION B — Custom Security Assessment
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+              Choose exactly what you want AegisTrace to investigate. Strict scope rules apply: unselected categories will be completely skipped.
+            </div>
+            <div style="font-size: 0.74rem; color: var(--primary); font-weight: 600;">
+              ✓ Granular category selection (e.g. IDOR only, Deserialization only).
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Scope Category Selector (Visible when Custom is active) -->
+        <div id="custom-scope-details" style="${assessmentMode === "custom" ? "display: block;" : "display: none;"} margin-bottom: 24px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle);">
+          <div style="font-weight: 700; color: #fff; font-size: 0.88rem; margin-bottom: 12px; display: flex; justify-content: space-between;">
+            <span>Select Specific Vulnerability Vectors:</span>
+            <span style="font-size: 0.74rem; color: var(--text-muted);">Strict Scope Enforcement</span>
+          </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            ${categoryOptions.map(cat => `
-              <label class="card" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px; cursor: pointer; border: 1px solid ${formData.scanCategories.includes(cat.id) ? "rgba(121, 59, 255, 0.4)" : "rgba(255,255,255,0.06)"}; background: ${formData.scanCategories.includes(cat.id) ? "rgba(121, 59, 255, 0.08)" : "rgba(0,0,0,0.2)"}; border-radius: var(--radius-md);">
-                <input type="checkbox" class="cat-checkbox" value="${cat.id}" ${formData.scanCategories.includes(cat.id) ? "checked" : ""} style="margin-top: 3px; accent-color: #793BFF;">
+            ${availableCategories.map(cat => `
+              <label class="card" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; cursor: pointer; border: 1px solid ${selectedCategories.includes(cat.id) ? "rgba(121, 59, 255, 0.45)" : "rgba(255,255,255,0.06)"}; background: ${selectedCategories.includes(cat.id) ? "rgba(121, 59, 255, 0.08)" : "rgba(0,0,0,0.2)"}; border-radius: var(--radius-md);">
+                <input type="checkbox" class="scope-cat-checkbox" value="${cat.id}" ${selectedCategories.includes(cat.id) ? "checked" : ""} style="margin-top: 3px; accent-color: #793BFF;">
                 <div>
-                  <div style="font-weight: 600; color: #fff; font-size: 0.86rem; margin-bottom: 3px;">
-                    ${cat.icon} ${cat.name}
-                  </div>
-                  <div style="font-size: 0.76rem; color: var(--text-muted); line-height: 1.4;">
-                    ${cat.desc}
-                  </div>
+                  <div style="font-weight: 600; color: #fff; font-size: 0.82rem;">${cat.icon} ${cat.name}</div>
+                  <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">${cat.desc}</div>
                 </div>
               </label>
             `).join("")}
           </div>
-        </div>
 
-        <!-- Platform Status Row -->
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 18px; margin-bottom: 28px;">
-          <div style="display: flex; align-items: center; gap: 18px;">
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #fff;">
-              <span style="color: var(--success); font-size: 10px;">●</span> Tavily Threat API: <strong style="color: var(--success);">ACTIVE</strong>
+          <!-- Target Dir Filter -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;">
+            <div>
+              <label style="display: block; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">Target Directory Filter (Optional)</label>
+              <input type="text" class="form-control" id="custom-target-dir" placeholder="e.g. backend/routers/" value="${targetDirFilter}" style="font-size: 0.82rem; padding: 8px 12px;">
             </div>
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #fff;">
-              <span style="color: var(--success); font-size: 10px;">●</span> Autonomous Agents: <strong style="color: #fff;">7 ONLINE</strong>
+            <div>
+              <label style="display: block; font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px;">Special Testing Instructions (Optional)</label>
+              <input type="text" class="form-control" id="custom-instructions" placeholder="e.g. Focus on tenant_id verification" value="${customInstructions}" style="font-size: 0.82rem; padding: 8px 12px;">
             </div>
-            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #fff;">
-              <span style="color: var(--success); font-size: 10px;">●</span> Auto-Clone: <strong style="color: var(--cyan-accent);">ENABLED</strong>
-            </div>
-          </div>
-          <div style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace;">
-            Zero False Positives Guarantee
           </div>
         </div>
 
-        <!-- Action Button -->
-        <div style="text-align: center;">
-          <button class="btn btn-primary btn-lg" id="btn-quick-launch" style="width: 100%; padding: 16px; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.5px; border-radius: var(--radius-lg); background: linear-gradient(135deg, #793BFF 0%, #426BFF 100%); border: none; box-shadow: 0 4px 20px rgba(121, 59, 255, 0.4); cursor: pointer;">
-            🚀 Launch Autonomous Security Audit
+        <!-- Launch Button -->
+        <div style="display: flex; justify-content: space-between; align-items: center; pt-3; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+          <div style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono);">
+            Scope: <strong style="color: #fff;">${assessmentMode.toUpperCase()}</strong> &bull; 
+            Selected: <strong style="color: var(--cyan-accent);">${assessmentMode === "full" ? "All Vectors" : selectedCategories.length + " Categories"}</strong>
+          </div>
+          <button class="btn btn-primary btn-lg" id="btn-launch-assessment" style="padding: 14px 38px; font-size: 1rem; font-weight: 700; box-shadow: 0 0 25px rgba(121, 59, 255, 0.45); display: flex; align-items: center; gap: 10px;">
+            <span>🚀</span> Launch Security Assessment
           </button>
         </div>
-
       </div>
     `;
-  }
-
-  function renderAdvancedWizardCard() {
-    return `
-      <div class="card card-central-glow" style="padding: 40px; border: 1px solid var(--border-gold); background: rgba(16, 15, 14, 0.9); border-radius: var(--radius-xl);">
-        <!-- 5 Step Indicator -->
-        <div class="wizard-steps" style="margin-bottom: 30px;">
-          <div class="wizard-step ${step === 1 ? "active" : ""} ${step > 1 ? "completed" : ""}" data-step="1">
-            <div class="step-circle">${step > 1 ? "✓" : "1"}</div>
-            <span class="step-title">Project</span>
-          </div>
-          <div class="wizard-step ${step === 2 ? "active" : ""} ${step > 2 ? "completed" : ""}" data-step="2">
-            <div class="step-circle">${step > 2 ? "✓" : "2"}</div>
-            <span class="step-title">Source</span>
-          </div>
-          <div class="wizard-step ${step === 3 ? "active" : ""} ${step > 3 ? "completed" : ""}" data-step="3">
-            <div class="step-circle">${step > 3 ? "✓" : "3"}</div>
-            <span class="step-title">Target URL</span>
-          </div>
-          <div class="wizard-step ${step === 4 ? "active" : ""} ${step > 4 ? "completed" : ""}" data-step="4">
-            <div class="step-circle">${step > 4 ? "✓" : "4"}</div>
-            <span class="step-title">Scope</span>
-          </div>
-          <div class="wizard-step ${step === 5 ? "active" : ""}" data-step="5">
-            <div class="step-circle">5</div>
-            <span class="step-title">Run</span>
-          </div>
-        </div>
-
-        ${renderStepContent(step)}
-
-        <!-- Footer Buttons -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
-          ${step > 1 ? `
-            <button class="btn btn-secondary" id="wiz-btn-prev">
-              &larr; Previous Step
-            </button>
-          ` : `<div></div>`}
-
-          ${step < 5 ? `
-            <button class="btn btn-primary" id="wiz-btn-next">
-              Next: Step ${step + 1} &rarr;
-            </button>
-          ` : `
-            <button class="btn btn-white btn-lg" id="wiz-btn-launch">
-              Launch Autonomous Assessment
-            </button>
-          `}
-        </div>
-      </div>
-    `;
-  }
-
-  function renderStepContent(currStep) {
-    if (currStep === 1) {
-      return `
-        <div>
-          <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Step 1: Select Assessment Project</h2>
-          <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 24px;">Choose an existing project or enter a custom identifier for this assessment run.</p>
-          
-          <div class="form-group">
-            <label class="form-label">Project Target</label>
-            <select class="form-select" id="wiz-project-id">
-              ${projects.map(p => `
-                <option value="${p.id}" ${formData.projectId === p.id ? "selected" : ""}>${p.name} (${p.id})</option>
-              `).join("")}
-              <option value="custom">-- Custom One-Off Assessment --</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="group-custom-name" style="${formData.projectId === "custom" ? "" : "display: none;"}">
-            <label class="form-label">Custom Project / Assessment Name</label>
-            <input type="text" class="form-control" id="wiz-custom-name" value="${formData.projectName}" placeholder="e.g. Q4 Staging Core API Audit">
-          </div>
-        </div>
-      `;
-    }
-
-    if (currStep === 2) {
-      return `
-        <div>
-          <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Step 2: Source Code Target Configuration</h2>
-          <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 24px;">Specify the code repository for Code Intelligence AST and invariant derivation.</p>
-
-          <div class="form-group">
-            <label class="form-label">GitHub Repository URL *</label>
-            <input type="text" class="form-control" id="wiz-github-url" value="${formData.githubUrl}" placeholder="https://github.com/org/repo">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Branch</label>
-            <input type="text" class="form-control" id="wiz-github-branch" value="${formData.githubBranch}" placeholder="main">
-          </div>
-        </div>
-      `;
-    }
-
-    if (currStep === 3) {
-      return `
-        <div>
-          <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Step 3: Web App Target & API Specification</h2>
-          <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 24px;">Configure the live target URL for dynamic behavioral testing.</p>
-
-          <div class="form-group">
-            <label class="form-label">Web Target Base URL</label>
-            <input type="text" class="form-control" id="wiz-web-url" value="${formData.webTargetUrl}" placeholder="http://127.0.0.1:5050 or https://example.com">
-          </div>
-        </div>
-      `;
-    }
-
-    if (currStep === 4) {
-      return `
-        <div>
-          <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Step 4: Scope Enforcement & Test Identities</h2>
-          <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 24px;">Define strict ScopeGate network boundaries and test credentials.</p>
-
-          <div class="form-group">
-            <label class="form-label">Authorized Hosts (ScopeGate Whitelist)</label>
-            <input type="text" class="form-control" id="wiz-allowed-hosts" value="${formData.allowedHosts}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Test User Roles / Identities</label>
-            <input type="text" class="form-control" id="wiz-roles" value="${formData.roles}">
-          </div>
-        </div>
-      `;
-    }
-
-    if (currStep === 5) {
-      return `
-        <div>
-          <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Step 5: Review & Authorize Assessment</h2>
-          <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 24px;">Review your assessment targets before launching the autonomous agents.</p>
-
-          <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-gold); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 24px; font-size: 0.86rem;">
-            <div>Target: <strong style="color: #fff; font-family: monospace;">${formData.githubUrl}</strong></div>
-            <div style="margin-top: 8px;">Mode: <strong style="color: var(--cyan-accent); text-transform: uppercase;">${formData.assessmentMode}</strong></div>
-          </div>
-
-          <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
-            <input type="checkbox" id="wiz-consent" ${formData.consented ? "checked" : ""} style="margin-top: 3px; accent-color: var(--cyan-accent);">
-            <span style="font-size: 0.82rem; color: #fff; line-height: 1.5;">
-              I explicitly authorize AegisTrace to conduct autonomous security assessments on the specified target.
-            </span>
-          </label>
-        </div>
-      `;
-    }
   }
 
   function bindEvents() {
-    document.getElementById("tab-quick-btn")?.addEventListener("click", () => {
-      activeTab = "quick";
-      render();
-    });
-    document.getElementById("tab-advanced-btn")?.addEventListener("click", () => {
-      activeTab = "advanced";
-      render();
-    });
+    const btnAnalyze = container.querySelector("#btn-analyze-repo");
+    const repoInput = container.querySelector("#repo-url-input");
 
-    document.querySelectorAll(".badge-btn").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        const url = e.target.getAttribute("data-url");
-        if (url) {
-          formData.githubUrl = url;
-          const inp = document.getElementById("quick-github-url");
-          if (inp) inp.value = url;
+    if (btnAnalyze && repoInput) {
+      btnAnalyze.onclick = async () => {
+        const url = repoInput.value.trim();
+        if (!url) {
+          toast("Please enter a valid GitHub repository URL", "warning");
+          return;
         }
-      });
-    });
 
-    document.getElementById("quick-mode-full")?.addEventListener("click", () => {
-      formData.assessmentMode = "full";
-      render();
-    });
+        isAnalyzing = true;
+        render();
 
-    document.getElementById("quick-mode-targeted")?.addEventListener("click", () => {
-      formData.assessmentMode = "targeted";
-      render();
-    });
-
-    document.querySelectorAll(".cat-checkbox").forEach(cb => {
-      cb.addEventListener("change", (e) => {
-        const val = e.target.value;
-        if (e.target.checked) {
-          if (!formData.scanCategories.includes(val)) formData.scanCategories.push(val);
-        } else {
-          formData.scanCategories = formData.scanCategories.filter(c => c !== val);
-        }
-      });
-    });
-
-    document.getElementById("btn-quick-launch")?.addEventListener("click", async () => {
-      const gInput = document.getElementById("quick-github-url");
-      if (gInput && gInput.value.trim()) {
-        formData.githubUrl = gInput.value.trim();
-      }
-
-      if (!formData.githubUrl) {
-        toast("Please enter a valid GitHub repository URL.", "warning");
-        return;
-      }
-
-      if (formData.assessmentMode === "targeted" && formData.scanCategories.length === 0) {
-        toast("Please select at least one security vector for targeted assessment.", "warning");
-        return;
-      }
-
-      executeLaunch();
-    });
-
-    document.getElementById("wiz-btn-prev")?.addEventListener("click", () => {
-      step = Math.max(1, step - 1);
-      render();
-    });
-
-    document.getElementById("wiz-btn-next")?.addEventListener("click", () => {
-      step = Math.min(5, step + 1);
-      render();
-    });
-
-    document.getElementById("wiz-btn-launch")?.addEventListener("click", () => {
-      executeLaunch();
-    });
-  }
-
-  async function executeLaunch() {
-    toast("Initiating Autonomous Multi-Agent Security Assessment...", "info");
-    try {
-      const allowed = ["127.0.0.1", "localhost"];
-      if (formData.webTargetUrl) {
         try {
-          const u = new URL(formData.webTargetUrl);
-          if (u.hostname && !allowed.includes(u.hostname)) {
-            allowed.push(u.hostname);
-          }
-        } catch(e) {}
-      }
-
-      const payload = {
-        project_id: formData.projectId === "custom" ? "prj_custom" : formData.projectId,
-        project_name: formData.projectName,
-        target_type: "github",
-        assessment_mode: formData.assessmentMode,
-        github_url: formData.githubUrl,
-        github_branch: formData.githubBranch,
-        web_target_url: formData.webTargetUrl,
-        openapi_spec_url: formData.openapiUrl,
-        allowed_hosts: allowed,
-        excluded_paths: [],
-        test_user_roles: ["admin", "tester"],
-        auth_token: null,
-        active_testing_consented: true,
-        scan_categories: formData.scanCategories
+          toast("Analyzing repository architecture & code structure...", "info");
+          const report = await api.analyzeRepository(url, authToken || null);
+          analysisReport = report;
+          isAnalyzing = false;
+          toast("Repository intelligence report ready!", "success");
+          render();
+        } catch (err) {
+          isAnalyzing = false;
+          toast(`Repository analysis failed: ${err.message}`, "error");
+          render();
+        }
       };
 
-      const res = await api.startScan(payload);
-      state.currentScanId = res.scan_id;
-      toast(`Assessment ${res.scan_id} initiated across all 7 AI agents!`, "success");
-      navigate("workspace");
-    } catch (err) {
-      toast("Failed to initiate scan: " + err.message, "critical");
+      repoInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") btnAnalyze.click();
+      });
+    }
+
+    container.querySelectorAll(".repo-preset-btn").forEach(btn => {
+      btn.onclick = () => {
+        const u = btn.getAttribute("data-url");
+        if (repoInput && u) {
+          repoInput.value = u;
+          initialUrl = u;
+          btnAnalyze.click();
+        }
+      };
+    });
+
+    const optFull = container.querySelector("#scope-option-full");
+    const optCustom = container.querySelector("#scope-option-custom");
+    if (optFull && optCustom) {
+      optFull.onclick = () => {
+        assessmentMode = "full";
+        render();
+      };
+      optCustom.onclick = () => {
+        assessmentMode = "custom";
+        render();
+      };
+    }
+
+    container.querySelectorAll(".scope-cat-checkbox").forEach(cb => {
+      cb.onchange = () => {
+        const val = cb.value;
+        if (cb.checked && !selectedCategories.includes(val)) {
+          selectedCategories.push(val);
+        } else if (!cb.checked) {
+          selectedCategories = selectedCategories.filter(c => c !== val);
+        }
+      };
+    });
+
+    const btnReanalyze = container.querySelector("#btn-reanalyze");
+    if (btnReanalyze) {
+      btnReanalyze.onclick = () => {
+        analysisReport = null;
+        render();
+      };
+    }
+
+    const btnLaunch = container.querySelector("#btn-launch-assessment");
+    if (btnLaunch) {
+      btnLaunch.onclick = async () => {
+        const url = repoInput.value.trim();
+        if (!url) {
+          toast("Please specify a target repository", "warning");
+          return;
+        }
+
+        if (assessmentMode === "custom" && selectedCategories.length === 0) {
+          toast("Please select at least one vulnerability category for custom assessment", "warning");
+          return;
+        }
+
+        toast("Initiating Autonomous 7-Agent Security Assessment...", "info");
+        btnLaunch.disabled = true;
+        btnLaunch.innerHTML = `<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Launching...`;
+
+        try {
+          const payload = {
+            repository_url: url,
+            project_name: analysisReport ? `${analysisReport.repository_name} Security Assessment` : "Repository Security Assessment",
+            assessment_mode: assessmentMode,
+            selected_categories: assessmentMode === "full" ? [] : selectedCategories,
+            target_dir_filter: container.querySelector("#custom-target-dir") ? container.querySelector("#custom-target-dir").value.trim() : "",
+            instructions: container.querySelector("#custom-instructions") ? container.querySelector("#custom-instructions").value.trim() : "",
+            auth_token: authToken || null,
+            active_testing_consented: true
+          };
+
+          const res = await api.createAssessment(payload);
+          state.currentScanId = res.assessment_id || res.scan_id;
+          toast("Assessment started! Connecting to live Agent Workspace...", "success");
+          navigate("workspace");
+        } catch (err) {
+          btnLaunch.disabled = false;
+          btnLaunch.innerHTML = `<span>🚀</span> Launch Security Assessment`;
+          toast(`Failed to launch assessment: ${err.message}`, "error");
+        }
+      };
     }
   }
 
   render();
+
+  // If a URL was passed from the landing page, automatically trigger analysis
+  if (state.targetRepoUrl && !analysisReport && !isAnalyzing) {
+    setTimeout(() => {
+      const btn = container.querySelector("#btn-analyze-repo");
+      if (btn) btn.click();
+    }, 100);
+  }
 }

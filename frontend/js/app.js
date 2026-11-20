@@ -58,6 +58,15 @@ export const api = {
   getReport(scanId) { return this.req(`/api/v1/reports/${scanId}`); },
   getSettings() { return this.req("/api/v1/settings"); },
   getAuditLogs() { return this.req("/api/v1/audit-logs"); },
+  analyzeRepository(url, token) { return this.req("/api/v1/repositories/analyze", { method: "POST", body: JSON.stringify({ repository_url: url, auth_token: token }) }); },
+  createAssessment(data) { return this.req("/api/v1/assessments", { method: "POST", body: JSON.stringify(data) }); },
+  getAssessment(id) { return this.req(`/api/v1/assessments/${id}`); },
+  getAssessmentEvents(id) { return this.req(`/api/v1/assessments/${id}/events`); },
+  getAssessmentFindings(id) { return this.req(`/api/v1/assessments/${id}/findings`); },
+  getCategories() { return this.req("/api/v1/categories"); },
+  getTavilyHealth() { return this.req("/api/v1/integrations/tavily/health"); },
+  testTavily(query) { return this.req("/api/v1/integrations/tavily/test", { method: "POST", body: JSON.stringify({ query }) }); },
+  getBifrostHealth() { return this.req("/api/v1/integrations/bifrost/health"); },
   getNotifications() { return this.req("/api/v1/notifications"); }
 };
 

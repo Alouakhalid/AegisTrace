@@ -42,8 +42,7 @@ from tools.recon_tools import (
 )
 
 agent_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, agent_dir)
-from validation import (
+from agents.recon_agent.validation import (
     validate_recon_request,
     validate_recon_response,
     create_error_response

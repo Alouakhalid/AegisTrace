@@ -17,12 +17,8 @@ mem_db_dir = os.path.join(workspace_root, "memory and database")
 if mem_db_dir not in sys.path:
     sys.path.insert(0, mem_db_dir)
 
-agent_dir = os.path.dirname(os.path.abspath(__file__))
-if agent_dir not in sys.path:
-    sys.path.insert(0, agent_dir)
-
 from agent_db_connector import AgentDatabaseConnector
-from validation import (
+from agents.orchestrator_agent.validation import (
     validate_orchestrator_request,
     validate_orchestrator_response,
     create_error_response,

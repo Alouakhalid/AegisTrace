@@ -39,7 +39,6 @@ class ScanCreateRequest(BaseModel):
     auth_token: Optional[str] = Field(default=None)
     test_user_roles: List[str] = Field(default_factory=lambda: ["admin", "buyer_a", "buyer_b"])
     active_testing_consented: bool = Field(default=True)
-    scan_categories: Optional[List[str]] = Field(default_factory=list)
 
 class ScanProgressEvent(BaseModel):
     scan_id: str
@@ -181,3 +180,21 @@ class ReportResponse(BaseModel):
     resolved_count: int
     compliance_assessment: Dict[str, Any]
     content_json: Dict[str, Any]
+
+class RepoAnalyzeRequest(BaseModel):
+    repository_url: str
+    auth_token: Optional[str] = None
+
+class AssessmentCreateRequest(BaseModel):
+    repository_url: str
+    project_name: Optional[str] = None
+    assessment_mode: str = "full"
+    selected_categories: Optional[List[str]] = None
+    target_dir_filter: Optional[str] = None
+    instructions: Optional[str] = None
+    auth_token: Optional[str] = None
+    active_testing_consented: bool = True
+
+class TavilyTestRequest(BaseModel):
+    query: Optional[str] = "FastAPI security advisory"
+    max_results: Optional[int] = 3

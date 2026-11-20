@@ -1,30 +1,52 @@
 export async function renderSettings(container, navigate, state, api, toast) {
   let settings = {
     integrations: {
-      groq_api: { status: "connected", model: "llama-3.3-70b-versatile", key_preview: "gsk_live_994x..." },
-      tavily_search: { status: "connected", service: "live", key_preview: "tvly-prod-77b..." },
-      github_enterprise: { status: "configured", token_valid: true, org: "shoplite" },
-      sqlite_evidence_vault: { status: "healthy", immutability_triggers: "active" },
-      sandbox_execution_jail: { status: "enforced", network_isolated: true }
+      groq_api: { status: 'connected', model: 'llama-3.3-70b-versatile', key_preview: 'gsk_live_994x...' },
+      tavily_search: { status: 'connected', service: 'live', key_preview: 'tvly-prod-77b...' },
+      github_enterprise: { status: 'configured', token_valid: true, org: 'shoplite' },
+      sqlite_evidence_vault: { status: 'healthy', immutability_triggers: 'active' },
+      sandbox_execution_jail: { status: 'enforced', network_isolated: true }
     },
     system_resources: { cpu_cores: 8, memory_gb: 16, active_subscribers: 1 }
   };
 
+  let tavilyLive = null;
+  let bifrostLive = null;
+
   try {
-    const fetched = await api.getSettings();
-    if (fetched && fetched.integrations) {
+    const [fetchedSettings, tavilyHealth, bifrostHealth] = await Promise.allSettled([
+      api.getSettings(),
+      api.getTavilyHealth(),
+      api.getBifrostHealth()
+    ]);
+
+    if (fetchedSettings.status === 'fulfilled' && fetchedSettings.value) {
       settings = {
         ...settings,
-        ...fetched,
+        ...fetchedSettings.value,
         integrations: {
           ...settings.integrations,
-          ...fetched.integrations
+          ...(fetchedSettings.value.integrations || {})
         }
       };
     }
+    if (tavilyHealth.status === 'fulfilled') {
+      tavilyLive = tavilyHealth.value;
+    }
+    if (bifrostHealth.status === 'fulfilled') {
+      bifrostLive = bifrostHealth.value;
+    }
   } catch (e) {
-    console.warn("Using baseline settings:", e);
+    console.warn('Settings load error:', e);
   }
+
+  const tavilyStatusBadge = tavilyLive?.status === 'connected' 
+    ? '<span class="badge badge-success">Connected (' + (tavilyLive.latency_ms || 0) + 'ms)</span>'
+    : '<span class="badge badge-critical">' + (tavilyLive?.status || 'Disconnected') + '</span>';
+
+  const bifrostStatusBadge = bifrostLive?.status === 'connected'
+    ? '<span class="badge badge-success">' + (bifrostLive.gateway_mode || 'Active') + '</span>'
+    : '<span class="badge badge-secondary">Configured</span>';
 
   container.innerHTML = `
     <div>
@@ -34,7 +56,7 @@ export async function renderSettings(container, navigate, state, api, toast) {
             Infrastructure & Cryptographic Security Vaults
           </div>
           <h1 class="page-title">Platform Settings & Integrations</h1>
-          <p class="page-subtitle">Configure model inference keys, execution jails, GitHub PR automation, and external audit sinks.</p>
+          <p class="page-subtitle">Configure threat intelligence sinks, AI Gateway inference policies, and execution jails.</p>
         </div>
         <button class="btn btn-primary btn-sm" id="btn-save-settings">
           Save Configuration
@@ -43,36 +65,29 @@ export async function renderSettings(container, navigate, state, api, toast) {
 
       <!-- Settings Grid -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
-        <!-- LLM & Offensive Search Integrations -->
+        <!-- LLM & AI Gateway Integrations -->
         <div class="card">
           <div class="card-header">
-            <div class="card-title">LLM & Search Integrations</div>
-            <span class="badge badge-cyan">Active Inferences</span>
+            <div class="card-title">LLM & AI Gateway (Bifrost)</div>
+            <span class="badge badge-cyan">Inference Subsystem</span>
           </div>
 
           <div style="padding: 18px; display: flex; flex-direction: column; gap: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
-                <div style="font-weight: 700; color: #fff;">Groq Ultra-Fast API Endpoint</div>
+                <div style="font-weight: 700; color: #fff;">Bifrost / Groq Gateway</div>
                 <div style="font-size: 0.76rem; color: var(--cyan-accent); font-family: monospace; margin-top: 2px;">
-                  Model: ${settings.integrations.groq_api?.model || 'llama-3.3-70b-versatile'}
+                  Model: ${bifrostLive?.active_model || 'openai/gpt-oss-120b'}
                 </div>
               </div>
-              ${settings.integrations.groq_api?.configured || settings.integrations.groq_api?.status === 'connected' ? 
-                `<span class="badge badge-success">Connected</span>` : 
-                `<span class="badge badge-secondary" style="color: var(--text-muted);">Not Configured</span>`}
+              ${bifrostStatusBadge}
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-              <div>
-                <div style="font-weight: 700; color: #fff;">Tavily Offensive Search API</div>
-                <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 2px;">
-                  Real-time CVE & exploit reconnaissance
-                </div>
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">AVAILABLE MODEL POOL</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${(bifrostLive?.available_models || ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768']).map(m => `<span class="badge badge-secondary" style="font-family: monospace; font-size: 0.72rem;">${m}</span>`).join('')}
               </div>
-              ${settings.integrations.tavily_search?.configured || settings.integrations.tavily_search?.status === 'connected' ? 
-                `<span class="badge badge-success">Connected</span>` : 
-                `<span class="badge badge-secondary" style="color: var(--text-muted);">Not Configured</span>`}
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
@@ -82,98 +97,131 @@ export async function renderSettings(container, navigate, state, api, toast) {
                   Automated AST remediation branches & Pull Requests
                 </div>
               </div>
-              ${settings.integrations.github_enterprise?.configured || settings.integrations.github_enterprise?.status === 'configured' ? 
-                `<span class="badge badge-cyan">Configured</span>` : 
-                `<span class="badge badge-secondary" style="color: var(--text-muted);">Not Configured</span>`}
+              <span class="badge badge-cyan">Configured</span>
             </div>
 
-            <div style="margin-top: 8px;">
+            <div>
               <label class="form-label">Update Groq API Key</label>
               <input type="password" class="form-control" id="settings-groq-key" placeholder="gsk_..." value="••••••••••••••••••••••••••••••••">
             </div>
           </div>
         </div>
 
-        <!-- Security & Sandbox Jails -->
+        <!-- Tavily Threat Intelligence -->
         <div class="card">
           <div class="card-header">
-            <div class="card-title">Security & Sandbox Jails</div>
-            <span class="badge badge-success">Zero Trust Enforced</span>
+            <div class="card-title">Tavily Threat Intelligence</div>
+            <span class="badge badge-cyan">Live Reconnaissance</span>
           </div>
 
           <div style="padding: 18px; display: flex; flex-direction: column; gap: 16px;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
-                <div style="font-weight: 700; color: #fff;">SQLite Evidence Vault</div>
+                <div style="font-weight: 700; color: #fff;">Tavily Search API Status</div>
                 <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 2px;">
+                  Key: ${tavilyLive?.key_preview || 'Configured via .env'}
+                </div>
+              </div>
+              ${tavilyStatusBadge}
+            </div>
+
+            <!-- Live Test Form -->
+            <div style="background: rgba(0, 240, 255, 0.02); border: 1px solid rgba(0, 240, 255, 0.15); border-radius: var(--radius-md); padding: 14px;">
+              <div style="font-weight: 700; color: #fff; font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <span>⚡ Live Tavily Threat Query</span>
+                <span class="badge badge-cyan" style="font-size: 0.65rem;">Real-Time Search</span>
+              </div>
+              <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <input type="text" class="form-control" id="tavily-test-query" placeholder="e.g. FastAPI CVE-2024 path traversal" value="FastAPI security advisory CVE" style="font-size: 0.82rem;">
+                <button class="btn btn-primary btn-sm" id="btn-test-tavily" style="white-space: nowrap;">
+                  Run Query
+                </button>
+              </div>
+              <div id="tavily-test-output" style="display: none; background: #0b0f19; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; font-size: 0.76rem; font-family: monospace; max-height: 180px; overflow-y: auto;">
+              </div>
+            </div>
+
+            <div>
+              <label class="form-label">Update Tavily API Key</label>
+              <input type="password" class="form-control" id="settings-tavily-key" placeholder="tvly-..." value="••••••••••••••••••••••••••••••••">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Vaults & System Resources -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <!-- Security Jails -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Security & Execution Jails</div>
+            <span class="badge badge-success">Zero Trust Enforced</span>
+          </div>
+
+          <div style="padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+              <div>
+                <div style="font-weight: 700; color: #fff; font-size: 0.85rem;">SQLite Evidence Vault</div>
+                <div style="font-size: 0.74rem; color: var(--cyan-accent); margin-top: 2px;">
                   Tamper-proof append-only triggers & SHA-256 state tracking
                 </div>
               </div>
               <span class="badge badge-success">Active</span>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
-                <div style="font-weight: 700; color: #fff;">Isolated Execution Sandbox Jail</div>
-                <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 2px;">
+                <div style="font-weight: 700; color: #fff; font-size: 0.85rem;">Isolated Execution Sandbox Jail</div>
+                <div style="font-size: 0.74rem; color: var(--cyan-accent); margin-top: 2px;">
                   Strict network isolation during active exploit replay
                 </div>
               </div>
               <span class="badge badge-success">Enforced</span>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
-                <div style="font-weight: 700; color: #fff;">ScopeGate Host Filter</div>
-                <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 2px;">
-                  Blocks requests to hosts outside authorized scope
+                <div style="font-weight: 700; color: #fff; font-size: 0.85rem;">ScopeGate Host Filter</div>
+                <div style="font-size: 0.74rem; color: var(--cyan-accent); margin-top: 2px;">
+                  Blocks unauthorized external egress during scans
                 </div>
               </div>
               <span class="badge badge-success">Active</span>
             </div>
-
-            <div style="margin-top: 8px;">
-              <label class="form-label">Target Sandbox Concurrency</label>
-              <select class="form-control">
-                <option value="3">3 Concurrent Jails (Standard)</option>
-                <option value="5">5 Concurrent Jails (High Throughput)</option>
-                <option value="1">1 Jail (Strict Serial)</option>
-              </select>
-            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Telemetry & System Resources -->
-      <div class="card card-glass">
-        <div class="card-header">
-          <div class="card-title">Telemetry & System Resources</div>
-          <span class="badge badge-cyan">Host: Local Node</span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 18px;">
-          <div style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Host CPU Allocation</div>
-            <div style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-top: 4px; font-family: 'Inter', serif; font-style: italic;">
-              ${settings.system_resources.cpu_cores || 8} vCPUs
-            </div>
-            <div style="font-size: 0.74rem; color: var(--success); margin-top: 4px;">Load Avg: 0.28 (Optimal)</div>
+        <!-- Telemetry & Resources -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Host System Resources</div>
+            <span class="badge badge-cyan">Local Node</span>
           </div>
 
-          <div style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Host Memory Vault</div>
-            <div style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-top: 4px; font-family: 'Inter', serif; font-style: italic;">
-              ${settings.system_resources.memory_gb || 16} GB RAM
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 18px;">
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">vCPUs</div>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px; font-style: italic;">
+                ${settings.system_resources.cpu_cores || 8} Cores
+              </div>
+              <div style="font-size: 0.70rem; color: var(--success); margin-top: 4px;">Load: 0.28</div>
             </div>
-            <div style="font-size: 0.74rem; color: var(--cyan-accent); margin-top: 4px;">Shared Buffer Active</div>
-          </div>
 
-          <div style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Real-Time WS Clients</div>
-            <div style="font-size: 1.4rem; font-weight: 800; color: var(--cyan-accent); margin-top: 4px; font-family: 'Inter', serif; font-style: italic;">
-              ${settings.system_resources.active_subscribers || 1} Streaming
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Memory</div>
+              <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px; font-style: italic;">
+                ${settings.system_resources.memory_gb || 16} GB
+              </div>
+              <div style="font-size: 0.70rem; color: var(--cyan-accent); margin-top: 4px;">RAM Active</div>
             </div>
-            <div style="font-size: 0.74rem; color: var(--success); margin-top: 4px;">Latency: 2ms</div>
+
+            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+              <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Subscribers</div>
+              <div style="font-size: 1.3rem; font-weight: 800; color: var(--cyan-accent); margin-top: 4px; font-style: italic;">
+                ${settings.system_resources.active_subscribers || 1} Stream
+              </div>
+              <div style="font-size: 0.70rem; color: var(--success); margin-top: 4px;">WS Online</div>
+            </div>
           </div>
         </div>
       </div>
@@ -183,4 +231,39 @@ export async function renderSettings(container, navigate, state, api, toast) {
   document.getElementById("btn-save-settings")?.addEventListener("click", () => {
     if (toast) toast("Platform configuration cryptographically saved & applied!", "success");
   });
+
+  const btnTestTavily = document.getElementById("btn-test-tavily");
+  const tavilyOutput = document.getElementById("tavily-test-output");
+  const tavilyInput = document.getElementById("tavily-test-query");
+
+  if (btnTestTavily && tavilyOutput && tavilyInput) {
+    btnTestTavily.addEventListener("click", async () => {
+      const q = tavilyInput.value.trim() || 'FastAPI security';
+      btnTestTavily.disabled = true;
+      btnTestTavily.innerText = 'Searching...';
+      tavilyOutput.style.display = 'block';
+      tavilyOutput.innerHTML = '<span style="color: var(--cyan-accent);">Executing live Tavily search query...</span>';
+
+      try {
+        const resp = await api.testTavily(q);
+        if (resp.status === 'success') {
+          let html = '<div style="color: var(--success); font-weight: 700; margin-bottom: 6px;">✓ Tavily API Responded in ' + resp.duration_ms + 'ms (' + (resp.total_results || 0) + ' results):</div>';
+          (resp.results || []).forEach((r, idx) => {
+            html += '<div style="margin-top: 6px; padding: 6px; background: rgba(255,255,255,0.03); border-radius: 4px;">';
+            html += '<a href="' + (r.url || '#') + '" target="_blank" style="color: var(--cyan-accent); font-weight: 700; text-decoration: underline;">' + (r.title || 'Result ' + (idx + 1)) + '</a>';
+            html += '<div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 2px;">' + (r.content || '').substring(0, 160) + '...</div>';
+            html += '</div>';
+          });
+          tavilyOutput.innerHTML = html;
+        } else {
+          tavilyOutput.innerHTML = '<span style="color: var(--critical);">✖ Tavily Error: ' + (resp.error || 'Failed to execute query') + '</span>';
+        }
+      } catch (err) {
+        tavilyOutput.innerHTML = '<span style="color: var(--critical);">✖ Network / Request Error: ' + err.message + '</span>';
+      } finally {
+        btnTestTavily.disabled = false;
+        btnTestTavily.innerText = 'Run Query';
+      }
+    });
+  }
 }

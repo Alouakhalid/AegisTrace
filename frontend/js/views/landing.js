@@ -54,6 +54,37 @@ export function renderLanding(container, navigate) {
         </p>
 
         <!-- CTAs -->
+                <!-- PROMINENT GITHUB REPOSITORY INPUT (Section 1 & 11) -->
+        <div style="max-width: 760px; margin: 0 auto 40px auto; background: rgba(13, 16, 34, 0.88); border: 1px solid var(--border-accent); border-radius: var(--radius-xl); padding: 26px; box-shadow: 0 0 50px rgba(121, 59, 255, 0.2); backdrop-filter: blur(16px); text-align: left;">
+          <div style="font-size: 0.82rem; font-weight: 700; color: var(--cyan-accent); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>🐙</span> <span>Analyze a GitHub Repository</span>
+            </div>
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">AST &bull; Code Graph &bull; BugHunter</span>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="landing-repo-input" value="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" 
+                   placeholder="https://github.com/owner/repository" 
+                   style="flex: 1; padding: 14px 18px; font-size: 0.96rem; font-family: var(--font-mono); background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius-md); color: #fff; outline: none; transition: border-color 0.2s;">
+            <button class="btn btn-primary" id="landing-btn-analyze" style="padding: 14px 28px; font-size: 0.95rem; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 20px rgba(121, 59, 255, 0.4);">
+              <span>⚡</span> Analyze Repository
+            </button>
+          </div>
+          <!-- Quick presets -->
+          <div style="display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap;">
+            <span style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Quick Targets:</span>
+            <button class="landing-preset-btn" data-url="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" style="background: rgba(121,59,255,0.15); border: 1px solid rgba(121,59,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.74rem; cursor: pointer;">
+              🧠 Neurovain-Data-Analysis-AI
+            </button>
+            <button class="landing-preset-btn" data-url="https://github.com/Alouakhalid/chess_RL" style="background: rgba(66,107,255,0.15); border: 1px solid rgba(66,107,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.74rem; cursor: pointer;">
+              ♟️ chess_RL
+            </button>
+            <button class="landing-preset-btn" data-url="https://github.com/ebraheembinessa-E-vias/community-reels-engine" style="background: rgba(36,200,245,0.15); border: 1px solid rgba(36,200,245,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.74rem; cursor: pointer;">
+              🎬 community-reels-engine
+            </button>
+          </div>
+        </div>
+
         <div style="display: flex; gap: 16px; justify-content: center; align-items: center; margin-bottom: 60px; flex-wrap: wrap;">
           <button class="btn btn-primary btn-lg" id="hero-btn-explore" style="padding: 14px 34px;">
             Explore the Platform &rarr;
@@ -435,6 +466,34 @@ export function renderLanding(container, navigate) {
   const navTo = (route) => {
     navigate(route);
   };
+
+    // Prominent Repo Analysis Action
+  const repoInput = container.querySelector("#landing-repo-input");
+  const btnAnalyze = container.querySelector("#landing-btn-analyze");
+  if (btnAnalyze && repoInput) {
+    btnAnalyze.onclick = () => {
+      const val = repoInput.value.trim();
+      if (val) {
+        state.targetRepoUrl = val;
+        navigate("wizard");
+      }
+    };
+    repoInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        btnAnalyze.click();
+      }
+    });
+  }
+  container.querySelectorAll(".landing-preset-btn").forEach(btn => {
+    btn.onclick = () => {
+      const u = btn.getAttribute("data-url");
+      if (repoInput && u) {
+        repoInput.value = u;
+        state.targetRepoUrl = u;
+        navigate("wizard");
+      }
+    };
+  });
 
   const btnExplore = container.querySelector("#hero-btn-explore");
   if (btnExplore) btnExplore.onclick = () => navTo("dashboard");
