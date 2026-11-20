@@ -29,7 +29,7 @@ export function renderLanding(container, navigate, state) {
     </header>
 
     <!-- 3.2 Hero Section with Interactive Code-to-Behavior Security Twin Canvas -->
-    <section class="hero-section" style="min-height: 100vh; position: relative; padding: 130px 24px 80px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at 50% 30%, rgba(121, 59, 255, 0.12) 0%, rgba(9, 11, 28, 0) 70%);">
+    <section class="hero-section" style="min-height: 100vh; position: relative; padding: 36px 24px 80px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at 50% 30%, rgba(121, 59, 255, 0.12) 0%, rgba(9, 11, 28, 0) 70%);">
       <!-- Interactive Grid Background -->
       <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none;"></div>
 

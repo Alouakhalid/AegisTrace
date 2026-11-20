@@ -146,7 +146,7 @@ export function showModal({ title, bodyHtml, confirmText = "Confirm", onConfirm 
 }
 
 // Client Router (All 18 Dedicated Pages)
-export function navigate(route) {
+export async function navigate(route) {
   state.currentRoute = route;
   window.location.hash = `#${route}`;
 
@@ -235,7 +235,7 @@ export function navigate(route) {
 }
 
 // App Initialization
-window.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener("DOMContentLoaded", () => {
   // Bind sidebar nav links
   document.querySelectorAll(".nav-item").forEach(item => {
     item.addEventListener("click", (e) => {
@@ -260,9 +260,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Topbar New Assessment button
   document.getElementById("btn-new-assessment")?.addEventListener("click", () => navigate("wizard"));
 
-  // Load projects into global selector
-  try {
-    const projects = await api.listProjects();
+  // Handle hash change events
+  window.addEventListener("hashchange", () => {
+    const route = window.location.hash.replace("#", "");
+    if (route && route !== state.currentRoute) {
+      navigate(route);
+    }
+  });
+
+  // Handle hash routing on initial load (defaults to Dashboard so tabs are immediately visible)
+  const hashRoute = window.location.hash.replace("#", "");
+  navigate(hashRoute || "dashboard");
+
+  // Load projects into global selector in background (non-blocking)
+  api.listProjects().then(projects => {
     const pSel = document.getElementById("global-project-select");
     if (pSel && projects && projects.length > 0) {
       pSel.innerHTML = projects.map(p => `
@@ -278,19 +289,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         navigate(state.currentRoute);
       });
     }
-  } catch (e) {
+  }).catch(e => {
     console.warn("Could not load global projects dropdown:", e);
-  }
-
-  // Handle hash change events
-  window.addEventListener("hashchange", () => {
-    const route = window.location.hash.replace("#", "");
-    if (route && route !== state.currentRoute) {
-      navigate(route);
-    }
   });
-
-  // Handle hash routing on initial load (defaults to Dashboard so tabs are immediately visible)
-  const hashRoute = window.location.hash.replace("#", "");
-  navigate(hashRoute || "dashboard");
 });

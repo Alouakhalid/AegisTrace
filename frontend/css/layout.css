@@ -479,31 +479,12 @@ body {
   background: rgba(10, 10, 10, 0.6);
 }
 
-/* Fullscreen Landing and Auth Mode Overrides */
-body.landing-mode #main-sidebar,
-body.landing-mode #app-sidebar,
-body.landing-mode #interior-topbar {
-  display: none !important;
-}
-body.landing-mode .main-wrapper {
-  margin-left: 0 !important;
-  width: 100% !important;
-  min-width: 100% !important;
-}
-body.landing-mode .page-content {
-  padding: 0 !important;
+/* Permanent Navigation & Page Content Overrides */
+body.landing-mode .page-content,
+body.auth-mode .page-content {
+  padding: 0;
 }
 
-body.auth-mode #main-sidebar,
-body.auth-mode #app-sidebar,
-body.auth-mode #interior-topbar {
+.landing-navbar {
   display: none !important;
-}
-body.auth-mode .main-wrapper {
-  margin-left: 0 !important;
-  width: 100% !important;
-  min-width: 100% !important;
-}
-body.auth-mode .page-content {
-  padding: 0 !important;
 }
