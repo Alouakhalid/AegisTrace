@@ -11,19 +11,19 @@ export function renderAuth(container, navigate, state, api, toast) {
           <!-- Card Header -->
           <div style="text-align: center; margin-bottom: 32px;">
             <div style="font-family: var(--font-serif); font-style: italic; font-size: 1.8rem; font-weight: 700; color: #FFFFFF; margin-bottom: 6px;">
-              Aegis<span style="color: var(--gold-light);">Trace</span>
+              Aegis<span style="color: var(--cyan-accent);">Trace</span>
             </div>
-            <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gold-base);">
+            <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--cyan-accent);">
               SOVEREIGN SECURITY CONSOLE
             </div>
           </div>
 
           <!-- Auth Mode Toggle -->
           <div style="display: flex; border-bottom: 1px solid var(--border-subtle); margin-bottom: 28px;">
-            <button id="auth-tab-signin" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 2px solid ${mode === 'signin' ? 'var(--gold-light)' : 'transparent'}; color: ${mode === 'signin' ? '#fff' : 'var(--text-muted)'}; font-size: 0.84rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1.2px;">
+            <button id="auth-tab-signin" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 2px solid ${mode === 'signin' ? 'var(--cyan-accent)' : 'transparent'}; color: ${mode === 'signin' ? '#fff' : 'var(--text-muted)'}; font-size: 0.84rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1.2px;">
               Sign In
             </button>
-            <button id="auth-tab-signup" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 2px solid ${mode === 'signup' ? 'var(--gold-light)' : 'transparent'}; color: ${mode === 'signup' ? '#fff' : 'var(--text-muted)'}; font-size: 0.84rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1.2px;">
+            <button id="auth-tab-signup" style="flex: 1; padding: 12px; background: none; border: none; border-bottom: 2px solid ${mode === 'signup' ? 'var(--cyan-accent)' : 'transparent'}; color: ${mode === 'signup' ? '#fff' : 'var(--text-muted)'}; font-size: 0.84rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1.2px;">
               Create Account
             </button>
           </div>
@@ -50,10 +50,10 @@ export function renderAuth(container, navigate, state, api, toast) {
             ${mode === 'signin' ? `
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 0.78rem;">
                 <label style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: pointer;">
-                  <input type="checkbox" checked style="accent-color: var(--gold-base);">
+                  <input type="checkbox" checked style="accent-color: var(--cyan-accent);">
                   Remember Token
                 </label>
-                <a href="javascript:void(0)" id="auth-forgot" style="color: var(--gold-light); text-decoration: none;">Forgot Passphrase?</a>
+                <a href="javascript:void(0)" id="auth-forgot" style="color: var(--cyan-accent); text-decoration: none;">Forgot Passphrase?</a>
               </div>
             ` : `
               <div style="margin-bottom: 24px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">

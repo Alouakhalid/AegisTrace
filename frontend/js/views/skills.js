@@ -18,7 +18,7 @@ export async function renderSkills(container, navigate, state, api, showModal) {
     <div>
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-base); font-weight: 700; margin-bottom: 6px;">
+          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
             Modular Offensive & Defensive Intelligence Packs
           </div>
           <h1 class="page-title">BugHunter Skills Library</h1>
@@ -26,7 +26,7 @@ export async function renderSkills(container, navigate, state, api, showModal) {
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
           <input type="text" class="form-control" id="skills-search" placeholder="Search skills or CWEs..." style="width: 260px; padding: 8px 16px; font-size: 0.84rem;">
-          <div class="badge badge-gold" style="padding: 8px 14px; font-size: 0.76rem;">
+          <div class="badge badge-cyan" style="padding: 8px 14px; font-size: 0.76rem;">
             ${skills.length} Loaded Packs
           </div>
         </div>
@@ -47,7 +47,7 @@ export async function renderSkills(container, navigate, state, api, showModal) {
           <div class="card card-glass" style="grid-column: 1 / -1; padding: 48px; text-align: center;">
             <div style="font-size: 2.5rem; margin-bottom: 14px;">📦</div>
             <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 8px;">No Skills Installed</h3>
-            <p style="font-size: 0.88rem; color: var(--gold-light); max-width: 600px; margin: 0 auto 20px auto; line-height: 1.6;">
+            <p style="font-size: 0.88rem; color: var(--cyan-accent); max-width: 600px; margin: 0 auto 20px auto; line-height: 1.6;">
               BugHunter intelligence packs are loaded dynamically from <code>skills/Claude-BugHunter/skills/*/SKILL.md</code>.
               Populate the directory or copy Claude-BugHunter into <code>skills/Claude-BugHunter</code> to activate automated heuristic matching.
             </p>
@@ -56,14 +56,14 @@ export async function renderSkills(container, navigate, state, api, showModal) {
           <div class="card card-glass skill-card" data-cat="${sk.category}" data-search="${sk.name.toLowerCase()} ${sk.description.toLowerCase()} ${(sk.supported_cwes || []).join(' ').toLowerCase()}" style="display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--radius-lg); transition: all 0.3s ease;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <h3 style="font-size: 1.12rem; font-weight: 700; color: #fff; font-family: 'Playfair Display', serif; font-style: italic;">
+                <h3 style="font-size: 1.12rem; font-weight: 700; color: #fff; font-family: 'Inter', serif; font-style: italic;">
                   ${sk.name}
                 </h3>
-                <span class="badge ${sk.category === 'Access Control' ? 'badge-gold' : 'badge-bronze'}">
+                <span class="badge ${sk.category === 'Access Control' ? 'badge-cyan' : 'badge-bronze'}">
                   ${sk.category}
                 </span>
               </div>
-              <p style="font-size: 0.82rem; color: var(--gold-light); line-height: 1.6; margin-bottom: 16px;">
+              <p style="font-size: 0.82rem; color: var(--cyan-accent); line-height: 1.6; margin-bottom: 16px;">
                 ${sk.description}
               </p>
             </div>
@@ -73,14 +73,14 @@ export async function renderSkills(container, navigate, state, api, showModal) {
                 <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Supported CWEs</div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                   ${(sk.supported_cwes || []).map(cwe => `
-                    <span class="badge badge-gold-subtle" style="font-size: 0.68rem; font-family: monospace;">${cwe}</span>
+                    <span class="badge badge-cyan-subtle" style="font-size: 0.68rem; font-family: monospace;">${cwe}</span>
                   `).join("")}
                 </div>
               </div>
 
               <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 12px;">
                 <div style="font-size: 0.72rem; color: var(--text-muted);">
-                  Agents: <code style="color: var(--gold-base);">${(sk.compatible_agents || []).slice(0, 2).join(", ")}</code>
+                  Agents: <code style="color: var(--cyan-accent);">${(sk.compatible_agents || []).slice(0, 2).join(", ")}</code>
                 </div>
                 <button class="btn btn-secondary btn-sm btn-simulate-skill" data-idx="${idx}" style="padding: 4px 10px; font-size: 0.72rem;">
                   Simulate Pack
@@ -128,16 +128,16 @@ export async function renderSkills(container, navigate, state, api, showModal) {
         bodyHtml: `
           <div style="display: flex; flex-direction: column; gap: 14px;">
             <div style="background: rgba(167, 139, 113, 0.08); border: 1px solid var(--border-gold); padding: 14px; border-radius: var(--radius-md);">
-              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--gold-base); font-weight: 700;">Simulated Skill Pack</div>
+              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700;">Simulated Skill Pack</div>
               <div style="color: #fff; font-size: 0.95rem; font-weight: 700; margin-top: 4px;">${sk.name} (${sk.id})</div>
-              <div style="font-size: 0.8rem; color: var(--gold-light); margin-top: 4px;">${sk.description}</div>
+              <div style="font-size: 0.8rem; color: var(--cyan-accent); margin-top: 4px;">${sk.description}</div>
             </div>
 
             <div style="background: #050505; border: 1px solid var(--border-subtle); padding: 14px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.76rem; color: #d1d5db; line-height: 1.5;">
-              <div style="color: var(--gold-base); font-weight: 700;">// Dispatching knowledge pack to DynamicTestingAgent...</div>
+              <div style="color: var(--cyan-accent); font-weight: 700;">// Dispatching knowledge pack to DynamicTestingAgent...</div>
               <div style="color: #38efbd;">[OK] Sandbox environment initialized (Isolation: sbx_sim_01)</div>
               <div style="color: #38efbd;">[OK] Synthetic dual-tenant identities generated (token_a, token_b)</div>
-              <div style="color: var(--gold-light);">[RUN] Probing invariant rules against target parameter models...</div>
+              <div style="color: var(--cyan-accent);">[RUN] Probing invariant rules against target parameter models...</div>
               <div style="color: #38efbd;">[SUCCESS] Skill ready for deployment in autonomous assessments.</div>
             </div>
           </div>

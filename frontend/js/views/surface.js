@@ -107,7 +107,7 @@ export async function renderAttackSurface(container, navigate, state, api, showM
     <div>
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-base); font-weight: 700; margin-bottom: 6px;">
+          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
             Reconnaissance Surface & Boundary Gate
           </div>
           <h1 class="page-title">Attack Surface Reconnaissance</h1>
@@ -153,7 +153,7 @@ export async function renderAttackSurface(container, navigate, state, api, showM
         <div class="card-header">
           <div style="display: flex; align-items: center; gap: 12px;">
             <div class="card-title">Authorized Scope Surface (${endpoints.length} Routes)</div>
-            <span class="badge badge-gold" style="font-size: 0.68rem;">JWT Dual-Tenant Active</span>
+            <span class="badge badge-cyan" style="font-size: 0.68rem;">JWT Dual-Tenant Active</span>
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-outline btn-sm filter-method active" data-method="ALL">ALL</button>
@@ -180,14 +180,14 @@ export async function renderAttackSurface(container, navigate, state, api, showM
               ${endpoints.map((ep, idx) => `
                 <tr class="surface-row" data-method="${ep.method}" data-search="${ep.path.toLowerCase()} ${ep.controller ? ep.controller.toLowerCase() : ''} ${ep.params.toLowerCase()}">
                   <td>
-                    <span class="badge ${ep.method === 'PATCH' ? 'badge-bronze' : (ep.method === 'POST' ? 'badge-gold' : (ep.method === 'DELETE' ? 'badge-critical' : 'badge-gold-subtle'))}">
+                    <span class="badge ${ep.method === 'PATCH' ? 'badge-bronze' : (ep.method === 'POST' ? 'badge-cyan' : (ep.method === 'DELETE' ? 'badge-critical' : 'badge-cyan-subtle'))}">
                       ${ep.method}
                     </span>
                   </td>
                   <td style="font-family: monospace; font-size: 0.88rem; color: #fff; font-weight: 600;">
                     ${ep.path}
                   </td>
-                  <td style="font-family: monospace; font-size: 0.78rem; color: var(--gold-light);">
+                  <td style="font-family: monospace; font-size: 0.78rem; color: var(--cyan-accent);">
                     ${ep.params || "none"}
                   </td>
                   <td>
@@ -195,7 +195,7 @@ export async function renderAttackSurface(container, navigate, state, api, showM
                       ${ep.auth_required ? 'Bearer JWT Required' : 'Public Access'}
                     </span>
                   </td>
-                  <td style="font-family: monospace; color: var(--gold-base); font-size: 0.82rem;">
+                  <td style="font-family: monospace; color: var(--cyan-accent); font-size: 0.82rem;">
                     ${ep.controller || "handler"}
                   </td>
                   <td>
@@ -262,14 +262,14 @@ export async function renderAttackSurface(container, navigate, state, api, showM
         bodyHtml: `
           <div style="display: flex; flex-direction: column; gap: 16px;">
             <div style="background: rgba(167, 139, 113, 0.08); border: 1px solid var(--border-gold); border-radius: var(--radius-md); padding: 14px 18px;">
-              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--gold-base); font-weight: 700; letter-spacing: 0.12em;">Route Description</div>
+              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; letter-spacing: 0.12em;">Route Description</div>
               <div style="color: #fff; font-size: 0.88rem; margin-top: 4px; line-height: 1.5;">${ep.description}</div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.82rem;">
               <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px 14px; border-radius: var(--radius-sm);">
                 <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">AST Source Anchor</span>
-                <div style="font-family: monospace; color: var(--gold-light); margin-top: 4px;">${ep.ast_file}:${ep.ast_line}</div>
+                <div style="font-family: monospace; color: var(--cyan-accent); margin-top: 4px;">${ep.ast_file}:${ep.ast_line}</div>
               </div>
 
               <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px 14px; border-radius: var(--radius-sm);">
@@ -289,7 +289,7 @@ export async function renderAttackSurface(container, navigate, state, api, showM
             </div>
 
             <div style="background: #050505; border: 1px solid var(--border-gold); border-radius: var(--radius-sm); padding: 14px; font-family: monospace; font-size: 0.78rem;">
-              <div style="color: var(--gold-base); margin-bottom: 6px;">// Expected Parameter Signature</div>
+              <div style="color: var(--cyan-accent); margin-bottom: 6px;">// Expected Parameter Signature</div>
               <div style="color: #fff;">${ep.params}</div>
             </div>
           </div>

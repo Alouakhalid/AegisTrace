@@ -17,7 +17,7 @@ export function renderRemediation(container, navigate, state) {
     <div>
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-base); font-weight: 700; margin-bottom: 6px;">
+          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
             Deterministic AST Patch Synthesis & Validation
           </div>
           <h1 class="page-title">Remediation Center & AST Patch Synthesis</h1>
@@ -38,28 +38,28 @@ export function renderRemediation(container, navigate, state) {
         <div class="card card-glass" style="border-left: 3px solid var(--success);">
           <div style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Unit Test Suite</div>
           <div style="display: flex; align-items: baseline; gap: 10px;">
-            <div style="font-size: 2rem; font-weight: 800; color: var(--success); font-family: 'Playfair Display', serif; font-style: italic;">10 / 10</div>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--success); font-family: 'Inter', serif; font-style: italic;">10 / 10</div>
             <span class="badge badge-success">PASSED</span>
           </div>
-          <div style="font-size: 0.76rem; color: var(--gold-light); margin-top: 6px;">Zero regressions in existing business logic workflows.</div>
+          <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 6px;">Zero regressions in existing business logic workflows.</div>
         </div>
 
-        <div class="card card-glass" style="border-left: 3px solid var(--gold-base);">
+        <div class="card card-glass" style="border-left: 3px solid var(--cyan-accent);">
           <div style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Exploit Replay Test</div>
           <div style="display: flex; align-items: baseline; gap: 10px;">
-            <div style="font-size: 2rem; font-weight: 800; color: var(--gold-base); font-family: 'Playfair Display', serif; font-style: italic;">HTTP 403</div>
-            <span class="badge badge-gold">EXPLOIT CLOSED</span>
+            <div style="font-size: 2rem; font-weight: 800; color: var(--cyan-accent); font-family: 'Inter', serif; font-style: italic;">HTTP 403</div>
+            <span class="badge badge-cyan">EXPLOIT CLOSED</span>
           </div>
-          <div style="font-size: 0.76rem; color: var(--gold-light); margin-top: 6px;">Unauthorized cross-tenant mutation strictly forbidden.</div>
+          <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 6px;">Unauthorized cross-tenant mutation strictly forbidden.</div>
         </div>
 
-        <div class="card card-glass" style="border-left: 3px solid var(--gold-light);">
+        <div class="card card-glass" style="border-left: 3px solid var(--cyan-accent);">
           <div style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">AST Syntax Integrity</div>
           <div style="display: flex; align-items: baseline; gap: 10px;">
-            <div style="font-size: 2rem; font-weight: 800; color: #fff; font-family: 'Playfair Display', serif; font-style: italic;">100%</div>
-            <span class="badge badge-gold-subtle">SYNTAX VALID</span>
+            <div style="font-size: 2rem; font-weight: 800; color: #fff; font-family: 'Inter', serif; font-style: italic;">100%</div>
+            <span class="badge badge-cyan-subtle">SYNTAX VALID</span>
           </div>
-          <div style="font-size: 0.76rem; color: var(--gold-light); margin-top: 6px;">Isolated git branch: <code style="color: var(--gold-base);">aegis-remediation-branch</code></div>
+          <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 6px;">Isolated git branch: <code style="color: var(--cyan-accent);">aegis-remediation-branch</code></div>
         </div>
       </div>
 
@@ -67,7 +67,7 @@ export function renderRemediation(container, navigate, state) {
       <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
           <div class="card-title">
-            Unified Code Diff — <code style="color: var(--gold-base);">target_app.py</code>
+            Unified Code Diff — <code style="color: var(--cyan-accent);">target_app.py</code>
           </div>
           <div style="font-size: 0.76rem; color: var(--text-muted); font-family: monospace;">
             Diff SHA-256: 7d1a2f64e29b01c3d4f88190e21bc5672901a88b1f5e8880291724ac661e8920
@@ -76,7 +76,7 @@ export function renderRemediation(container, navigate, state) {
 
         <div class="diff-container" style="background: #050505; padding: 16px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.82rem; line-height: 1.6;">
           ${diffLines.map(line => `
-            <div class="diff-line ${line.type}" style="padding: 2px 8px; border-radius: 2px; ${line.type === 'add' ? 'background: rgba(32, 214, 160, 0.12); color: #38efbd; font-weight: 600;' : (line.type === 'info' ? 'color: var(--gold-base); font-weight: 700;' : 'color: #9ca3af;')}">
+            <div class="diff-line ${line.type}" style="padding: 2px 8px; border-radius: 2px; ${line.type === 'add' ? 'background: rgba(32, 214, 160, 0.12); color: #38efbd; font-weight: 600;' : (line.type === 'info' ? 'color: var(--cyan-accent); font-weight: 700;' : 'color: #9ca3af;')}">
               ${line.text}
             </div>
           `).join("")}
@@ -96,7 +96,7 @@ export function renderRemediation(container, navigate, state) {
           <div style="color: #38efbd;">✓ test_order_retrieval_authorized PASSED [20%]</div>
           <div style="color: #38efbd;">✓ test_order_update_by_owner PASSED [40%]</div>
           <div style="color: #38efbd;">✓ test_order_update_by_admin PASSED [60%]</div>
-          <div style="color: var(--gold-base); font-weight: 700;">✓ test_cross_tenant_bola_exploit_blocked [HTTP 403 CONFIRMED] PASSED [100%]</div>
+          <div style="color: var(--cyan-accent); font-weight: 700;">✓ test_cross_tenant_bola_exploit_blocked [HTTP 403 CONFIRMED] PASSED [100%]</div>
           <div style="color: var(--success); margin-top: 8px; font-weight: 700;">==================== 5 passed in 0.42s ====================</div>
         </div>
       </div>

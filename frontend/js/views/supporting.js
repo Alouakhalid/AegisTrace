@@ -76,7 +76,7 @@ export async function renderSupporting(container, navigate, state, api, toast) {
     <div>
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-base); font-weight: 700; margin-bottom: 6px;">
+          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
             Unified Operations, Telemetry & Auxiliary Services
           </div>
           <h1 class="page-title">Supporting Screens & System Operations</h1>
@@ -97,19 +97,19 @@ export async function renderSupporting(container, navigate, state, api, toast) {
         <div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px;">
           <!-- Profile Card -->
           <div class="card card-glass" style="text-align: center; padding: 28px 20px;">
-            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--gold-base), var(--gold-bronze)); color: #0a0a0a; font-weight: 800; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; box-shadow: 0 0 30px rgba(167, 139, 113, 0.4);">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan-accent), var(--primary)); color: #0a0a0a; font-weight: 800; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; box-shadow: 0 0 30px rgba(167, 139, 113, 0.4);">
               AL
             </div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; font-family: 'Playfair Display', serif; font-style: italic;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; font-family: 'Inter', serif; font-style: italic;">
               Security Lead
             </h3>
-            <div style="font-size: 0.8rem; color: var(--gold-base); margin-top: 4px; font-family: monospace;">admin@aegistrace.luxury</div>
+            <div style="font-size: 0.8rem; color: var(--cyan-accent); margin-top: 4px; font-family: monospace;">admin@aegistrace.luxury</div>
             <div style="margin-top: 12px;">
-              <span class="badge badge-gold">Enterprise Tier</span>
+              <span class="badge badge-cyan">Enterprise Tier</span>
               <span class="badge badge-success" style="margin-left: 6px;">Dual-Key Signer</span>
             </div>
 
-            <div style="border-top: 1px solid var(--border-subtle); margin-top: 20px; padding-top: 16px; text-align: left; font-size: 0.78rem; line-height: 1.8; color: var(--gold-light);">
+            <div style="border-top: 1px solid var(--border-subtle); margin-top: 20px; padding-top: 16px; text-align: left; font-size: 0.78rem; line-height: 1.8; color: var(--cyan-accent);">
               <div>Hardware MFA: <strong style="color: var(--success);">YubiKey 5C Active</strong></div>
               <div>Session Cipher: <strong style="color: #fff;">TLS 1.3 / ChaCha20</strong></div>
               <div>Organization: <strong style="color: #fff;">AegisTrace Global Defense</strong></div>
@@ -137,16 +137,16 @@ export async function renderSupporting(container, navigate, state, api, toast) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><code style="color: var(--gold-base); font-size: 0.76rem;">aegis_sec_live_4491a...</code></td>
-                    <td><span class="badge badge-gold-subtle">admin:write, patch:merge</span></td>
+                    <td><code style="color: var(--cyan-accent); font-size: 0.76rem;">aegis_sec_live_4491a...</code></td>
+                    <td><span class="badge badge-cyan-subtle">admin:write, patch:merge</span></td>
                     <td>2026-11-01</td>
                     <td>Just now</td>
                     <td><span class="badge badge-success">ACTIVE</span></td>
                     <td><button class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 0.7rem;">Revoke</button></td>
                   </tr>
                   <tr>
-                    <td><code style="color: var(--gold-base); font-size: 0.76rem;">aegis_ci_cd_pipe_8812b...</code></td>
-                    <td><span class="badge badge-gold-subtle">scan:trigger, report:read</span></td>
+                    <td><code style="color: var(--cyan-accent); font-size: 0.76rem;">aegis_ci_cd_pipe_8812b...</code></td>
+                    <td><span class="badge badge-cyan-subtle">scan:trigger, report:read</span></td>
                     <td>2026-11-15</td>
                     <td>14 hours ago</td>
                     <td><span class="badge badge-success">ACTIVE</span></td>
@@ -165,7 +165,7 @@ export async function renderSupporting(container, navigate, state, api, toast) {
           <div class="card-header">
             <div style="display: flex; align-items: center; gap: 12px;">
               <div class="card-title">Immutable Event Audit Trail (${auditLogs.length} Events)</div>
-              <span class="badge badge-gold">Append-Only Vault</span>
+              <span class="badge badge-cyan">Append-Only Vault</span>
             </div>
             <button class="btn btn-secondary btn-sm" id="btn-export-audit">Export Audit JSON</button>
           </div>
@@ -187,11 +187,11 @@ export async function renderSupporting(container, navigate, state, api, toast) {
                 ${auditLogs.map(l => `
                   <tr>
                     <td style="font-family: monospace; font-weight: 700; color: #fff;">${l.event_id}</td>
-                    <td style="font-size: 0.76rem; color: var(--gold-light); font-family: monospace;">${l.timestamp}</td>
-                    <td><span class="badge badge-gold">${l.event_type}</span></td>
+                    <td style="font-size: 0.76rem; color: var(--cyan-accent); font-family: monospace;">${l.timestamp}</td>
+                    <td><span class="badge badge-cyan">${l.event_type}</span></td>
                     <td style="font-weight: 600; color: #fff;">${l.operator}</td>
-                    <td style="font-size: 0.8rem; color: var(--gold-light);">${l.action}</td>
-                    <td><code style="font-size: 0.72rem; color: var(--gold-base);">${(l.sha256_hash || '').substring(0, 16)}...</code></td>
+                    <td style="font-size: 0.8rem; color: var(--cyan-accent);">${l.action}</td>
+                    <td><code style="font-size: 0.72rem; color: var(--cyan-accent);">${(l.sha256_hash || '').substring(0, 16)}...</code></td>
                     <td><span class="badge badge-success">${l.status}</span></td>
                   </tr>
                 `).join("")}
@@ -213,14 +213,14 @@ export async function renderSupporting(container, navigate, state, api, toast) {
             ${notifications.map(n => `
               <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px; background: rgba(255, 255, 255, ${n.read ? '0.01' : '0.03'}); border: 1px solid ${n.read ? 'var(--border-subtle)' : 'var(--border-gold)'}; border-radius: var(--radius-md);">
                 <div style="display: flex; gap: 14px; align-items: flex-start;">
-                  <div style="width: 10px; height: 10px; border-radius: 50%; background: ${n.read ? 'transparent' : 'var(--gold-base)'}; margin-top: 6px;"></div>
+                  <div style="width: 10px; height: 10px; border-radius: 50%; background: ${n.read ? 'transparent' : 'var(--cyan-accent)'}; margin-top: 6px;"></div>
                   <div>
                     <div style="display: flex; align-items: center; gap: 10px;">
                       <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin: 0;">${n.title}</h4>
-                      <span class="badge ${n.severity === 'CRITICAL' ? 'badge-critical' : (n.severity === 'HIGH' ? 'badge-warning' : 'badge-gold-subtle')}">${n.severity}</span>
+                      <span class="badge ${n.severity === 'CRITICAL' ? 'badge-critical' : (n.severity === 'HIGH' ? 'badge-warning' : 'badge-cyan-subtle')}">${n.severity}</span>
                       <span class="badge badge-bronze" style="font-size: 0.65rem;">${n.category}</span>
                     </div>
-                    <div style="font-size: 0.82rem; color: var(--gold-light); margin-top: 4px; line-height: 1.5;">${n.message}</div>
+                    <div style="font-size: 0.82rem; color: var(--cyan-accent); margin-top: 4px; line-height: 1.5;">${n.message}</div>
                     <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; font-family: monospace;">${n.timestamp}</div>
                   </div>
                 </div>
@@ -237,11 +237,11 @@ export async function renderSupporting(container, navigate, state, api, toast) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
           <!-- 404 Route Diagnostic -->
           <div class="card card-glass" style="text-align: center; padding: 36px 24px; border: 1px solid var(--border-gold);">
-            <div style="font-size: 3.5rem; font-weight: 800; color: var(--gold-base); font-family: 'Playfair Display', serif; font-style: italic; line-height: 1; margin-bottom: 12px;">
+            <div style="font-size: 3.5rem; font-weight: 800; color: var(--cyan-accent); font-family: 'Inter', serif; font-style: italic; line-height: 1; margin-bottom: 12px;">
               404
             </div>
             <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Target Route Not Found</h3>
-            <p style="font-size: 0.82rem; color: var(--gold-light); line-height: 1.5; margin-bottom: 18px;">
+            <p style="font-size: 0.82rem; color: var(--cyan-accent); line-height: 1.5; margin-bottom: 18px;">
               The requested security intelligence dossier or telemetry stream does not exist in the active memory vault.
             </p>
             <button class="btn btn-secondary btn-sm" id="btn-err-return-dash">

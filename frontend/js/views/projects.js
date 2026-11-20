@@ -37,20 +37,20 @@ export async function renderProjects(container, navigate, state, api, showModal,
                 <tr>
                   <td>
                     <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">${p.name}</div>
-                    <div style="font-size: 9px; color: var(--gold-base); font-family: monospace; letter-spacing: 1px;">${p.id}</div>
+                    <div style="font-size: 9px; color: var(--cyan-accent); font-family: monospace; letter-spacing: 1px;">${p.id}</div>
                   </td>
                   <td>
-                    <div style="font-family: monospace; color: var(--gold-light); font-size: 0.84rem;">
+                    <div style="font-family: monospace; color: var(--cyan-accent); font-size: 0.84rem;">
                       ${p.repository_url || "Local Workspace Target"}
                     </div>
                     <div style="font-size: 0.72rem; color: var(--text-muted);">branch: ${p.branch || "main"}</div>
                   </td>
-                  <td><span class="badge badge-gold">${p.project_type || "FastAPI"}</span></td>
+                  <td><span class="badge badge-cyan">${p.project_type || "FastAPI"}</span></td>
                   <td>${p.last_scan_at || "Recent"}</td>
                   <td><span style="color: var(--critical); font-weight: 700;">${p.open_findings || 0}</span></td>
                   <td>
                     ${p.security_score !== null && p.security_score !== undefined ? `
-                      <span class="badge ${p.security_score >= 90 ? 'badge-success' : 'badge-gold'}">
+                      <span class="badge ${p.security_score >= 90 ? 'badge-success' : 'badge-cyan'}">
                         ${p.security_score}/100
                       </span>
                     ` : `

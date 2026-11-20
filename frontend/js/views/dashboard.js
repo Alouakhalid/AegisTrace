@@ -83,15 +83,15 @@ export async function renderDashboard(container, navigate, state, api) {
         <div class="card">
           <div class="card-header">
             <div class="card-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-accent)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
               Vulnerability Trends & Resolution (Historical)
             </div>
             <div style="display: flex; gap: 16px; font-size: 0.76rem;">
               <span style="display: flex; align-items: center; gap: 6px; color: var(--critical);">
                 <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--critical);"></span> Discovered
               </span>
-              <span style="display: flex; align-items: center; gap: 6px; color: var(--gold-light);">
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--gold-light);"></span> Resolved
+              <span style="display: flex; align-items: center; gap: 6px; color: var(--cyan-accent);">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--cyan-accent);"></span> Resolved
               </span>
             </div>
           </div>
@@ -103,7 +103,7 @@ export async function renderDashboard(container, navigate, state, api) {
           ${stats.security_score !== null && stats.security_score !== undefined ? `
             <canvas id="gaugeCanvas" style="width: 180px; height: 180px;"></canvas>
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
-              System Health: <span style="color: var(--gold-light); font-weight: 600;">Active Pipeline</span>
+              System Health: <span style="color: var(--cyan-accent); font-weight: 600;">Active Pipeline</span>
             </div>
           ` : `
             <div style="height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -123,7 +123,7 @@ export async function renderDashboard(container, navigate, state, api) {
         <div class="card">
           <div class="card-header">
             <div class="card-title">Recent Assessments</div>
-            <a href="javascript:void(0)" id="link-all-scans" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-light); text-decoration: none;">View Workspace &rarr;</a>
+            <a href="javascript:void(0)" id="link-all-scans" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cyan-accent); text-decoration: none;">View Workspace &rarr;</a>
           </div>
           <div class="table-wrapper">
             <table class="data-table">
@@ -141,7 +141,7 @@ export async function renderDashboard(container, navigate, state, api) {
                   <tr>
                     <td style="font-family: monospace; font-weight: 700; color: #fff;">${s.scan_id}</td>
                     <td>${s.project_name || "Enterprise API"}</td>
-                    <td><span class="badge ${s.status === 'completed' ? 'badge-success' : 'badge-gold'}">${s.status}</span></td>
+                    <td><span class="badge ${s.status === 'completed' ? 'badge-success' : 'badge-cyan'}">${s.status}</span></td>
                     <td><span style="color: var(--critical); font-weight: 800;">${s.total_findings || 1}</span></td>
                     <td>
                       <button class="btn btn-outline btn-sm btn-view-scan" data-scan-id="${s.scan_id}">
@@ -162,22 +162,22 @@ export async function renderDashboard(container, navigate, state, api) {
         <!-- Pending Approvals & Actions -->
         <div class="card" style="border: 1px solid var(--border-gold);">
           <div class="card-header">
-            <div class="card-title" style="color: var(--gold-light);">
+            <div class="card-title" style="color: var(--cyan-accent);">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
               Pending Human Approvals (${stats.pending_approvals || 1})
             </div>
-            <span class="badge badge-gold">Action Required</span>
+            <span class="badge badge-cyan">Action Required</span>
           </div>
-          <div style="background: rgba(10, 10, 10, 0.6); padding: 18px; border-radius: var(--radius-md); border-left: 3px solid var(--gold-base); margin-bottom: 20px;">
+          <div style="background: rgba(10, 10, 10, 0.6); padding: 18px; border-radius: var(--radius-md); border-left: 3px solid var(--cyan-accent); margin-bottom: 20px;">
             <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 6px;">
               BOLA / IDOR AST Remediation Patch
             </div>
             <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
-              File: <code style="color: var(--gold-light);">target_app.py:88</code> | Branch: <code style="color: var(--gold-base);">aegis-remediation</code>
+              File: <code style="color: var(--cyan-accent);">target_app.py:88</code> | Branch: <code style="color: var(--cyan-accent);">aegis-remediation</code>
             </div>
             <div style="display: flex; gap: 10px;">
               <span class="badge badge-success">Unit Tests: 10/10 PASS</span>
-              <span class="badge badge-gold">Exploit Closed: 403 OK</span>
+              <span class="badge badge-cyan">Exploit Closed: 403 OK</span>
             </div>
           </div>
           <button class="btn btn-primary btn-sm" style="width: 100%;" id="dash-btn-go-approvals">
@@ -192,7 +192,7 @@ export async function renderDashboard(container, navigate, state, api) {
   setTimeout(() => {
     const gaugeCanvas = document.getElementById("gaugeCanvas");
     if (gaugeCanvas && stats.security_score !== null && stats.security_score !== undefined) {
-      drawRadialGauge(gaugeCanvas, stats.security_score, 100, "Security Posture", "#c9b8a0");
+      drawRadialGauge(gaugeCanvas, stats.security_score, 100, "Security Posture", "#24C8F5");
     }
 
     const trendCanvas = document.getElementById("trendChartCanvas");

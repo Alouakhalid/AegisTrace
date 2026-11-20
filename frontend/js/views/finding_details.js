@@ -72,40 +72,40 @@ export async function renderFindingDetails(container, navigate, state, api, toas
       <div class="page-header" style="margin-bottom: 24px;">
         <div>
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-            <span class="badge badge-gold" style="font-family: monospace;">${finding.id}</span>
+            <span class="badge badge-cyan" style="font-family: monospace;">${finding.id}</span>
             <span class="badge ${finding.severity === 'CRITICAL' ? 'badge-critical' : 'badge-warning'}">${finding.severity}</span>
-            <span class="badge badge-gold-subtle" style="font-family: monospace;">${finding.cwe_id}</span>
+            <span class="badge badge-cyan-subtle" style="font-family: monospace;">${finding.cwe_id}</span>
           </div>
           <h1 class="page-title">${finding.title}</h1>
           <p class="page-subtitle">${finding.root_cause}</p>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-base); font-weight: 700;">CVSS v3.1 Base Score</div>
-          <div style="font-size: 2.2rem; font-weight: 800; color: var(--gold-base); font-family: 'Playfair Display', serif; font-style: italic;">
+          <div style="font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700;">CVSS v3.1 Base Score</div>
+          <div style="font-size: 2.2rem; font-weight: 800; color: var(--cyan-accent); font-family: 'Inter', serif; font-style: italic;">
             ${finding.cvss_score}
           </div>
         </div>
       </div>
 
       <!-- Hero Forensic State Mutation Trapped Banner -->
-      <div class="card card-glass" style="margin-bottom: 24px; border-left: 4px solid var(--gold-base); box-shadow: 0 0 40px rgba(167, 139, 113, 0.15);">
+      <div class="card card-glass" style="margin-bottom: 24px; border-left: 4px solid var(--cyan-accent); box-shadow: 0 0 40px rgba(167, 139, 113, 0.15);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
           <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(167, 139, 113, 0.15); border: 2px solid var(--gold-base); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--gold-base);">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(167, 139, 113, 0.15); border: 2px solid var(--cyan-accent); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: var(--cyan-accent);">
               ⚡
             </div>
             <div>
               <div style="font-size: 1.15rem; font-weight: 700; color: #fff;">
                 Forensic State Mutation Trapped (Zero False Positive)
               </div>
-              <div style="font-size: 0.82rem; color: var(--gold-light); margin-top: 3px;">
+              <div style="font-size: 0.82rem; color: var(--cyan-accent); margin-top: 3px;">
                 Cross-tenant persistent state mutation executed in isolated sandbox jail. Arbitrated as ground-truth exploit.
               </div>
             </div>
           </div>
           <div style="display: flex; gap: 10px;">
             <span class="badge badge-success">3/3 Sandbox Reproductions</span>
-            <span class="badge badge-gold">Deterministic Proof</span>
+            <span class="badge badge-cyan">Deterministic Proof</span>
           </div>
         </div>
       </div>
@@ -127,18 +127,18 @@ export async function renderFindingDetails(container, navigate, state, api, toas
           </div>
         </div>
 
-        <div class="card card-glass" style="border-left: 3px solid var(--gold-base);">
+        <div class="card card-glass" style="border-left: 3px solid var(--cyan-accent);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div style="font-size: 0.74rem; text-transform: uppercase; color: var(--gold-base); font-weight: 700; letter-spacing: 0.12em;">
+            <div style="font-size: 0.74rem; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; letter-spacing: 0.12em;">
               Legitimate Resource Owner
             </div>
-            <span class="badge badge-gold" style="font-size: 0.65rem;">VICTIM / RESOURCE</span>
+            <span class="badge badge-cyan" style="font-size: 0.65rem;">VICTIM / RESOURCE</span>
           </div>
           <div style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px;">
             ${evd.target_resource_owner}
           </div>
           <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">
-            Primary owner of database record in table <code style="color: var(--gold-light);">orders</code> (ID: 100). State was forcibly modified.
+            Primary owner of database record in table <code style="color: var(--cyan-accent);">orders</code> (ID: 100). State was forcibly modified.
           </div>
         </div>
       </div>
@@ -152,7 +152,7 @@ export async function renderFindingDetails(container, navigate, state, api, toas
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">SHA-256 Snapshot:</span>
-            <code style="font-size: 0.72rem; color: var(--gold-base); font-family: monospace;">${(evd.sha256_snapshot_hash || '').substring(0, 16)}...</code>
+            <code style="font-size: 0.72rem; color: var(--cyan-accent); font-family: monospace;">${(evd.sha256_snapshot_hash || '').substring(0, 16)}...</code>
             <button class="btn btn-outline btn-sm" id="btn-copy-sha" style="padding: 2px 8px; font-size: 0.7rem;">Copy SHA</button>
           </div>
         </div>
@@ -184,11 +184,11 @@ export async function renderFindingDetails(container, navigate, state, api, toas
       <div class="card" style="margin-bottom: 24px;">
         <div class="card-header">
           <div class="card-title">HTTP Request & Response Exchange Replay</div>
-          <span class="badge badge-gold">${evd.http_method} ${evd.http_url} &rarr; HTTP ${evd.http_status}</span>
+          <span class="badge badge-cyan">${evd.http_method} ${evd.http_url} &rarr; HTTP ${evd.http_status}</span>
         </div>
 
         <div style="padding: 18px; font-family: monospace; font-size: 0.8rem;">
-          <div style="color: var(--gold-base); font-weight: 700; margin-bottom: 8px;">
+          <div style="color: var(--cyan-accent); font-weight: 700; margin-bottom: 8px;">
             ${evd.http_method} /api/v1/orders/100 HTTP/1.1
           </div>
           <div style="color: var(--text-muted); margin-bottom: 8px;">
@@ -208,7 +208,7 @@ export async function renderFindingDetails(container, navigate, state, api, toas
               Content-Type: application/json<br>
               Server: Uvicorn/FastAPI
             </div>
-            <div style="background: #050505; border: 1px solid var(--border-subtle); padding: 12px; border-radius: var(--radius-sm); color: var(--gold-light);">
+            <div style="background: #050505; border: 1px solid var(--border-subtle); padding: 12px; border-radius: var(--radius-sm); color: var(--cyan-accent);">
               <pre style="margin: 0;">${evd.response_body}</pre>
             </div>
           </div>
@@ -239,21 +239,21 @@ export async function renderFindingDetails(container, navigate, state, api, toas
                 <td>Isolated Sandbox sbx_1</td>
                 <td><span class="badge badge-critical">HTTP 200 (Exploited)</span></td>
                 <td><span style="color: #f87171; font-weight: 700;">MUTATED</span></td>
-                <td><code style="font-size: 0.74rem; color: var(--gold-base);">${(evd.sha256_snapshot_hash || '').substring(0, 24)}...</code></td>
+                <td><code style="font-size: 0.74rem; color: var(--cyan-accent);">${(evd.sha256_snapshot_hash || '').substring(0, 24)}...</code></td>
               </tr>
               <tr>
                 <td style="font-weight: 700; color: #fff;">Run #2</td>
                 <td>Isolated Sandbox sbx_2</td>
                 <td><span class="badge badge-critical">HTTP 200 (Exploited)</span></td>
                 <td><span style="color: #f87171; font-weight: 700;">MUTATED</span></td>
-                <td><code style="font-size: 0.74rem; color: var(--gold-base);">${(evd.sha256_snapshot_hash || '').substring(0, 24)}...</code></td>
+                <td><code style="font-size: 0.74rem; color: var(--cyan-accent);">${(evd.sha256_snapshot_hash || '').substring(0, 24)}...</code></td>
               </tr>
               <tr>
                 <td style="font-weight: 700; color: #fff;">Run #3</td>
                 <td>Isolated Sandbox sbx_3</td>
                 <td><span class="badge badge-critical">HTTP 200 (Exploited)</span></td>
                 <td><span style="color: #f87171; font-weight: 700;">MUTATED</span></td>
-                <td><code style="font-size: 0.74rem; color: var(--gold-base);">${(evd.sha256_snapshot_hash || '').substring(0, 24)}...</code></td>
+                <td><code style="font-size: 0.74rem; color: var(--cyan-accent);">${(evd.sha256_snapshot_hash || '').substring(0, 24)}...</code></td>
               </tr>
             </tbody>
           </table>

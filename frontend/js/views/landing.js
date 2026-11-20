@@ -1,761 +1,520 @@
 export function renderLanding(container, navigate) {
   container.innerHTML = `
-    <!-- GSAP Luxury Pill Navigation -->
-    <div class="pill-nav-wrapper" id="pill-nav-wrapper">
-      <nav class="pill-nav-container" aria-label="AegisTrace Luxury Navigation">
-        <!-- Rotating Logo on Hover -->
-        <div class="pill-nav-logo" id="pill-nav-logo" title="AegisTrace — Autonomous Security Intelligence">
-          AT
+    <!-- 3.1 Floating Fixed Glass Navigation Bar -->
+    <header class="landing-navbar" id="landing-navbar">
+      <div class="landing-brand" id="landing-brand-logo">
+        <div class="user-avatar" style="width: 34px; height: 34px; background: linear-gradient(135deg, var(--primary), var(--electric-blue)); color: #fff; font-weight: 800; font-family: var(--font-mono); font-size: 0.95rem; border-radius: var(--radius-sm); box-shadow: 0 0 20px rgba(121, 59, 255, 0.4);">AT</div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.3px; color: #fff;">AegisTrace</span>
+          <span style="font-size: 8px; font-weight: 700; letter-spacing: 1.6px; color: var(--cyan-accent); text-transform: uppercase;">Security Twin</span>
         </div>
+      </div>
 
-        <!-- Pill Nav Items with GSAP Rising Background Circles -->
-        <ul class="pill-nav-items" id="pill-nav-items">
-          <li class="pill-nav-item active" data-route="landing">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Home</span>
-              <span class="pill-label-hover">Home</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="code_intel">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Architecture</span>
-              <span class="pill-label-hover">Architecture</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="surface">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Surface</span>
-              <span class="pill-label-hover">Surface</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="findings">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Findings</span>
-              <span class="pill-label-hover">Findings</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="finding_details">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Evidence</span>
-              <span class="pill-label-hover">Evidence</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="verification">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Verification</span>
-              <span class="pill-label-hover">Verification</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="remediation">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Remediation</span>
-              <span class="pill-label-hover">Remediation</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="approvals">
-            <span class="hover-circle"></span>
-            <span class="label-stack">
-              <span class="pill-label">Approvals</span>
-              <span class="pill-label-hover">Approvals</span>
-            </span>
-          </li>
-          <li class="pill-nav-item" data-route="dashboard" style="background: var(--gold-base); color: #0a0a0a; font-weight: 700;">
-            <span class="hover-circle" style="background: #ffffff;"></span>
-            <span class="label-stack">
-              <span class="pill-label">Console &rarr;</span>
-              <span class="pill-label-hover" style="color: #0a0a0a;">Console &rarr;</span>
-            </span>
-          </li>
-        </ul>
+      <nav class="landing-nav-links" id="landing-nav-links">
+        <a class="landing-nav-link" href="#security-twin-section">Product</a>
+        <a class="landing-nav-link" href="#workflow-section">Platform</a>
+        <a class="landing-nav-link" href="#agents-section">Capabilities</a>
+        <a class="landing-nav-link" href="#security-section">Security</a>
+        <a class="landing-nav-link" id="nav-link-docs">Documentation</a>
       </nav>
-    </div>
 
-    <!-- Hero Stage with Interactive 3D Tubes Canvas Background -->
-    <div class="hero-interactive-stage" id="hero-stage">
-      <!-- 3D Interactive Neon Tubes Canvas -->
-      <canvas id="tubes-cursor-canvas" class="tubes-bg-canvas"></canvas>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <button class="btn btn-outline btn-sm" id="nav-btn-signin" style="font-size: 11px;">
+          Sign In
+        </button>
+        <button class="btn btn-pill-trial btn-sm" id="nav-btn-getstarted">
+          Get Started &rarr;
+        </button>
+      </div>
+    </header>
 
-      <!-- Content Overlay -->
-      <div style="position: relative; z-index: 2; width: 100%; max-width: 1240px; margin: 0 auto; padding: 120px 24px 60px 24px; text-align: center;">
+    <!-- 3.2 Hero Section with Interactive Code-to-Behavior Security Twin Canvas -->
+    <section class="hero-section" style="min-height: 100vh; position: relative; padding: 130px 24px 80px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at 50% 30%, rgba(121, 59, 255, 0.12) 0%, rgba(9, 11, 28, 0) 70%);">
+      <!-- Interactive Grid Background -->
+      <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none;"></div>
+
+      <div style="position: relative; z-index: 2; max-width: 1200px; width: 100%; text-align: center; margin: 0 auto;">
         <!-- Live Status Pill -->
-        <div style="display: flex; justify-content: center; margin-bottom: 28px;">
-          <div class="live-pill">
-            <span class="green-dot"></span>
-            <span class="live-tag">LIVE</span>
-            <span class="status-text">Autonomous AI Security Twin &bull; 0% False Positives</span>
-          </div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(121, 59, 255, 0.12); border: 1px solid var(--border-accent); padding: 6px 18px; border-radius: var(--radius-full); margin-bottom: 28px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--cyan-accent); box-shadow: 0 0 10px var(--cyan-accent);"></span>
+          <span style="font-size: 9px; font-weight: 800; color: var(--cyan-accent); letter-spacing: 1.5px; text-transform: uppercase;">Autonomous Security Twin</span>
+          <span style="color: var(--text-muted); font-size: 11px;">&bull;</span>
+          <span style="font-size: 11px; color: var(--text-secondary);">Code &bull; Runtime &bull; Policy</span>
         </div>
 
-        <!-- Editorial Headline with Playfair Display Italic and Gold Accents -->
-        <h1 style="font-family: var(--font-serif); font-style: italic; font-size: clamp(2.8rem, 7.5vw, 5.8rem); font-weight: 700; line-height: 1.1; margin-bottom: 24px; letter-spacing: -1.5px; color: #FFFFFF; text-shadow: 0 0 35px rgba(0,0,0,0.8);">
-          From Code Understanding to <br>
-          <span style="color: var(--gold-base); text-shadow: 0 0 30px rgba(167, 139, 113, 0.4);">Verified Security Remediation</span>.
+        <!-- Headline -->
+        <h1 style="font-family: var(--font-sans); font-size: clamp(2.6rem, 6.5vw, 5.2rem); font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -1.8px; color: #FFFFFF;">
+          Understand Your Code.<br>
+          <span style="background: linear-gradient(135deg, #793BFF 0%, #426BFF 50%, #24C8F5 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Expose What Others Miss.</span>
         </h1>
 
-        <p style="font-family: var(--font-sans); font-size: 1.15rem; color: var(--gold-light); max-width: 760px; margin: 0 auto 36px auto; font-weight: 400; line-height: 1.7; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">
-          A sophisticated neural orchestration mesh of 7 autonomous AI agents that analyze ASTs, trap live database mutations with cryptographic state hashes, and synthesize verified patches.
+        <!-- Supporting message -->
+        <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 780px; margin: 0 auto 36px auto; line-height: 1.7; font-weight: 400;">
+          Autonomous application security intelligence that connects code, runtime behavior, and security policies to discover, verify, and remediate real vulnerabilities.
         </p>
 
-        <!-- Dual Button CTA Group -->
-        <div style="display: flex; gap: 18px; justify-content: center; align-items: center; margin-bottom: 70px;">
-          <button class="btn btn-white btn-lg" id="hero-btn-start" style="padding: 14px 34px; font-size: 0.92rem; box-shadow: 0 8px 30px rgba(255,255,255,0.25);">
-            Start Free Assessment
+        <!-- CTAs -->
+        <div style="display: flex; gap: 16px; justify-content: center; align-items: center; margin-bottom: 60px; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-lg" id="hero-btn-explore" style="padding: 14px 34px;">
+            Explore the Platform &rarr;
           </button>
-          <button class="btn btn-secondary btn-lg" id="hero-btn-explore" style="padding: 14px 34px; font-size: 0.92rem; background: rgba(10,10,10,0.7); backdrop-filter: blur(12px);">
-            Explore Live Workspace
-          </button>
-          <button class="btn btn-primary btn-lg" id="hero-btn-console" style="padding: 14px 34px; font-size: 0.92rem;">
-            Open Console &rarr;
+          <button class="btn btn-secondary btn-lg" id="hero-btn-howitworks" style="padding: 14px 34px;">
+            View How It Works
           </button>
         </div>
 
-        <!-- Central Interactive Node with Connected Satellite Cards -->
-        <div class="hero-neural-stage" id="hero-neural-stage">
-          <!-- Central Glow & SVG Neural Canvas -->
-          <svg class="neural-canvas" viewBox="0 0 1000 660">
-            <!-- Dynamic SVG Bezier Curves -->
-            <path d="M 500 330 C 350 240, 250 150, 160 140" class="node-line"/>
-            <path d="M 500 330 C 350 240, 250 150, 160 140" class="node-line-dashed"/>
-
-            <path d="M 500 330 C 650 240, 750 150, 840 140" class="node-line"/>
-            <path d="M 500 330 C 650 240, 750 150, 840 140" class="node-line-dashed"/>
-
-            <path d="M 500 330 C 350 420, 250 510, 160 520" class="node-line"/>
-            <path d="M 500 330 C 350 420, 250 510, 160 520" class="node-line-dashed"/>
-
-            <path d="M 500 330 C 650 420, 750 510, 840 520" class="node-line"/>
-            <path d="M 500 330 C 650 420, 750 510, 840 520" class="node-line-dashed"/>
-          </svg>
-
-          <!-- Floating Satellites Wrap -->
-          <div class="hero-satellites-wrap">
-            <!-- Floating Satellite Left Top -->
-            <div class="satellite-card sat-top-left" id="sat-card-1">
-              <div class="satellite-img-wrapper">
-                <img src="/static/assets/satellite_ast.jpg" alt="Invariant Synthesis" class="satellite-img">
+        <!-- MANDATORY HERO ANIMATION: Animated Code-to-Behavior Security Twin Visualization -->
+        <div class="security-twin-interactive-card" id="security-twin-stage" style="background: var(--bg-surface); border: 1px solid var(--border-accent); border-radius: var(--radius-xl); padding: 32px; box-shadow: var(--shadow-lg), 0 0 50px rgba(121, 59, 255, 0.15); position: relative; overflow: hidden; text-align: left;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 12px var(--success);"></span>
+                <span style="font-size: 12px; font-weight: 800; font-family: var(--font-mono); color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px;">Live Security Twin Simulation &bull; BOLA / IDOR Trap</span>
               </div>
-              <div class="satellite-title">Invariant Synthesis</div>
-              <div class="satellite-role">AGENT 02 &bull; CODE INTEL</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Real-time correlation between AST Code Invariant, HTTP Execution, and Database State</div>
             </div>
-
-            <!-- Floating Satellite Right Top -->
-            <div class="satellite-card sat-top-right" id="sat-card-2">
-              <div class="satellite-img-wrapper">
-                <img src="/static/assets/satellite_exploit.jpg" alt="State Mutation Proof" class="satellite-img">
-              </div>
-              <div class="satellite-title">State Mutation Proof</div>
-              <div class="satellite-role">AGENT 05 &bull; DYNAMIC TEST</div>
-            </div>
-
-            <!-- Floating Satellite Left Bottom -->
-            <div class="satellite-card sat-bottom-left" id="sat-card-3">
-              <div class="satellite-img-wrapper">
-                <img src="/static/assets/satellite_evidence.jpg" alt="Forensic Arbitration" class="satellite-img">
-              </div>
-              <div class="satellite-title">Forensic Arbitration</div>
-              <div class="satellite-role">AGENT 06 &bull; EVIDENCE STORE</div>
-            </div>
-
-            <!-- Floating Satellite Right Bottom -->
-            <div class="satellite-card sat-bottom-right" id="sat-card-4">
-              <div class="satellite-img-wrapper">
-                <img src="/static/assets/satellite_patch.jpg" alt="AST Patch Synthesis" class="satellite-img">
-              </div>
-              <div class="satellite-title">AST Patch Synthesis</div>
-              <div class="satellite-role">AGENT 07 &bull; REMEDIATION</div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" id="btn-sim-replay" style="font-size: 10px;">Replay Request</button>
+              <button class="btn btn-secondary btn-sm" id="btn-sim-switch" style="font-size: 10px;">Toggle Identity: Buyer B (Attacker)</button>
             </div>
           </div>
 
-          <!-- Central Core 16:9 Glass Node -->
-          <div class="central-node" id="central-core-node" style="cursor: pointer;">
-            <img src="/static/assets/hero_neural_core.jpg" alt="Neural Core" class="central-node-img">
-            <div class="central-node-overlay">
-              <div class="central-node-badge">
-                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-base);"></span>
-                AegisCore Neural Orchestrator
+          <!-- Three Connected Representations Grid -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; position: relative;">
+            <!-- Node 1: Code Intelligence -->
+            <div class="sim-node" id="sim-node-code" style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; transition: all 0.3s ease;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--cyan-accent); letter-spacing: 1px;">1. CODE INTELLIGENCE</span>
+                <span class="badge badge-cyan">AST INVARIANT</span>
               </div>
-              <div style="font-size: 1.25rem; font-weight: 700; color: #fff; font-family: var(--font-serif); font-style: italic; margin-top: 8px;">
-                Autonomous Security Intelligence Mesh
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); background: rgba(0,0,0,0.4); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.04); line-height: 1.6;">
+                <div style="color: var(--primary);">&commat;app.patch('/orders/{id}')</div>
+                <div>async def update_order(id: int, req: OrderUpdate, auth: Principal):</div>
+                <div style="color: #68708c;">&nbsp;&nbsp;pass</div>
+                <div style="color: var(--cyan-accent);">&nbsp;&nbsp;await db.execute('UPDATE orders...')</div>
+                <div style="margin-top: 8px; color: var(--warning); border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">&bull; Invariant: owner_id == caller_id</div>
               </div>
-              <div style="font-size: 0.78rem; color: var(--gold-light); margin-top: 4px;">
-                Click to Open Interactive Agent Workspace &rarr;
+            </div>
+
+            <!-- Node 2: Runtime Behavior -->
+            <div class="sim-node" id="sim-node-runtime" style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; transition: all 0.3s ease;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--electric-blue); letter-spacing: 1px;">2. RUNTIME BEHAVIOR</span>
+                <span class="badge badge-low">SANDBOX REPLAY</span>
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); background: rgba(0,0,0,0.4); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.04); line-height: 1.6;">
+                <div><span style="color: var(--warning);">PATCH</span> /api/v1/orders/100</div>
+                <div>Header: Authorization: Bearer &lt;buyer_b&gt;</div>
+                <div>Payload: <span style="color: var(--cyan-accent);">{"shipping_address": "Tampered 777"}</span></div>
+                <div style="color: var(--success); margin-top: 8px;">HTTP Response: 200 OK</div>
+                <div style="font-size: 10px; color: #888;">(Standard scanners miss this!)</div>
+              </div>
+            </div>
+
+            <!-- Node 3: Security Policies -->
+            <div class="sim-node" id="sim-node-policy" style="background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; transition: all 0.3s ease;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--critical); letter-spacing: 1px;">3. SECURITY POLICIES</span>
+                <span class="badge badge-critical">INVARIANT ENGINE</span>
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); background: rgba(0,0,0,0.4); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.04); line-height: 1.6;">
+                <div>DB Snapshot (Before): owner='buyer_a'</div>
+                <div>DB Snapshot (After): addr='Tampered 777'</div>
+                <div style="color: var(--critical); font-weight: 700; margin-top: 8px;">&times; INVARIANT BROKEN: IDOR Detected</div>
+                <div style="color: var(--cyan-accent); font-size: 10px;">State Proof: sha256:1377503964d1...</div>
+                <div style="color: var(--success); font-size: 10px;">Confidence: 100% &bull; Repro: 3/3</div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Tubes Interaction Hint -->
-        <div style="display: flex; justify-content: center; margin-top: 40px;">
-          <div class="tubes-randomize-hint">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-            <span>Move cursor to guide 3D neon tubes &bull; Click anywhere to randomize colors</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Features Section (4 Columns) -->
-    <section id="features" style="max-width: 1240px; margin: 0 auto; padding: 100px 24px;">
-      <div style="text-align: center; margin-bottom: 64px;">
-        <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-base); margin-bottom: 12px;">
-          Autonomous Architecture
-        </div>
-        <h2 style="font-family: var(--font-serif); font-style: italic; font-size: 2.8rem; font-weight: 700; color: #fff;">
-          Built for Ground-Truth Determinism
-        </h2>
-        <p style="color: var(--gold-light); font-size: 1rem; max-width: 600px; margin: 12px auto 0 auto;">
-          Every stage of the vulnerability lifecycle is audited, verified in isolated sandboxes, and mathematically bounded.
-        </p>
-      </div>
-
-      <div class="feature-grid">
-        <div class="feature-card" data-goto="code_intel" style="cursor: pointer;">
-          <div class="feature-icon-wrapper">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          </div>
-          <div class="feature-title">AST Semantic Invariants</div>
-          <div class="feature-desc">
-            Deep static parsing extracts access-control constraints, ownership invariants, and data-flow trees directly from source code.
-          </div>
-        </div>
-
-        <div class="feature-card" data-goto="surface" style="cursor: pointer;">
-          <div class="feature-icon-wrapper">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          </div>
-          <div class="feature-title">ScopeGate Authorization</div>
-          <div class="feature-desc">
-            Dynamic reconnaissance enforces strict domain, method, and rate-limit guardrails ensuring zero out-of-scope testing.
-          </div>
-        </div>
-
-        <div class="feature-card" data-goto="finding_details" style="cursor: pointer;">
-          <div class="feature-icon-wrapper">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <div class="feature-title">Cryptographic State Diffing</div>
-          <div class="feature-desc">
-            Vulnerabilities are confirmed only when pre/post database mutation hashes prove unauthorized cross-tenant data alteration.
-          </div>
-        </div>
-
-        <div class="feature-card" data-goto="remediation" style="cursor: pointer;">
-          <div class="feature-icon-wrapper">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          </div>
-          <div class="feature-title">AST Patch Synthesis</div>
-          <div class="feature-desc">
-            RemediationAgent generates precise AST patches in isolated git worktrees, validated through automated unit test suites and exploit closure.
+          <!-- Flow Pipeline Animation Ribbon -->
+          <div style="margin-top: 24px; padding: 14px 20px; background: rgba(0, 0, 0, 0.5); border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span id="sim-status-bullet" style="width: 8px; height: 8px; border-radius: 50%; background: var(--critical); box-shadow: 0 0 10px var(--critical);"></span>
+              <span id="sim-status-text" style="font-family: var(--font-mono); font-size: 11px; color: #fff;">
+                Triangulation Complete: Unauthorized DB State Mutation Trapped by Verification Agent
+              </span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">
+              Zero False Positives &bull; Verifiable Evidence Hash
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Pricing Section (3 Tiers) -->
-    <section id="pricing" style="max-width: 1240px; margin: 0 auto; padding: 100px 24px;">
+    <!-- 3.3 Trust & Technical Highlights -->
+    <section style="padding: 80px 24px; max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle);">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <div style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--cyan-accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">
+          ENGINEERING PILLARS
+        </div>
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.5px;">
+          Precision Security. Built on Evidence.
+        </h2>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px;">
+        <div class="card" style="padding: 28px;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: rgba(121, 59, 255, 0.15); border: 1px solid var(--border-accent); display: flex; align-items: center; justify-content: center; color: var(--primary); margin-bottom: 20px;">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Autonomous Security Testing</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+            Explores complex application logic and APIs without manual test authoring, formulating paired-identity test scenarios autonomously.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 28px;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: rgba(36, 200, 245, 0.15); border: 1px solid var(--border-cyan); display: flex; align-items: center; justify-content: center; color: var(--cyan-accent); margin-bottom: 20px;">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Evidence-Based Verification</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+            Vulnerabilities are never reported based on suspicion. Every finding requires cryptographic SHA-256 state mutation proof and 3/3 reproducible arbitration.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 28px;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: rgba(66, 107, 255, 0.15); border: 1px solid rgba(66, 107, 255, 0.35); display: flex; align-items: center; justify-content: center; color: var(--electric-blue); margin-bottom: 20px;">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Code-to-Behavior Intelligence</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+            Connects static AST analysis directly with runtime HTTP traces and SQL mutations to verify whether theoretical flaws are actually exploitable.
+          </p>
+        </div>
+
+        <div class="card" style="padding: 28px;">
+          <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: rgba(32, 214, 160, 0.15); border: 1px solid rgba(32, 214, 160, 0.35); display: flex; align-items: center; justify-content: center; color: var(--success); margin-bottom: 20px;">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 8px;">Controlled AI Remediation</h3>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+            Synthesizes minimal AST diff patches that undergo automated regression verification and require human review and SHA-256 seal before application.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3.4 How AegisTrace Works: 8-Stage Interactive Workflow -->
+    <section id="workflow-section" style="padding: 80px 24px; max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle);">
       <div style="text-align: center; margin-bottom: 50px;">
-        <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-base); margin-bottom: 12px;">
-          Subscription & Licensing
+        <div style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--cyan-accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">
+          AUTONOMOUS LIFECYCLE
         </div>
-        <h2 style="font-family: var(--font-serif); font-style: italic; font-size: 2.8rem; font-weight: 700; color: #fff;">
-          Enterprise Defense Tiers
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.5px;">
+          From Repository Ingestion to Sealed Patch
         </h2>
-        <p style="color: var(--gold-light); font-size: 1rem; max-width: 500px; margin: 12px auto 30px auto;">
-          Deterministic security intelligence tailored for high-velocity software engineering organizations.
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-accent); font-weight: 700; margin-bottom: 8px;">STAGE 01</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Repository Input</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Ingests Git repository or OpenAPI specification within strict ScopeGate boundaries.</p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-accent); font-weight: 700; margin-bottom: 8px;">STAGE 02</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Code Intelligence</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Extracts routes, controllers, ORM schemas, and synthesizes candidate security invariants.</p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-accent); font-weight: 700; margin-bottom: 8px;">STAGE 03</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Attack Surface</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Maps authorized hosts, live endpoints, and active authentication middlewares.</p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-accent); font-weight: 700; margin-bottom: 8px;">STAGE 04</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Vulnerability Research</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Dynamically loads BugHunter skills and constructs prioritized test plans.</p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--primary); font-weight: 700; margin-bottom: 8px;">STAGE 05</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Dynamic Testing</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Executes identity-paired payloads inside sandboxed test containers.</p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--primary); font-weight: 700; margin-bottom: 8px;">STAGE 06</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Verification</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Multi-attempt replay, cryptographic state diff validation, and arbitration.</p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--success); font-weight: 700; margin-bottom: 8px;">STAGE 07</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Remediation</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Synthesizes minimal AST patch and verifies regression-free test passes.</p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--success); font-weight: 700; margin-bottom: 8px;">STAGE 08</div>
+          <h4 style="font-size: 1rem; color: #fff; margin-bottom: 6px;">Human Approval</h4>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">Cryptographic SHA-256 patch integrity verification with approve, reject, or defer.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3.5 Code-to-Behavior Security Twin Deep Dive -->
+    <section id="security-twin-section" style="padding: 80px 24px; max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle);">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <div style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--cyan-accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">
+          CORE INNOVATION
+        </div>
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.5px;">
+          The Code-to-Behavior Security Twin
+        </h2>
+        <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 680px; margin: 12px auto 0 auto;">
+          Why traditional scanners fail: an endpoint returning HTTP 200 with valid JSON can still represent a catastrophic authorization breach. AegisTrace triangulates all three layers:
         </p>
-
-        <!-- Billing Toggle Pill -->
-        <div class="pricing-toggle-wrapper">
-          <div class="pricing-toggle-pill active" id="toggle-monthly">Monthly</div>
-          <div class="pricing-toggle-pill" id="toggle-annual">Annual (Save 20%)</div>
-        </div>
       </div>
 
-      <div class="pricing-grid">
-        <!-- Starter Tier -->
-        <div class="pricing-card">
-          <div class="pricing-tier-name">Developer</div>
-          <div class="pricing-price" id="price-starter">$4,900</div>
-          <div class="pricing-period">per month</div>
-          <p style="font-size: 0.82rem; color: var(--gold-light); margin-top: 14px; margin-bottom: 24px;">
-            For agile development teams needing autonomous PR verification and AST invariant checks.
-          </p>
-          <ul class="pricing-features">
-            <li>5 Target Applications / Repositories</li>
-            <li>Continuous Invariant Synthesis</li>
-            <li>Single-Tenant Sandbox Jails</li>
-            <li>Standard GitHub PR Integration</li>
-          </ul>
-          <button class="btn btn-secondary btn-full" id="btn-tier-dev">Select Tier</button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+        <div class="card" style="padding: 32px;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--critical);"></span>
+            The Illusion: False Negative in Traditional Scanners
+          </h3>
+          <div style="font-family: var(--font-mono); font-size: 12px; background: rgba(0,0,0,0.5); padding: 18px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.06); line-height: 1.7; color: var(--text-secondary);">
+            <div style="color: var(--text-muted);"># Attacker sends payload to target:</div>
+            <div>PATCH /api/v1/orders/100 HTTP/1.1</div>
+            <div>Host: target.app</div>
+            <div>Authorization: Bearer buyer_b_token</div>
+            <div>{"shipping_address": "Tampered 777"}</div>
+            <br>
+            <div style="color: var(--success);">HTTP/1.1 200 OK</div>
+            <div>Content-Type: application/json</div>
+            <div>{"status": "updated", "id": 100}</div>
+            <br>
+            <div style="color: var(--critical);">Verdict: Scanner marks as 'Passed/Safe' (Received 200 OK)</div>
+          </div>
         </div>
 
-        <!-- Pro Tier (Highlighted) -->
-        <div class="pricing-card highlighted">
-          <div class="popular-badge">MOST POPULAR</div>
-          <div class="pricing-tier-name">Enterprise Core</div>
-          <div class="pricing-price" id="price-pro">$14,500</div>
-          <div class="pricing-period">per month</div>
-          <p style="font-size: 0.82rem; color: var(--gold-light); margin-top: 14px; margin-bottom: 24px;">
-            Full autonomous 7-agent mesh with live database state mutation verification and AST repair.
-          </p>
-          <ul class="pricing-features">
-            <li>Unlimited Repositories & Scans</li>
-            <li>7-Agent Autonomous Pipeline</li>
-            <li>3x Isolated Sandbox Arbitration</li>
-            <li>Cryptographic SHA-256 Vault</li>
-            <li>Human Approval Dual-Key Gate</li>
-          </ul>
-          <button class="btn btn-primary btn-full" id="btn-tier-enterprise">Get Enterprise Access</button>
-        </div>
-
-        <!-- Custom Sovereign Tier -->
-        <div class="pricing-card">
-          <div class="pricing-tier-name">Sovereign Air-Gapped</div>
-          <div class="pricing-price">Custom</div>
-          <div class="pricing-period">dedicated deployment</div>
-          <p style="font-size: 0.82rem; color: var(--gold-light); margin-top: 14px; margin-bottom: 24px;">
-            Self-hosted on-premise installation with zero outbound data telemetry for regulated sectors.
-          </p>
-          <ul class="pricing-features">
-            <li>Air-Gapped Local LLM Inference</li>
-            <li>Dedicated Security Engineer Support</li>
-            <li>Custom Invariant Domain Rules</li>
-            <li>SOC2 / ISO 27001 Certification</li>
-          </ul>
-          <button class="btn btn-secondary btn-full" id="btn-tier-custom">Contact Architects</button>
+        <div class="card" style="padding: 32px; border-color: var(--border-accent); box-shadow: var(--shadow-violet-glow);">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></span>
+            The Truth: AegisTrace Invariant Triangulation
+          </h3>
+          <div style="font-family: var(--font-mono); font-size: 12px; background: rgba(0,0,0,0.5); padding: 18px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.06); line-height: 1.7; color: var(--text-secondary);">
+            <div style="color: var(--cyan-accent);"># Code Invariant check:</div>
+            <div>Invariant inv_01: orders.owner_id == caller_id</div>
+            <div style="color: var(--primary);"># Database state diff:</div>
+            <div>Before: id=100 &bull; owner='buyer_a' &bull; addr='Clean St'</div>
+            <div>After:&nbsp;&nbsp;id=100 &bull; owner='buyer_a' &bull; addr='Tampered 777'</div>
+            <br>
+            <div style="color: var(--critical); font-weight: 700;">TRAPPED: Principal 'buyer_b' altered 'buyer_a' record!</div>
+            <div style="color: var(--cyan-accent);">Evidence: evd_0192f21a (sha256 verified)</div>
+            <div style="color: var(--success);">Result: Confirmed Critical Finding with Zero False Positives</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Team Section (2 Columns) -->
-    <section id="team" style="max-width: 1240px; margin: 0 auto; padding: 100px 24px;">
-      <div style="text-align: center; margin-bottom: 60px;">
-        <div style="font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-base); margin-bottom: 12px;">
-          Research & Systems Leadership
+    <!-- 3.6 Seven-Agent Architecture -->
+    <section id="agents-section" style="padding: 80px 24px; max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle);">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <div style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--cyan-accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">
+          AUTONOMOUS MULTI-AGENT MESH
         </div>
-        <h2 style="font-family: var(--font-serif); font-style: italic; font-size: 2.8rem; font-weight: 700; color: #fff;">
-          The Architecture Team
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.5px;">
+          The 7 Specialized Security Agents
         </h2>
       </div>
 
-      <div class="team-grid">
-        <div class="team-card">
-          <div class="team-img-wrapper">
-            <img src="/static/assets/team_architect.jpg" alt="Dr. Alexander Vance" class="team-img">
-          </div>
-          <div class="team-info">
-            <div class="team-name">Dr. Alexander Vance</div>
-            <div class="team-role">PRINCIPAL SECURITY SYSTEMS ARCHITECT</div>
-            <p style="font-size: 0.82rem; color: var(--gold-light); line-height: 1.6; margin-top: 10px;">
-              Former Lead Systems Researcher at DeepMind Advanced Agentic Coding. Specialized in formal program verification, AST rewriting, and invariant synthesis.
-            </p>
-          </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+        <div class="card" style="padding: 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">AGENT 01</div>
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px;">Orchestrator Agent</h4>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">Coordinates pipeline execution, governs token budgets, handles error recovery, and arbitrates multi-agent contracts.</p>
         </div>
 
-        <div class="team-card">
-          <div class="team-img-wrapper">
-            <img src="/static/assets/team_director.jpg" alt="Elena Rostova" class="team-img">
-          </div>
-          <div class="team-info">
-            <div class="team-name">Elena Rostova</div>
-            <div class="team-role">VP OF AUTONOMOUS CYBER DEFENSE</div>
-            <p style="font-size: 0.82rem; color: var(--gold-light); line-height: 1.6; margin-top: 10px;">
-              Pioneered zero-false-positive differential state mutation fuzzing. Oversees the 7-agent neural mesh and EvidenceStore cryptographic arbitrations.
-            </p>
-          </div>
+        <div class="card" style="padding: 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">AGENT 02</div>
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px;">Code Intelligence Agent</h4>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">Performs deep Tree-sitter AST analysis, models data flows, maps ORM entities, and synthesizes candidate security invariants.</p>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">AGENT 03</div>
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px;">Reconnaissance Agent</h4>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">Explores authorized target endpoints, parses OpenAPI schemas, fingerprints frameworks, and enforces ScopeGate boundaries.</p>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--primary); font-weight: 700; margin-bottom: 6px;">AGENT 04</div>
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px;">Vulnerability Research Agent</h4>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">Dynamically loads BugHunter skills, matches code patterns against CWE classifications, and constructs prioritized hypotheses.</p>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--primary); font-weight: 700; margin-bottom: 6px;">AGENT 05</div>
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px;">Dynamic Testing Agent</h4>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">Executes active tests with identity pairs, monitors state mutations, captures response latency, and records tamper artifacts.</p>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--electric-blue); font-weight: 700; margin-bottom: 6px;">AGENT 06</div>
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px;">Verification Agent</h4>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">Arbitrates exploit validity with 3-attempt replay, verifies cryptographic SHA-256 evidence hashes, and computes CVSS v3.1 vectors.</p>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--success); font-weight: 700; margin-bottom: 6px;">AGENT 07</div>
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 6px;">Remediation Agent</h4>
+          <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6;">Generates minimal AST diff patches, executes regression test suites, seals patch integrity hashes, and prepares human approval gates.</p>
         </div>
       </div>
     </section>
 
-    <!-- Footer (5 Columns) -->
-    <footer class="footer">
-      <div class="footer-grid">
-        <!-- Col 1: Brand & Bio -->
-        <div>
-          <div class="footer-brand">
-            Aegis<span class="brand-gold">Trace</span>
-          </div>
-          <p class="footer-bio">
-            Autonomous Application Security Intelligence & Verified Remediation Platform. Delivering zero false positives through cryptographic mutation verification.
-          </p>
-          <div class="social-links">
-            <a href="#" class="social-icon">𝕏</a>
-            <a href="#" class="social-icon">GH</a>
-            <a href="#" class="social-icon">in</a>
-          </div>
+    <!-- 3.7 Security & Control Section -->
+    <section id="security-section" style="padding: 80px 24px; max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle);">
+      <div style="text-align: center; margin-bottom: 48px;">
+        <div style="font-size: 10px; font-weight: 800; font-family: var(--font-mono); color: var(--cyan-accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;">
+          SECURITY-FIRST GOVERNANCE
         </div>
-
-        <!-- Col 2: Platform Links -->
-        <div class="footer-links-col">
-          <div class="footer-links-title">Core Operations</div>
-          <ul class="footer-links">
-            <li><a class="footer-link" data-route="dashboard">Overview Console</a></li>
-            <li><a class="footer-link" data-route="projects">Projects Catalog</a></li>
-            <li><a class="footer-link" data-route="wizard">New Assessment</a></li>
-            <li><a class="footer-link" data-route="workspace">Agent Pipeline</a></li>
-          </ul>
-        </div>
-
-        <!-- Col 3: Intelligence Links -->
-        <div class="footer-links-col">
-          <div class="footer-links-title">Intelligence</div>
-          <ul class="footer-links">
-            <li><a class="footer-link" data-route="code_intel">Code Intelligence</a></li>
-            <li><a class="footer-link" data-route="surface">Attack Surface</a></li>
-            <li><a class="footer-link" data-route="findings">Findings Ledger</a></li>
-            <li><a class="footer-link" data-route="finding_details">Forensic Evidence</a></li>
-            <li><a class="footer-link" data-route="verification">Verification Center</a></li>
-          </ul>
-        </div>
-
-        <!-- Col 4: Remediation Links -->
-        <div class="footer-links-col">
-          <div class="footer-links-title">Remediation</div>
-          <ul class="footer-links">
-            <li><a class="footer-link" data-route="remediation">AST Patch Studio</a></li>
-            <li><a class="footer-link" data-route="approvals">Human Approvals</a></li>
-            <li><a class="footer-link" data-route="reports">Compliance Audit</a></li>
-            <li><a class="footer-link" data-route="skills">Skills Library</a></li>
-            <li><a class="footer-link" data-route="benchmarks">Benchmark Matrix</a></li>
-          </ul>
-        </div>
-
-        <!-- Col 5: Digest -->
-        <div>
-          <div class="footer-links-title">Security Digest</div>
-          <p style="font-size: 0.8rem; color: var(--gold-light); margin-bottom: 14px; line-height: 1.5;">
-            Quarterly disclosures on zero-day invariant synthesis and autonomous remediation research.
-          </p>
-          <div class="digest-form">
-            <input type="email" placeholder="security@enterprise.com" class="digest-input">
-            <button class="digest-btn">&rarr;</button>
-          </div>
-        </div>
+        <h2 style="font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.5px;">
+          Safety and Control by Design
+        </h2>
       </div>
 
-      <div class="footer-bottom">
-        <div>&copy; 2026 AegisTrace Autonomous Intelligence Inc. All rights reserved.</div>
-        <div style="display: flex; gap: 20px;">
-          <a class="footer-link" data-route="supporting">Supporting Screens & Logs</a>
-          <a class="footer-link" data-route="settings">Settings</a>
-          <a class="footer-link" data-route="auth">Operator Login</a>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+        <div class="card" style="padding: 28px;">
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 8px;">ScopeGate Host Enforcement</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">Strict domain boundary protection blocks out-of-scope probes before execution.</p>
+        </div>
+        <div class="card" style="padding: 28px;">
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Isolated Sandbox Jails</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">All dynamic tests run in ephemeral, isolated environments with strict network controls.</p>
+        </div>
+        <div class="card" style="padding: 28px;">
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Cryptographic Evidence</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">Every state mutation is fingerprinted with SHA-256 for tamper-proof forensic auditability.</p>
+        </div>
+        <div class="card" style="padding: 28px;">
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Mandatory Human Signoff</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">Patches require explicit human approval; zero autonomous code pushes to production.</p>
+        </div>
+        <div class="card" style="padding: 28px;">
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Immutable Audit Trail</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">Every agent decision, LLM prompt, and action is permanently recorded in SQLite.</p>
+        </div>
+        <div class="card" style="padding: 28px;">
+          <h4 style="font-size: 1.1rem; color: #fff; margin-bottom: 8px;">Regression Verification</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">Patches are validated to verify the vulnerability is closed without breaking existing tests.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3.8 Final CTA and Footer -->
+    <section style="padding: 100px 24px; text-align: center; background: radial-gradient(circle at 50% 50%, rgba(121, 59, 255, 0.15) 0%, rgba(9, 11, 28, 0) 70%); border-top: 1px solid var(--border-subtle);">
+      <div style="max-width: 800px; margin: 0 auto;">
+        <h2 style="font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; color: #fff; margin-bottom: 18px; letter-spacing: -1px;">
+          Ready to Expose What Others Miss?
+        </h2>
+        <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 36px; line-height: 1.7;">
+          Deploy autonomous application security intelligence to your codebase today.
+        </p>
+        <button class="btn btn-primary btn-lg" id="footer-btn-start" style="padding: 16px 42px; font-size: 1rem;">
+          Open Security Operations Console &rarr;
+        </button>
+      </div>
+    </section>
+
+    <footer style="background: var(--bg-secondary); border-top: 1px solid var(--border-subtle); padding: 60px 48px 30px 48px;">
+      <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="user-avatar" style="width: 30px; height: 30px; background: linear-gradient(135deg, var(--primary), var(--electric-blue)); color: #fff; font-size: 0.8rem; border-radius: 6px;">AT</div>
+          <span style="font-weight: 800; color: #fff; font-size: 1.1rem;">AegisTrace</span>
+          <span style="color: var(--text-muted); font-size: 11px;">&bull; Autonomous Application Security Intelligence</span>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">
+          &copy; 2026 AegisTrace Systems. All rights reserved.
         </div>
       </div>
     </footer>
   `;
 
-  // -------------------------------------------------------------
-  // 1. Initialize GSAP PillNav Component
-  // -------------------------------------------------------------
-  initPillNav(navigate);
+  // Bind Navigation Events
+  const navTo = (route) => {
+    navigate(route);
+  };
 
-  // -------------------------------------------------------------
-  // 2. Initialize 3D Interactive Neon Tubes Background
-  // -------------------------------------------------------------
-  initTubesBackground();
+  const btnExplore = container.querySelector("#hero-btn-explore");
+  if (btnExplore) btnExplore.onclick = () => navTo("dashboard");
 
-  // -------------------------------------------------------------
-  // 3. Bind CTA Buttons and Navigation Links
-  // -------------------------------------------------------------
-  document.getElementById("hero-btn-start")?.addEventListener("click", () => navigate("wizard"));
-  document.getElementById("hero-btn-explore")?.addEventListener("click", () => navigate("workspace"));
-  document.getElementById("hero-btn-console")?.addEventListener("click", () => navigate("dashboard"));
-  document.getElementById("central-core-node")?.addEventListener("click", () => navigate("workspace"));
-
-  document.getElementById("sat-card-1")?.addEventListener("click", () => navigate("code_intel"));
-  document.getElementById("sat-card-2")?.addEventListener("click", () => navigate("finding_details"));
-  document.getElementById("sat-card-3")?.addEventListener("click", () => navigate("verification"));
-  document.getElementById("sat-card-4")?.addEventListener("click", () => navigate("remediation"));
-
-  container.querySelectorAll(".feature-card").forEach(c => {
-    c.addEventListener("click", (e) => {
-      const route = e.currentTarget.getAttribute("data-goto");
-      if (route) navigate(route);
-    });
-  });
-
-  document.getElementById("btn-tier-dev")?.addEventListener("click", () => navigate("wizard"));
-  document.getElementById("btn-tier-enterprise")?.addEventListener("click", () => navigate("wizard"));
-  document.getElementById("btn-tier-custom")?.addEventListener("click", () => navigate("settings"));
-
-  // Footer navigation links
-  container.querySelectorAll(".footer-link").forEach(l => {
-    l.addEventListener("click", (e) => {
-      const r = e.currentTarget.getAttribute("data-route");
-      if (r) navigate(r);
-    });
-  });
-
-  // Pricing monthly/annual toggle
-  const tMonthly = document.getElementById("toggle-monthly");
-  const tAnnual = document.getElementById("toggle-annual");
-  const pStarter = document.getElementById("price-starter");
-  const pPro = document.getElementById("price-pro");
-
-  tMonthly?.addEventListener("click", () => {
-    tMonthly.classList.add("active");
-    tAnnual.classList.remove("active");
-    if (pStarter) pStarter.innerText = "$4,900";
-    if (pPro) pPro.innerText = "$14,500";
-  });
-
-  tAnnual?.addEventListener("click", () => {
-    tAnnual.classList.add("active");
-    tMonthly.classList.remove("active");
-    if (pStarter) pStarter.innerText = "$3,920";
-    if (pPro) pPro.innerText = "$11,600";
-  });
-}
-
-// ---------------------------------------------------------------------------
-// GSAP PillNav Component Implementation with Rising Circle Animations
-// ---------------------------------------------------------------------------
-function initPillNav(navigate) {
-  const logo = document.getElementById("pill-nav-logo");
-  const items = document.querySelectorAll(".pill-nav-item");
-
-  // Rotating logo on hover via GSAP
-  logo?.addEventListener("mouseenter", () => {
-    if (window.gsap) {
-      window.gsap.to(logo, {
-        rotate: 360,
-        duration: 0.8,
-        ease: "elastic.out(1, 0.5)",
-        overwrite: "auto",
-        onComplete: () => window.gsap.set(logo, { rotate: 0 })
-      });
-    }
-  });
-
-  logo?.addEventListener("click", () => navigate("landing"));
-
-  // Layout and rising circle hover timelines for each pill
-  items.forEach((pill) => {
-    const circle = pill.querySelector(".hover-circle");
-    const label = pill.querySelector(".pill-label");
-    const labelHover = pill.querySelector(".pill-label-hover");
-
-    const setupPillTimeline = () => {
-      if (!circle || !window.gsap) return;
-      const rect = pill.getBoundingClientRect();
-      const w = rect.width || 80;
-      const h = rect.height || 36;
-
-      const R = ((w * w) / 4 + h * h) / (2 * h);
-      const D = Math.ceil(2 * R) + 2;
-      const delta = Math.ceil(R - Math.sqrt(Math.max(0, R * R - (w * w) / 4))) + 1;
-      const originY = D - delta;
-
-      circle.style.width = `${D}px`;
-      circle.style.height = `${D}px`;
-      circle.style.bottom = `-${delta}px`;
-
-      window.gsap.set(circle, {
-        xPercent: -50,
-        scale: 0,
-        transformOrigin: `50% ${originY}px`
-      });
-
-      if (label) window.gsap.set(label, { y: 0 });
-      if (labelHover) window.gsap.set(labelHover, { y: h + 10, opacity: 0 });
-
-      const tl = window.gsap.timeline({ paused: true });
-      tl.to(circle, { scale: 1.25, xPercent: -50, duration: 0.6, ease: "power3.out" }, 0);
-      if (label) tl.to(label, { y: -(h + 6), duration: 0.5, ease: "power3.out" }, 0);
-      if (labelHover) tl.to(labelHover, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 0);
-
-      pill._tl = tl;
+  const btnHowItWorks = container.querySelector("#hero-btn-howitworks");
+  if (btnHowItWorks) {
+    btnHowItWorks.onclick = () => {
+      const el = container.querySelector("#security-twin-section");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
     };
-
-    setupPillTimeline();
-
-    pill.addEventListener("mouseenter", () => {
-      if (pill._tl) pill._tl.play();
-    });
-
-    pill.addEventListener("mouseleave", () => {
-      if (pill._tl) pill._tl.reverse();
-    });
-
-    pill.addEventListener("click", (e) => {
-      const route = e.currentTarget.getAttribute("data-route");
-      if (route) navigate(route);
-    });
-  });
-
-  // Initial load stagger entrance animation
-  if (window.gsap) {
-    window.gsap.from(items, {
-      opacity: 0,
-      y: -15,
-      duration: 0.6,
-      stagger: 0.04,
-      ease: "power2.out",
-      delay: 0.1
-    });
-
-    if (logo) {
-      window.gsap.from(logo, {
-        scale: 0,
-        opacity: 0,
-        duration: 0.7,
-        ease: "back.out(1.8)"
-      });
-    }
   }
-}
 
-// ---------------------------------------------------------------------------
-// 3D Interactive Neon Tubes Cursor Background
-// ---------------------------------------------------------------------------
-function initTubesBackground() {
-  const canvas = document.getElementById("tubes-cursor-canvas");
-  const stage = document.getElementById("hero-stage");
-  if (!canvas || !stage) return;
+  const btnConsole = container.querySelector("#hero-btn-console");
+  if (btnConsole) btnConsole.onclick = () => navTo("dashboard");
 
-  // Gold luxury color palettes for tubes & lights
-  const goldPalettes = [
-    { tubes: ["#c9b8a0", "#a78b71", "#e8d5b7"], lights: ["#e8d5b7", "#c9b8a0", "#a78b71", "#ffffff"] },
-    { tubes: ["#f59e0b", "#d97706", "#b45309"], lights: ["#fef3c7", "#fbbf24", "#d97706", "#ffffff"] },
-    { tubes: ["#38efbd", "#10b981", "#a78b71"], lights: ["#6ee7b7", "#38efbd", "#c9b8a0", "#ffffff"] },
-    { tubes: ["#c49fff", "#8b5cf6", "#e8d5b7"], lights: ["#ddd6fe", "#a78b71", "#c49fff", "#ffffff"] }
-  ];
+  const btnGetStarted = container.querySelector("#nav-btn-getstarted");
+  if (btnGetStarted) btnGetStarted.onclick = () => navTo("wizard");
 
-  let currentPaletteIdx = 0;
-  let tubesApp = null;
+  const btnSignIn = container.querySelector("#nav-btn-signin");
+  if (btnSignIn) btnSignIn.onclick = () => navTo("auth");
 
-  // Try loading official threejs-components TubesCursor from CDN
-  const loadCdnTubes = async () => {
-    try {
-      const module = await import("https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js");
-      const TubesCursor = module.default;
-      const initial = goldPalettes[0];
+  const footerStart = container.querySelector("#footer-btn-start");
+  if (footerStart) footerStart.onclick = () => navTo("dashboard");
 
-      tubesApp = TubesCursor(canvas, {
-        tubes: {
-          colors: initial.tubes,
-          lights: {
-            intensity: 220,
-            colors: initial.lights
-          }
-        }
-      });
-    } catch (err) {
-      console.warn("Using high-performance WebGL/Canvas interactive fallback for 3D tubes:", err);
-      initFallback3DTubes(canvas, stage);
-    }
-  };
+  // Interactive Twin Simulation Logic
+  const replayBtn = container.querySelector("#btn-sim-replay");
+  const switchBtn = container.querySelector("#btn-sim-switch");
+  const nodeCode = container.querySelector("#sim-node-code");
+  const nodeRuntime = container.querySelector("#sim-node-runtime");
+  const nodePolicy = container.querySelector("#sim-node-policy");
+  const statusBullet = container.querySelector("#sim-status-bullet");
+  const statusText = container.querySelector("#sim-status-text");
 
-  loadCdnTubes();
+  let isAttacker = true;
 
-  // Click interaction: Randomize / cycle colors instantly
-  stage.addEventListener("click", (e) => {
-    // Only trigger if not clicking buttons or interactive links
-    if (e.target.closest("button") || e.target.closest("a") || e.target.closest(".pill-nav-container") || e.target.closest(".satellite-card") || e.target.closest(".central-node")) {
-      return;
+  function runSimulation() {
+    if (!nodeCode || !nodeRuntime || !nodePolicy) return;
+    nodeCode.style.borderColor = "var(--cyan-accent)";
+    nodeCode.style.boxShadow = "0 0 20px rgba(36, 200, 245, 0.2)";
+    nodeRuntime.style.borderColor = "var(--border-subtle)";
+    nodeRuntime.style.boxShadow = "none";
+    nodePolicy.style.borderColor = "var(--border-subtle)";
+    nodePolicy.style.boxShadow = "none";
+
+    if (statusText) statusText.innerText = "Step 1: AST Route and Invariant extracted: owner_id == caller_id";
+    if (statusBullet) {
+      statusBullet.style.background = "var(--cyan-accent)";
+      statusBullet.style.boxShadow = "0 0 10px var(--cyan-accent)";
     }
 
-    currentPaletteIdx = (currentPaletteIdx + 1) % goldPalettes.length;
-    const pal = goldPalettes[currentPaletteIdx];
+    setTimeout(() => {
+      nodeRuntime.style.borderColor = "var(--electric-blue)";
+      nodeRuntime.style.boxShadow = "0 0 20px rgba(66, 107, 255, 0.2)";
+      if (statusText) statusText.innerText = isAttacker
+        ? "Step 2: Dynamic Test executed with Identity Buyer B (Attacker) -> Target returned 200 OK"
+        : "Step 2: Dynamic Test executed with Identity Buyer A (Legitimate Owner) -> Target returned 200 OK";
+    }, 1200);
 
-    if (tubesApp && tubesApp.tubes) {
-      if (tubesApp.tubes.setColors) tubesApp.tubes.setColors(pal.tubes);
-      if (tubesApp.tubes.setLightsColors) tubesApp.tubes.setLightsColors(pal.lights);
-    } else if (window.__randomizeFallbackTubes) {
-      window.__randomizeFallbackTubes(pal.tubes);
-    }
-  });
-}
-
-// ---------------------------------------------------------------------------
-// High-Performance Interactive Fallback Canvas (3D Cursor Ribbons & Gold Tubes)
-// ---------------------------------------------------------------------------
-function initFallback3DTubes(canvas, container) {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  let width = (canvas.width = container.offsetWidth || window.innerWidth);
-  let height = (canvas.height = container.offsetHeight || window.innerHeight);
-
-  const onResize = () => {
-    width = canvas.width = container.offsetWidth || window.innerWidth;
-    height = canvas.height = container.offsetHeight || window.innerHeight;
-  };
-  window.addEventListener("resize", onResize);
-
-  let mouse = { x: width / 2, y: height / 2, px: width / 2, py: height / 2, speed: 0 };
-  let points = [];
-  const maxPoints = 55;
-
-  let activeColors = ["#c9b8a0", "#a78b71", "#e8d5b7"];
-  window.__randomizeFallbackTubes = (newColors) => {
-    activeColors = newColors;
-  };
-
-  container.addEventListener("mousemove", (e) => {
-    const rect = container.getBoundingClientRect();
-    const nx = e.clientX - rect.left;
-    const ny = e.clientY - rect.top;
-    const dx = nx - mouse.x;
-    const dy = ny - mouse.y;
-    mouse.speed = Math.sqrt(dx * dx + dy * dy);
-    mouse.px = mouse.x;
-    mouse.py = mouse.y;
-    mouse.x = nx;
-    mouse.y = ny;
-
-    points.push({
-      x: mouse.x,
-      y: mouse.y,
-      vx: dx * 0.1,
-      vy: dy * 0.1,
-      age: 0,
-      width: Math.min(32, Math.max(8, mouse.speed * 0.6))
-    });
-
-    if (points.length > maxPoints) points.shift();
-  });
-
-  let animFrameId = null;
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
-
-    if (points.length > 2) {
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      for (let i = 1; i < points.length; i++) {
-        const p0 = points[i - 1];
-        const p1 = points[i];
-        p1.age += 1;
-
-        const progress = i / points.length;
-        const color = activeColors[i % activeColors.length];
-
-        ctx.beginPath();
-        ctx.moveTo(p0.x, p0.y);
-        ctx.lineTo(p1.x, p1.y);
-
-        ctx.strokeStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 18;
-        ctx.lineWidth = p1.width * progress;
-        ctx.globalAlpha = progress * 0.85;
-        ctx.stroke();
+    setTimeout(() => {
+      nodePolicy.style.borderColor = isAttacker ? "var(--critical)" : "var(--success)";
+      nodePolicy.style.boxShadow = isAttacker ? "0 0 30px rgba(255, 85, 120, 0.35)" : "0 0 30px rgba(32, 214, 160, 0.35)";
+      if (statusBullet) {
+        statusBullet.style.background = isAttacker ? "var(--critical)" : "var(--success)";
+        statusBullet.style.boxShadow = isAttacker ? "0 0 10px var(--critical)" : "0 0 10px var(--success)";
       }
-      ctx.globalAlpha = 1.0;
-      ctx.shadowBlur = 0;
-    }
-
-    animFrameId = requestAnimationFrame(animate);
+      if (statusText) statusText.innerText = isAttacker
+        ? "Step 3: Invariant Broke! Database mutation captured: Buyer B updated Buyer A's order without authorization."
+        : "Step 3: Invariant Validated: Caller owns resource, DB state matches expected business rules.";
+    }, 2400);
   }
 
-  animate();
+  if (replayBtn) replayBtn.onclick = () => runSimulation();
+  if (switchBtn) {
+    switchBtn.onclick = () => {
+      isAttacker = !isAttacker;
+      switchBtn.innerText = isAttacker ? "Toggle Identity: Buyer B (Attacker)" : "Toggle Identity: Buyer A (Owner)";
+      runSimulation();
+    };
+  }
+
+  // Run initial simulation
+  runSimulation();
 }

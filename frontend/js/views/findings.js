@@ -17,7 +17,7 @@ export async function renderFindings(container, navigate, state, api, showModal)
     <div>
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-base); font-weight: 700; margin-bottom: 6px;">
+          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
             EvidenceStore Verified Ground-Truth Flaws
           </div>
           <h1 class="page-title">Vulnerability Findings & Evidence</h1>
@@ -65,7 +65,7 @@ export async function renderFindings(container, navigate, state, api, showModal)
         <div class="card-header">
           <div style="display: flex; align-items: center; gap: 12px;">
             <div class="card-title">Vulnerability Dossiers (${findings.length})</div>
-            <span class="badge badge-gold" style="font-size: 0.68rem;">100% Reproductible</span>
+            <span class="badge badge-cyan" style="font-size: 0.68rem;">100% Reproductible</span>
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-outline btn-sm filter-severity active" data-sev="ALL">ALL</button>
@@ -91,7 +91,7 @@ export async function renderFindings(container, navigate, state, api, showModal)
             <tbody>
               ${findings.length === 0 ? `
                 <tr>
-                  <td colspan="8" style="text-align: center; padding: 48px 20px; color: var(--gold-light);">
+                  <td colspan="8" style="text-align: center; padding: 48px 20px; color: var(--cyan-accent);">
                     <div style="font-weight: 600; font-size: 1rem; color: #fff; margin-bottom: 6px;">No Security Findings Recorded</div>
                     <div style="font-size: 0.8rem;">No verified vulnerabilities exist for this scan. Run a security assessment to populate findings.</div>
                   </td>
@@ -101,7 +101,7 @@ export async function renderFindings(container, navigate, state, api, showModal)
                   <td style="font-family: monospace; font-weight: 700; color: #fff;">${f.id}</td>
                   <td>
                     <div style="font-weight: 700; color: #fff; margin-bottom: 3px; font-size: 0.9rem;">${f.title}</div>
-                    <div style="font-size: 0.74rem; color: var(--gold-light); line-height: 1.4;">${f.root_cause}</div>
+                    <div style="font-size: 0.74rem; color: var(--cyan-accent); line-height: 1.4;">${f.root_cause}</div>
                   </td>
                   <td>
                     <span class="badge ${f.severity === 'CRITICAL' ? 'badge-critical' : 'badge-warning'}">
@@ -109,13 +109,13 @@ export async function renderFindings(container, navigate, state, api, showModal)
                     </span>
                   </td>
                   <td>
-                    <span style="font-weight: 800; color: var(--gold-base); font-family: monospace; font-size: 0.95rem;">${f.cvss_score}</span>
+                    <span style="font-weight: 800; color: var(--cyan-accent); font-family: monospace; font-size: 0.95rem;">${f.cvss_score}</span>
                   </td>
                   <td>
-                    <span class="badge badge-gold" style="font-family: monospace;">${f.cwe_id}</span>
+                    <span class="badge badge-cyan" style="font-family: monospace;">${f.cwe_id}</span>
                   </td>
                   <td>
-                    <code style="color: var(--gold-light); font-size: 0.8rem; background: rgba(255,255,255,0.03); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-subtle);">${f.http_method} ${f.endpoint}</code>
+                    <code style="color: var(--cyan-accent); font-size: 0.8rem; background: rgba(255,255,255,0.03); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-subtle);">${f.http_method} ${f.endpoint}</code>
                   </td>
                   <td>
                     <span class="badge badge-success">
@@ -200,7 +200,7 @@ export async function renderFindings(container, navigate, state, api, showModal)
             <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
               <div>
                 <strong style="color: #f87171; font-size: 0.95rem;">Cryptographic State Mutation Trapped!</strong>
-                <div style="font-size: 0.78rem; color: var(--gold-light); margin-top: 2px;">Cross-tenant unauthorized write succeeded with HTTP 200 OK.</div>
+                <div style="font-size: 0.78rem; color: var(--cyan-accent); margin-top: 2px;">Cross-tenant unauthorized write succeeded with HTTP 200 OK.</div>
               </div>
               <span class="badge badge-success">3/3 Consistent Runs</span>
             </div>
@@ -210,14 +210,14 @@ export async function renderFindings(container, navigate, state, api, showModal)
                 <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Attacker Identity Used</div>
                 <div style="color: #fff; font-weight: 700; font-size: 0.85rem; margin-top: 4px;">${evd.identity_used}</div>
               </div>
-              <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--radius-md); border-left: 3px solid var(--gold-base);">
+              <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--radius-md); border-left: 3px solid var(--cyan-accent);">
                 <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Legitimate Resource Owner</div>
                 <div style="color: #fff; font-weight: 700; font-size: 0.85rem; margin-top: 4px;">${evd.target_resource_owner}</div>
               </div>
             </div>
 
             <div style="background: #050505; border: 1px solid var(--border-gold); border-radius: var(--radius-sm); padding: 12px; font-family: monospace; font-size: 0.76rem;">
-              <div style="color: var(--gold-base); margin-bottom: 4px;">// SHA-256 Snapshot Proof</div>
+              <div style="color: var(--cyan-accent); margin-bottom: 4px;">// SHA-256 Snapshot Proof</div>
               <div style="color: #fff; word-break: break-all;">${evd.sha256_snapshot_hash}</div>
             </div>
           </div>

@@ -50,12 +50,12 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
         <div>
           <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 6px;">
             <h1 class="page-title" style="margin-bottom: 0;">Multi-Agent Workspace</h1>
-            <span class="badge ${scanInfo.status === 'completed' ? 'badge-success' : 'badge-gold'}" id="ws-scan-status-badge">
+            <span class="badge ${scanInfo.status === 'completed' ? 'badge-success' : 'badge-cyan'}" id="ws-scan-status-badge">
               ${scanInfo.status.toUpperCase()}
             </span>
           </div>
           <p class="page-subtitle">
-            Assessment ID: <code style="color: var(--gold-light); font-family: monospace;">${scanId}</code> | Target: <span style="color: #fff; font-weight: 600;">${scanInfo.project_name || "Enterprise Core API"}</span>
+            Assessment ID: <code style="color: var(--cyan-accent); font-family: monospace;">${scanId}</code> | Target: <span style="color: #fff; font-weight: 600;">${scanInfo.project_name || "Enterprise Core API"}</span>
           </p>
         </div>
 
@@ -75,7 +75,7 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
         <div class="card card-central-glow" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
           <canvas id="workspaceGaugeCanvas" style="width: 170px; height: 170px;"></canvas>
           <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 10px;">
-            Active Agent: <br><strong style="color: var(--gold-light);" id="ws-active-agent-name">${scanInfo.active_agent}</strong>
+            Active Agent: <br><strong style="color: var(--cyan-accent);" id="ws-active-agent-name">${scanInfo.active_agent}</strong>
           </div>
         </div>
 
@@ -83,18 +83,18 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
         <div class="card">
           <div class="card-header" style="margin-bottom: 16px;">
             <div class="card-title" style="font-size: 1.05rem;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold-base)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
               Autonomous Multi-Agent Topology
             </div>
-            <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold-base);">7 AGENTS ACTIVE</span>
+            <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cyan-accent);">7 AGENTS ACTIVE</span>
           </div>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;" id="ws-agents-grid">
             ${agents.map((ag, idx) => `
               <div class="card" style="padding: 14px; background: rgba(10, 10, 10, 0.6); border: 1px solid ${ag.status === 'completed' ? 'rgba(32, 214, 160, 0.3)' : (ag.status === 'running' ? 'var(--border-gold)' : 'var(--border-subtle)')}; border-radius: var(--radius-md);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="font-size: 9px; font-weight: 700; color: var(--gold-base);">#0${idx + 1}</span>
-                  <span class="badge ${ag.status === 'completed' ? 'badge-success' : (ag.status === 'running' ? 'badge-gold' : 'badge-outline')}" style="padding: 2px 6px; font-size: 0.65rem;">
+                  <span style="font-size: 9px; font-weight: 700; color: var(--cyan-accent);">#0${idx + 1}</span>
+                  <span class="badge ${ag.status === 'completed' ? 'badge-success' : (ag.status === 'running' ? 'badge-cyan' : 'badge-outline')}" style="padding: 2px 6px; font-size: 0.65rem;">
                     ${ag.status}
                   </span>
                 </div>
@@ -102,7 +102,7 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
                   ${ag.name.replace('Agent', '')}
                 </div>
                 <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;">${ag.role}</div>
-                <div style="font-size: 0.68rem; color: var(--gold-light); font-family: monospace;">
+                <div style="font-size: 0.68rem; color: var(--cyan-accent); font-family: monospace;">
                   ${ag.tools.join(", ")}
                 </div>
               </div>
@@ -141,7 +141,7 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
   // Draw Circular Progress in Gold
   const gaugeCanvas = document.getElementById("workspaceGaugeCanvas");
   if (gaugeCanvas) {
-    drawRadialGauge(gaugeCanvas, scanInfo.progress_percentage || 70, 100, "Progress", "#c9b8a0");
+    drawRadialGauge(gaugeCanvas, scanInfo.progress_percentage || 70, 100, "Progress", "#24C8F5");
   }
 
   document.getElementById("ws-btn-findings")?.addEventListener("click", () => navigate("findings"));
@@ -159,7 +159,7 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
     entry.innerHTML = `
       <span class="log-time">[${time}]</span>
       <span class="log-tag ${level}">[${level}]</span>
-      <span style="color: var(--gold-base); font-weight: 600;">[${agent}]</span>
+      <span style="color: var(--cyan-accent); font-weight: 600;">[${agent}]</span>
       <span class="log-text">${message}</span>
     `;
     terminalBody.appendChild(entry);
@@ -191,7 +191,7 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
           appendLog(data.timestamp || "NOW", data.level || "INFO", data.agent_name || "Agent", data.message || "");
         } else if (data.type === "progress") {
           if (gaugeCanvas) {
-            drawRadialGauge(gaugeCanvas, data.progress_percentage, 100, "Progress", "#c9b8a0");
+            drawRadialGauge(gaugeCanvas, data.progress_percentage, 100, "Progress", "#24C8F5");
           }
           const actAg = document.getElementById("ws-active-agent-name");
           if (actAg) actAg.innerText = data.agent_name;

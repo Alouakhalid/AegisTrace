@@ -110,11 +110,11 @@ export async function renderWizard(container, navigate, state, api, toast) {
           <div class="form-group">
             <label class="form-label">Assessment Mode</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 10px;">
-              <div class="card" style="cursor: pointer; border-color: ${formData.assessmentMode === 'full' ? 'var(--gold-light)' : 'var(--border-subtle)'}; padding: 22px; background: ${formData.assessmentMode === 'full' ? 'rgba(167, 139, 113, 0.12)' : 'rgba(255, 255, 255, 0.02)'};" id="mode-full">
+              <div class="card" style="cursor: pointer; border-color: ${formData.assessmentMode === 'full' ? 'var(--cyan-accent)' : 'var(--border-subtle)'}; padding: 22px; background: ${formData.assessmentMode === 'full' ? 'rgba(167, 139, 113, 0.12)' : 'rgba(255, 255, 255, 0.02)'};" id="mode-full">
                 <div style="font-weight: 700; color: #fff; margin-bottom: 6px;">⚡ Full Assessment</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">End-to-end AST scan, full OpenAPI attack surface crawl, and behavioral exploitation.</div>
               </div>
-              <div class="card" style="cursor: pointer; border-color: ${formData.assessmentMode === 'scoped' ? 'var(--gold-light)' : 'var(--border-subtle)'}; padding: 22px; background: ${formData.assessmentMode === 'scoped' ? 'rgba(167, 139, 113, 0.12)' : 'rgba(255, 255, 255, 0.02)'};" id="mode-scoped">
+              <div class="card" style="cursor: pointer; border-color: ${formData.assessmentMode === 'scoped' ? 'var(--cyan-accent)' : 'var(--border-subtle)'}; padding: 22px; background: ${formData.assessmentMode === 'scoped' ? 'rgba(167, 139, 113, 0.12)' : 'rgba(255, 255, 255, 0.02)'};" id="mode-scoped">
                 <div style="font-weight: 700; color: #fff; margin-bottom: 6px;">🎯 Scoped Assessment</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Focused active testing only on specific endpoints or vulnerability perspectives (IDOR/BOLA).</div>
               </div>
@@ -132,11 +132,11 @@ export async function renderWizard(container, navigate, state, api, toast) {
 
           <div style="display: flex; gap: 24px; margin-bottom: 24px;">
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff; font-size: 0.88rem;">
-              <input type="radio" name="source_opt" value="local" ${formData.targetType !== 'github' ? 'checked' : ''} id="opt-local" style="accent-color: var(--gold-base);">
+              <input type="radio" name="source_opt" value="local" ${formData.targetType !== 'github' ? 'checked' : ''} id="opt-local" style="accent-color: var(--cyan-accent);">
               Local Directory Path / Workspace
             </label>
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff; font-size: 0.88rem;">
-              <input type="radio" name="source_opt" value="github" ${formData.targetType === 'github' ? 'checked' : ''} id="opt-github" style="accent-color: var(--gold-base);">
+              <input type="radio" name="source_opt" value="github" ${formData.targetType === 'github' ? 'checked' : ''} id="opt-github" style="accent-color: var(--cyan-accent);">
               GitHub / Remote Git Repository
             </label>
           </div>
@@ -226,25 +226,25 @@ export async function renderWizard(container, navigate, state, api, toast) {
               <span style="color: #fff; font-weight: 600;">${formData.projectName}</span>
 
               <span style="color: var(--text-muted);">Assessment Mode:</span>
-              <span style="color: var(--gold-light); font-weight: 700; text-transform: uppercase;">${formData.assessmentMode}</span>
+              <span style="color: var(--cyan-accent); font-weight: 700; text-transform: uppercase;">${formData.assessmentMode}</span>
 
               <span style="color: var(--text-muted);">Source Target:</span>
               <span style="font-family: monospace; color: #fff;">${formData.targetType === 'github' ? formData.githubUrl : formData.sourcePath}</span>
 
               <span style="color: var(--text-muted);">Web Target URL:</span>
-              <span style="font-family: monospace; color: var(--gold-light);">${formData.webTargetUrl}</span>
+              <span style="font-family: monospace; color: var(--cyan-accent);">${formData.webTargetUrl}</span>
 
               <span style="color: var(--text-muted);">Scope Whitelist:</span>
               <span style="color: var(--success); font-family: monospace;">${formData.allowedHosts}</span>
 
               <span style="color: var(--text-muted);">Test Identities:</span>
-              <span style="color: var(--gold-light);">${formData.roles}</span>
+              <span style="color: var(--cyan-accent);">${formData.roles}</span>
             </div>
           </div>
 
-          <div style="background: rgba(167, 139, 113, 0.08); border-left: 3px solid var(--gold-base); padding: 18px 22px; border-radius: 4px; margin-bottom: 24px;">
+          <div style="background: rgba(167, 139, 113, 0.08); border-left: 3px solid var(--cyan-accent); padding: 18px 22px; border-radius: 4px; margin-bottom: 24px;">
             <label style="display: flex; align-items: flex-start; gap: 14px; cursor: pointer;">
-              <input type="checkbox" id="wiz-consent" ${formData.consented ? 'checked' : ''} style="margin-top: 3px; accent-color: var(--gold-base);">
+              <input type="checkbox" id="wiz-consent" ${formData.consented ? 'checked' : ''} style="margin-top: 3px; accent-color: var(--cyan-accent);">
               <span style="font-size: 0.82rem; color: #fff; line-height: 1.6;">
                 I explicitly authorize AegisTrace to conduct autonomous security assessments on the specified targets and verify that all hosts are within my approved testing authority.
               </span>

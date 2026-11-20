@@ -23,7 +23,7 @@ export async function renderBenchmarks(container, navigate, state, api) {
     <div>
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-base); font-weight: 700; margin-bottom: 6px;">
+          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
             Scientific Validation & Agent Evaluation Matrix
           </div>
           <h1 class="page-title">Empirical Benchmark Matrix</h1>
@@ -48,7 +48,7 @@ export async function renderBenchmarks(container, navigate, state, api) {
 
         <div class="stat-card">
           <div class="stat-label">Mean F1 Score</div>
-          <div class="stat-value" style="font-family: 'Playfair Display', serif; font-style: italic;">0.993</div>
+          <div class="stat-value" style="font-family: 'Inter', serif; font-style: italic;">0.993</div>
           <div class="stat-desc">Harmonic precision-recall mean</div>
         </div>
 
@@ -64,7 +64,7 @@ export async function renderBenchmarks(container, navigate, state, api) {
         <div class="card-header">
           <div style="display: flex; align-items: center; gap: 12px;">
             <div class="card-title">Agent-by-Agent Ground Truth Verification</div>
-            <span class="badge badge-gold" style="font-size: 0.68rem;">7 Autonomous Agents</span>
+            <span class="badge badge-cyan" style="font-size: 0.68rem;">7 Autonomous Agents</span>
           </div>
         </div>
 
@@ -87,11 +87,11 @@ export async function renderBenchmarks(container, navigate, state, api) {
                 <tr>
                   <td style="font-weight: 700; color: #fff;">${b.agent_name}</td>
                   <td><span style="color: var(--success); font-weight: 700;">${(b.precision * 100).toFixed(1)}%</span></td>
-                  <td><span style="color: var(--gold-base); font-weight: 700;">${(b.recall * 100).toFixed(1)}%</span></td>
-                  <td><span style="color: var(--gold-light); font-weight: 700; font-family: monospace;">${b.f1_score.toFixed(3)}</span></td>
+                  <td><span style="color: var(--cyan-accent); font-weight: 700;">${(b.recall * 100).toFixed(1)}%</span></td>
+                  <td><span style="color: var(--cyan-accent); font-weight: 700; font-family: monospace;">${b.f1_score.toFixed(3)}</span></td>
                   <td><span style="color: var(--success); font-weight: 700;">${(b.false_positive_rate * 100).toFixed(1)}%</span></td>
                   <td><span style="color: #fff; font-weight: 600;">${(b.reproduction_rate * 100).toFixed(1)}%</span></td>
-                  <td><span style="font-family: monospace; color: var(--gold-light);">${b.total_evaluations} cases</span></td>
+                  <td><span style="font-family: monospace; color: var(--cyan-accent);">${b.total_evaluations} cases</span></td>
                   <td><span class="badge badge-success">✓ VERIFIED</span></td>
                 </tr>
               `).join("")}
@@ -101,12 +101,12 @@ export async function renderBenchmarks(container, navigate, state, api) {
       </div>
 
       <!-- Benchmarking Methodology Notice -->
-      <div class="card card-glass" style="border-left: 3px solid var(--gold-base);">
+      <div class="card card-glass" style="border-left: 3px solid var(--cyan-accent);">
         <div style="padding: 20px;">
-          <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 8px; font-family: 'Playfair Display', serif; font-style: italic;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 8px; font-family: 'Inter', serif; font-style: italic;">
             Empirical Evaluation Methodology & Ground Truth Corpus
           </h4>
-          <p style="font-size: 0.82rem; color: var(--gold-light); line-height: 1.6; margin: 0;">
+          <p style="font-size: 0.82rem; color: var(--cyan-accent); line-height: 1.6; margin: 0;">
             AegisTrace benchmark evaluations are conducted against standardized real-world vulnerability corpora, including OWASP API Security Top 10 challenge benchmarks (e.g. crAPI, DVAPI) and real-world multi-tenant BOLA targets. Each finding is accepted only when it achieves 3x deterministic reproduction in isolated network-sandboxed environments with trapped cryptographic state diffs.
           </p>
         </div>

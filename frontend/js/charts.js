@@ -1,4 +1,4 @@
-export function drawRadialGauge(canvas, value, maxValue = 100, label = "Security Score", color = "#c9b8a0") {
+export function drawRadialGauge(canvas, value, maxValue = 100, label = "Security Score", color = "#24C8F5") {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const dpr = window.devicePixelRatio || 1;
@@ -26,26 +26,26 @@ export function drawRadialGauge(canvas, value, maxValue = 100, label = "Security
   ctx.lineCap = "round";
   ctx.stroke();
   
-  // Active Gold arc with subtle glow
+  // Active Cyber arc with subtle glow
   ctx.beginPath();
   ctx.arc(centerX, centerY, radius, startAngle, currentAngle);
   ctx.strokeStyle = color;
   ctx.lineWidth = 8;
   ctx.lineCap = "round";
-  ctx.shadowColor = "rgba(167, 139, 113, 0.4)";
+  ctx.shadowColor = "rgba(36, 200, 245, 0.4)";
   ctx.shadowBlur = 16;
   ctx.stroke();
   ctx.shadowBlur = 0;
   
   // Center Value
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "italic 700 32px 'Playfair Display', Georgia, serif";
+  ctx.font = "700 32px 'IBM Plex Mono', 'Inter', monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(`${Math.round(value)}`, centerX, centerY - 6);
   
   // Label with heavy letter spacing
-  ctx.fillStyle = "#a78b71";
+  ctx.fillStyle = "#24C8F5";
   ctx.font = "700 8.5px 'Inter', sans-serif";
   ctx.fillText(label.toUpperCase(), centerX, centerY + 24);
 }
@@ -128,8 +128,8 @@ export function drawLineTrendChart(canvas, labels, discovered, resolved) {
     });
   }
   
-  drawSeries(discovered, "#e0536c", "rgba(224, 83, 108, 0.06)");
-  drawSeries(resolved, "#c9b8a0", "rgba(201, 184, 160, 0.08)");
+  drawSeries(discovered, "#FF5578", "rgba(255, 85, 120, 0.08)");
+  drawSeries(resolved, "#20D6A0", "rgba(32, 214, 160, 0.10)");
   
   // X axis labels
   ctx.fillStyle = "#8a8885";
