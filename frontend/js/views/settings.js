@@ -1,4 +1,4 @@
-export async function renderSettings(container, navigate, state, api, toast) {
+export function renderSettings(container, navigate, state, api, toast) {
   let settings = {
     integrations: {
       groq_api: { status: 'connected', model: 'llama-3.3-70b-versatile', key_preview: 'gsk_live_994x...' },
@@ -9,44 +9,6 @@ export async function renderSettings(container, navigate, state, api, toast) {
     },
     system_resources: { cpu_cores: 8, memory_gb: 16, active_subscribers: 1 }
   };
-
-  let tavilyLive = null;
-  let bifrostLive = null;
-
-  try {
-    const [fetchedSettings, tavilyHealth, bifrostHealth] = await Promise.allSettled([
-      api.getSettings(),
-      api.getTavilyHealth(),
-      api.getBifrostHealth()
-    ]);
-
-    if (fetchedSettings.status === 'fulfilled' && fetchedSettings.value) {
-      settings = {
-        ...settings,
-        ...fetchedSettings.value,
-        integrations: {
-          ...settings.integrations,
-          ...(fetchedSettings.value.integrations || {})
-        }
-      };
-    }
-    if (tavilyHealth.status === 'fulfilled') {
-      tavilyLive = tavilyHealth.value;
-    }
-    if (bifrostHealth.status === 'fulfilled') {
-      bifrostLive = bifrostHealth.value;
-    }
-  } catch (e) {
-    console.warn('Settings load error:', e);
-  }
-
-  const tavilyStatusBadge = tavilyLive?.status === 'connected' 
-    ? '<span class="badge badge-success">Connected (' + (tavilyLive.latency_ms || 0) + 'ms)</span>'
-    : '<span class="badge badge-critical">' + (tavilyLive?.status || 'Disconnected') + '</span>';
-
-  const bifrostStatusBadge = bifrostLive?.status === 'connected'
-    ? '<span class="badge badge-success">' + (bifrostLive.gateway_mode || 'Active') + '</span>'
-    : '<span class="badge badge-secondary">Configured</span>';
 
   container.innerHTML = `
     <div>
@@ -76,17 +38,19 @@ export async function renderSettings(container, navigate, state, api, toast) {
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
                 <div style="font-weight: 700; color: #fff;">Bifrost / Groq Gateway</div>
-                <div style="font-size: 0.76rem; color: var(--cyan-accent); font-family: monospace; margin-top: 2px;">
-                  Model: ${bifrostLive?.active_model || 'openai/gpt-oss-120b'}
+                <div style="font-size: 0.76rem; color: var(--cyan-accent); font-family: monospace; margin-top: 2px;" id="bifrost-model-label">
+                  Model: openai/gpt-oss-120b
                 </div>
               </div>
-              ${bifrostStatusBadge}
+              <span id="bifrost-status-badge"><span class="badge badge-success">Active</span></span>
             </div>
 
             <div style="background: rgba(255, 255, 255, 0.02); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">AVAILABLE MODEL POOL</div>
-              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                ${(bifrostLive?.available_models || ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768']).map(m => `<span class="badge badge-secondary" style="font-family: monospace; font-size: 0.72rem;">${m}</span>`).join('')}
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="bifrost-models-pool">
+                <span class="badge badge-secondary" style="font-family: monospace; font-size: 0.72rem;">openai/gpt-oss-120b</span>
+                <span class="badge badge-secondary" style="font-family: monospace; font-size: 0.72rem;">llama-3.3-70b-versatile</span>
+                <span class="badge badge-secondary" style="font-family: monospace; font-size: 0.72rem;">mixtral-8x7b-32768</span>
               </div>
             </div>
 
@@ -118,11 +82,11 @@ export async function renderSettings(container, navigate, state, api, toast) {
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
               <div>
                 <div style="font-weight: 700; color: #fff;">Tavily Search API Status</div>
-                <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 2px;">
-                  Key: ${tavilyLive?.key_preview || 'Configured via .env'}
+                <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 2px;" id="tavily-key-preview">
+                  Key: Configured via .env
                 </div>
               </div>
-              ${tavilyStatusBadge}
+              <span id="tavily-status-badge"><span class="badge badge-success">Connected</span></span>
             </div>
 
             <!-- Live Test Form -->
@@ -201,24 +165,24 @@ export async function renderSettings(container, navigate, state, api, toast) {
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 18px;">
             <div style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
               <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">vCPUs</div>
-              <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px; font-style: italic;">
-                ${settings.system_resources.cpu_cores || 8} Cores
+              <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px; font-style: italic;" id="res-cpus">
+                8 Cores
               </div>
-              <div style="font-size: 0.70rem; color: var(--success); margin-top: 4px;">Load: 0.28</div>
+              <div style="font-size: 0.70rem; color: var(--success); margin-top: 4px;">Load: Optimal</div>
             </div>
 
             <div style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
               <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Memory</div>
-              <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px; font-style: italic;">
-                ${settings.system_resources.memory_gb || 16} GB
+              <div style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 4px; font-style: italic;" id="res-mem">
+                16 GB
               </div>
               <div style="font-size: 0.70rem; color: var(--cyan-accent); margin-top: 4px;">RAM Active</div>
             </div>
 
             <div style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
               <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Subscribers</div>
-              <div style="font-size: 1.3rem; font-weight: 800; color: var(--cyan-accent); margin-top: 4px; font-style: italic;">
-                ${settings.system_resources.active_subscribers || 1} Stream
+              <div style="font-size: 1.3rem; font-weight: 800; color: var(--cyan-accent); margin-top: 4px; font-style: italic;" id="res-subscribers">
+                1 Stream
               </div>
               <div style="font-size: 0.70rem; color: var(--success); margin-top: 4px;">WS Online</div>
             </div>
@@ -266,4 +230,41 @@ export async function renderSettings(container, navigate, state, api, toast) {
       }
     });
   }
+
+  api.getSettings().then(fetched => {
+    if (fetched && fetched.system_resources) {
+      const cpuEl = document.getElementById("res-cpus");
+      const memEl = document.getElementById("res-mem");
+      const subEl = document.getElementById("res-subscribers");
+      if (cpuEl && fetched.system_resources.cpu_cores) cpuEl.innerText = fetched.system_resources.cpu_cores + ' Cores';
+      if (memEl && fetched.system_resources.memory_gb) memEl.innerText = fetched.system_resources.memory_gb + ' GB';
+      if (subEl && fetched.system_resources.active_subscribers !== undefined) subEl.innerText = fetched.system_resources.active_subscribers + ' Stream';
+    }
+  }).catch(() => {});
+
+  api.getTavilyHealth().then(t => {
+    const b = document.getElementById("tavily-status-badge");
+    const k = document.getElementById("tavily-key-preview");
+    if (b && t) {
+      b.innerHTML = t.status === 'connected'
+        ? '<span class="badge badge-success">Connected (' + (t.latency_ms || 0) + 'ms)</span>'
+        : '<span class="badge badge-secondary">' + t.status + '</span>';
+    }
+    if (k && t && t.key_preview) {
+      k.innerText = 'Key: ' + t.key_preview;
+    }
+  }).catch(() => {});
+
+  api.getBifrostHealth().then(b => {
+    const badge = document.getElementById("bifrost-status-badge");
+    const mLabel = document.getElementById("bifrost-model-label");
+    if (badge && b) {
+      badge.innerHTML = b.status === 'connected'
+        ? '<span class="badge badge-success">' + (b.gateway_mode || 'Active') + '</span>'
+        : '<span class="badge badge-secondary">Configured</span>';
+    }
+    if (mLabel && b && b.active_model) {
+      mLabel.innerText = 'Model: ' + b.active_model;
+    }
+  }).catch(() => {});
 }

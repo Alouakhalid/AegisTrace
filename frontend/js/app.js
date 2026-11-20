@@ -20,19 +20,32 @@ import { renderSupporting } from "./views/supporting.js";
 // Global API Client
 export const api = {
   async req(url, options = {}) {
-    const res = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-      ...options
-    });
-    if (!res.ok) {
-      let errDetail = res.statusText;
-      try {
-        const j = await res.json();
-        if (j.detail) errDetail = j.detail;
-      } catch (e) {}
-      throw new Error(errDetail);
+    const timeout = options.timeout || (url.includes('/analyze') ? 45000 : 7000);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      const res = await fetch(url, {
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        signal: controller.signal,
+        ...options
+      });
+      clearTimeout(timer);
+      if (!res.ok) {
+        let errDetail = res.statusText;
+        try {
+          const j = await res.json();
+          if (j.detail) errDetail = j.detail;
+        } catch (e) {}
+        throw new Error(errDetail);
+      }
+      return res.json();
+    } catch (err) {
+      clearTimeout(timer);
+      if (err.name === 'AbortError') {
+        throw new Error(`Request timed out after ${timeout / 1000}s`);
+      }
+      throw err;
     }
-    return res.json();
   },
 
   getHealth() { return this.req("/api/v1/health"); },
@@ -188,64 +201,36 @@ export function navigate(route) {
   const viewRoot = document.getElementById("view-root");
   if (!viewRoot) return;
 
-  switch (route) {
-    case "landing":
-      renderLanding(viewRoot, navigate);
-      break;
-    case "auth":
-      renderAuth(viewRoot, navigate, state, api, toast);
-      break;
-    case "dashboard":
-      renderDashboard(viewRoot, navigate, state, api);
-      break;
-    case "projects":
-      renderProjects(viewRoot, navigate, state, api, showModal, toast);
-      break;
-    case "wizard":
-      renderWizard(viewRoot, navigate, state, api, toast);
-      break;
-    case "workspace":
-      renderWorkspace(viewRoot, navigate, state, api, toast);
-      break;
-    case "code_intel":
-      renderCodeIntel(viewRoot, navigate, state, api);
-      break;
-    case "surface":
-      renderAttackSurface(viewRoot, navigate, state, api, showModal);
-      break;
-    case "findings":
-      renderFindings(viewRoot, navigate, state, api, showModal);
-      break;
-    case "finding_details":
-      renderFindingDetails(viewRoot, navigate, state, api, toast);
-      break;
-    case "verification":
-      renderVerification(viewRoot, navigate);
-      break;
-    case "remediation":
-      renderRemediation(viewRoot, navigate, state);
-      break;
-    case "approvals":
-      renderApprovals(viewRoot, navigate, state, api, showModal, toast);
-      break;
-    case "reports":
-      renderReports(viewRoot, navigate, state, api, toast);
-      break;
-    case "skills":
-      renderSkills(viewRoot, navigate, state, api, showModal);
-      break;
-    case "benchmarks":
-      renderBenchmarks(viewRoot, navigate, state, api);
-      break;
-    case "settings":
-      renderSettings(viewRoot, navigate, state, api, toast);
-      break;
-    case "supporting":
-      renderSupporting(viewRoot, navigate, state, api, toast);
-      break;
-    default:
-      renderDashboard(viewRoot, navigate, state, api);
-      break;
+  try {
+    let p;
+    switch (route) {
+      case "landing": p = renderLanding(viewRoot, navigate); break;
+      case "auth": p = renderAuth(viewRoot, navigate, state, api, toast); break;
+      case "dashboard": p = renderDashboard(viewRoot, navigate, state, api); break;
+      case "projects": p = renderProjects(viewRoot, navigate, state, api, showModal, toast); break;
+      case "wizard": p = renderWizard(viewRoot, navigate, state, api, toast); break;
+      case "workspace": p = renderWorkspace(viewRoot, navigate, state, api, toast); break;
+      case "code_intel": p = renderCodeIntel(viewRoot, navigate, state, api); break;
+      case "surface": p = renderAttackSurface(viewRoot, navigate, state, api, showModal); break;
+      case "findings": p = renderFindings(viewRoot, navigate, state, api, showModal); break;
+      case "finding_details": p = renderFindingDetails(viewRoot, navigate, state, api, toast); break;
+      case "verification": p = renderVerification(viewRoot, navigate); break;
+      case "remediation": p = renderRemediation(viewRoot, navigate, state); break;
+      case "approvals": p = renderApprovals(viewRoot, navigate, state, api, showModal, toast); break;
+      case "reports": p = renderReports(viewRoot, navigate, state, api, toast); break;
+      case "skills": p = renderSkills(viewRoot, navigate, state, api, showModal); break;
+      case "benchmarks": p = renderBenchmarks(viewRoot, navigate, state, api); break;
+      case "settings": p = renderSettings(viewRoot, navigate, state, api, toast); break;
+      case "supporting": p = renderSupporting(viewRoot, navigate, state, api, toast); break;
+      default: p = renderDashboard(viewRoot, navigate, state, api); break;
+    }
+    if (p && typeof p.catch === "function") {
+      await p.catch(err => {
+        console.error("View render error:", err);
+      });
+    }
+  } catch (err) {
+    console.error("Navigation error:", err);
   }
 }
 

@@ -254,7 +254,7 @@ async def start_scan(req: ScanCreateRequest, background_tasks: BackgroundTasks):
     }
 
 @app.post('/api/v1/repositories/analyze')
-async def analyze_repository(req: RepoAnalyzeRequest):
+def analyze_repository(req: RepoAnalyzeRequest):
     from backend.repo_analyzer import validate_github_url, clone_or_fetch_repo, RepositoryIntelligenceEngine
     is_valid, owner, repo_name, norm_url = validate_github_url(req.repository_url)
     if not is_valid or not repo_name or not owner:
@@ -328,17 +328,17 @@ async def get_categories():
     return BugHunterSkillRouter().get_available_categories()
 
 @app.get('/api/v1/integrations/tavily/health')
-async def get_tavily_health():
+def get_tavily_health(force: bool = False):
     from backend.integration_service import TavilyIntegrationService
-    return TavilyIntegrationService().check_health(force=True)
+    return TavilyIntegrationService().check_health(force=force)
 
 @app.post('/api/v1/integrations/tavily/test')
-async def test_tavily(req: TavilyTestRequest = TavilyTestRequest()):
+def test_tavily(req: TavilyTestRequest = TavilyTestRequest()):
     from backend.integration_service import TavilyIntegrationService
     return TavilyIntegrationService().execute_search(query=req.query or "FastAPI CVE", max_results=req.max_results or 3)
 
 @app.get('/api/v1/integrations/bifrost/health')
-async def get_bifrost_health():
+def get_bifrost_health():
     from backend.integration_service import BifrostGatewayService
     return BifrostGatewayService().check_health()
 
