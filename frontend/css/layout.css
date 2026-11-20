@@ -479,12 +479,45 @@ body {
   background: rgba(10, 10, 10, 0.6);
 }
 
-/* Permanent Navigation & Page Content Overrides */
-body.landing-mode .page-content,
-body.auth-mode .page-content {
-  padding: 0;
+/* Fullscreen Hero Landing Mode (Zero Left Banner / Immersive Full Width) */
+body.landing-mode #main-sidebar,
+body.landing-mode #app-sidebar,
+body.landing-mode #interior-topbar {
+  display: none !important;
 }
 
-.landing-navbar {
+body.landing-mode .main-wrapper {
+  margin-left: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+body.landing-mode .page-content {
+  padding: 0 !important;
+}
+
+body.landing-mode .landing-navbar {
+  display: flex !important;
+}
+
+/* Authentication Mode (Fullscreen Clean Canvas) */
+body.auth-mode #main-sidebar,
+body.auth-mode #app-sidebar,
+body.auth-mode #interior-topbar {
   display: none !important;
+}
+
+body.auth-mode .main-wrapper {
+  margin-left: 0 !important;
+  width: 100% !important;
+  min-width: 100% !important;
+}
+
+body.auth-mode .page-content {
+  padding: 0 !important;
+}
+
+/* Default state for landing-navbar when inside dashboard tabs */
+.landing-navbar {
+  display: none;
 }

@@ -8,6 +8,14 @@
   --bg-glass: rgba(21, 21, 43, 0.75);
   --bg-glass-strong: rgba(13, 16, 34, 0.90);
 
+  /* Gold Luxury Accents */
+  --gold-base: #d4af37;
+  --gold-light: #e8d5b7;
+  --gold-hover: #c9b8a0;
+  --gold-bronze: #755f4c;
+  --gold-glow: rgba(212, 175, 55, 0.30);
+  --gold-bg: rgba(212, 175, 55, 0.10);
+
   /* Primary Cyber Accents */
   --primary: #793BFF;
   --primary-hover: #9258FF;
@@ -52,8 +60,8 @@
   --border-strong: rgba(255, 255, 255, 0.15);
   --border-accent: rgba(121, 59, 255, 0.40);
   --border-cyan: rgba(36, 200, 245, 0.35);
-  --border-gold: rgba(121, 59, 255, 0.35);
-  --border-gold-strong: rgba(36, 200, 245, 0.50);
+  --border-gold: rgba(212, 175, 55, 0.40);
+  --border-gold-strong: rgba(212, 175, 55, 0.60);
 
   /* Typography Fonts */
   --font-sans: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

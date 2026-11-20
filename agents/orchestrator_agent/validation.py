@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import jsonschema
@@ -157,7 +158,10 @@ class OrchestratorResponse(BaseModel):
         return self
 
 def load_master_schema() -> Dict[str, Any]:
-    schema_path = "/Users/alikhalidalikhalid/AegisTrace/AegisTrace_Documentation/AegisTrace_Agent_JSON_Schemas.json"
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    schema_path = os.path.join(
+        repo_root, "AegisTrace_Documentation", "AegisTrace_Agent_JSON_Schemas.json"
+    )
     with open(schema_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
