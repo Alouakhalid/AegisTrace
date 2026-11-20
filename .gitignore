@@ -45,3 +45,6 @@ dist/
 
 # Target cloned repositories
 target_repos/
+
+# Backward-compatibility symlinks
+fronted
