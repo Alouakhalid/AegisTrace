@@ -377,7 +377,6 @@ class PatchSynthesizer:
             summaries.append(
                 f"{node.name} in {relative} loads {record} by identifier and mutates it without verifying that {principal} owns the {owner_field}."
             )
-            # A single, precise source reference is the documented minimal patch.
             break
 
         if not patched_files:
@@ -497,8 +496,6 @@ class SandboxTestRunner:
         if total_executed == 0:
             raise PatchTestsFailedError("NO_TESTS_EXECUTED: pytest collected no runnable tests")
 
-        # Test hooks are retained for fault-injection tests, but they can only
-        # mark a real suite as failed; they can never fabricate passing counts.
         for suite, should_fail in (
             ("unit", fail_unit),
             ("integration", fail_integration),

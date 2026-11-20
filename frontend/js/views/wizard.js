@@ -300,7 +300,16 @@ export async function renderWizard(container, navigate, state, api, toast) {
       }
 
       toast("Initiating Autonomous Multi-Agent Security Assessment...", "info");
-      try {
+        const allowed = formData.allowedHosts ? formData.allowedHosts.split(",").map(h => h.trim()).filter(Boolean) : ["127.0.0.1", "localhost"];
+        if (formData.webTargetUrl) {
+          try {
+            const u = new URL(formData.webTargetUrl);
+            if (u.hostname && !allowed.includes(u.hostname)) {
+              allowed.push(u.hostname);
+            }
+          } catch(e) {}
+        }
+
         const payload = {
           project_id: formData.projectId === "custom" ? "prj_custom" : formData.projectId,
           project_name: formData.projectName,
@@ -311,9 +320,9 @@ export async function renderWizard(container, navigate, state, api, toast) {
           github_branch: formData.githubBranch,
           web_target_url: formData.webTargetUrl,
           openapi_spec_url: formData.openapiUrl,
-          allowed_hosts: formData.allowedHosts.split(",").map(h => h.trim()),
-          excluded_paths: formData.excludedPaths.split(",").map(p => p.trim()),
-          test_user_roles: formData.roles.split(",").map(r => r.trim()),
+          allowed_hosts: allowed,
+          excluded_paths: formData.excludedPaths.split(",").map(p => p.trim()).filter(Boolean),
+          test_user_roles: formData.roles.split(",").map(r => r.trim()).filter(Boolean),
           auth_token: formData.authToken || null,
           active_testing_consented: true
         };

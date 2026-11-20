@@ -37,7 +37,6 @@ class ScopeValidator:
         if "://" in candidate:
             parsed = urlparse(candidate)
             return (parsed.hostname or "").lower()
-        # Strip userinfo, port and path without requiring a scheme.
         candidate = candidate.split("/")[0]
         if "@" in candidate:
             candidate = candidate.rsplit("@", 1)[-1]
@@ -70,8 +69,6 @@ class ScopeValidator:
         if manifest_data is not None:
             m_data = manifest_data
             m_sha = hashlib.sha256(json.dumps(m_data, sort_keys=True).encode("utf-8")).hexdigest()
-            # A raw manifest is untrusted input.  It must explicitly carry an
-            # attestation; absent or false means the engagement is not attested.
             is_attested = m_data.get("attested") is True
         elif scope_manifest_id in self._manifests:
             manifest_record = self._manifests[scope_manifest_id]
@@ -104,9 +101,6 @@ class ScopeValidator:
             "detail": f"Target host {target_host} confirmed within allowed_hosts" if host_in_scope else f"Target host {target_host} is not in authorized allowed_hosts"
         })
 
-        # Only reject wildcards that cover a public suffix (``*.com``) or a
-        # bare ``*``.  Explicit scoped wildcards such as ``*.example.com`` are
-        # legitimate and are matched exactly by ``_host_matches``.
         dangerous_public_suffixes = {
             "com", "net", "org", "io", "co", "dev", "app", "ai", "cloud",
             "co.uk", "com.au", "co.jp", "com.br", "co.in"

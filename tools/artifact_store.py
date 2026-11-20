@@ -66,10 +66,6 @@ def _read_json(path: str) -> Optional[Any]:
         return None
 
 
-# ---------------------------------------------------------------------------
-# Task outputs: out://tsk_... / workspace://tsk_...
-# ---------------------------------------------------------------------------
-
 def _task_key(task_ref: str) -> str:
     clean = task_ref.strip()
     clean = re.sub(r"^(out|workspace)://", "", clean)
@@ -150,10 +146,6 @@ def resolve_output_payload(task_ref: str) -> Optional[Dict[str, Any]]:
     return output if isinstance(output, dict) else data
 
 
-# ---------------------------------------------------------------------------
-# Graphs: graph://<scan_id>/<kind>
-# ---------------------------------------------------------------------------
-
 def save_graph(scan_id: str, kind: str, payload: Dict[str, Any]) -> str:
     safe_scan = re.sub(r"[^A-Za-z0-9_.-]+", "_", scan_id)
     safe_kind = re.sub(r"[^A-Za-z0-9_.-]+", "_", kind)
@@ -175,10 +167,6 @@ def load_graph(graph_ref: str) -> Optional[Dict[str, Any]]:
     return _read_json(os.path.join(CACHE_ROOT, "graphs", f"{safe_scan}_{safe_kind}.json"))
 
 
-# ---------------------------------------------------------------------------
-# Evidence: evd_...
-# ---------------------------------------------------------------------------
-
 def save_evidence(evidence_id: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     import hashlib
 
@@ -196,10 +184,6 @@ def save_evidence(evidence_id: str, content: str, metadata: Optional[Dict[str, A
 def load_evidence(evidence_id: str) -> Optional[Dict[str, Any]]:
     return _read_json(os.path.join(CACHE_ROOT, "evidence", f"{evidence_id}.json"))
 
-
-# ---------------------------------------------------------------------------
-# Test plans and patches
-# ---------------------------------------------------------------------------
 
 def save_test_plan(test_plan: Dict[str, Any]) -> str:
     plan_id = test_plan.get("test_plan_id") or "tpl_unknown"

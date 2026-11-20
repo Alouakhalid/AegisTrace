@@ -164,12 +164,33 @@ class ScanExecutionManager:
         github_url = scan_config.get('github_url', '') or scan_config.get('target_repo', '')
         web_target_url = scan_config.get('web_target_url', 'http://127.0.0.1:5050')
         allowed_hosts = scan_config.get('allowed_hosts', ['127.0.0.1', 'localhost'])
+        if not isinstance(allowed_hosts, list):
+            allowed_hosts = ['127.0.0.1', 'localhost']
+        if not github_url and web_target_url and 'github.com/' in web_target_url:
+            github_url = web_target_url
+            web_target_url = 'http://127.0.0.1:5050'
+        if web_target_url:
+            from urllib.parse import urlparse
+            parsed_h = urlparse(web_target_url).hostname
+            if parsed_h and parsed_h not in allowed_hosts:
+                allowed_hosts = list(allowed_hosts) + [parsed_h]
+        scan_config['allowed_hosts'] = allowed_hosts
         
         target_dir = source_path
         if not target_dir or not os.path.exists(target_dir):
             if github_url:
                 repo_name = os.path.basename(github_url.rstrip('/'))
                 local_clone = os.path.join(workspace_root, 'target_repos', repo_name)
+                if not os.path.exists(local_clone):
+                    try:
+                        import subprocess
+                        os.makedirs(os.path.join(workspace_root, 'target_repos'), exist_ok=True)
+                        subprocess.run(
+                            ['git', 'clone', '--depth', '1', github_url, local_clone],
+                            capture_output=True, text=True, timeout=60
+                        )
+                    except Exception:
+                        pass
                 if os.path.exists(local_clone):
                     target_dir = local_clone
         if not target_dir or not os.path.exists(target_dir):
