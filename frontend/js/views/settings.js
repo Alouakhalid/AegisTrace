@@ -55,10 +55,12 @@ export async function renderSettings(container, navigate, state, api, toast) {
               <div>
                 <div style="font-weight: 700; color: #fff;">Groq Ultra-Fast API Endpoint</div>
                 <div style="font-size: 0.76rem; color: var(--gold-light); font-family: monospace; margin-top: 2px;">
-                  Model: ${settings.integrations.groq_api.model}
+                  Model: ${settings.integrations.groq_api?.model || 'llama-3.3-70b-versatile'}
                 </div>
               </div>
-              <span class="badge badge-success">Connected</span>
+              ${settings.integrations.groq_api?.configured || settings.integrations.groq_api?.status === 'connected' ? 
+                `<span class="badge badge-success">Connected</span>` : 
+                `<span class="badge badge-secondary" style="color: var(--text-muted);">Not Configured</span>`}
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
@@ -68,7 +70,9 @@ export async function renderSettings(container, navigate, state, api, toast) {
                   Real-time CVE & exploit reconnaissance
                 </div>
               </div>
-              <span class="badge badge-success">Connected</span>
+              ${settings.integrations.tavily_search?.configured || settings.integrations.tavily_search?.status === 'connected' ? 
+                `<span class="badge badge-success">Connected</span>` : 
+                `<span class="badge badge-secondary" style="color: var(--text-muted);">Not Configured</span>`}
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
@@ -78,7 +82,9 @@ export async function renderSettings(container, navigate, state, api, toast) {
                   Automated AST remediation branches & Pull Requests
                 </div>
               </div>
-              <span class="badge badge-gold">Configured</span>
+              ${settings.integrations.github_enterprise?.configured || settings.integrations.github_enterprise?.status === 'configured' ? 
+                `<span class="badge badge-gold">Configured</span>` : 
+                `<span class="badge badge-secondary" style="color: var(--text-muted);">Not Configured</span>`}
             </div>
 
             <div style="margin-top: 8px;">

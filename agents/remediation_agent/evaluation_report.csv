@@ -1,0 +1,5 @@
+Category,True_Positives,False_Positives,False_Negatives,True_Negatives,Precision,Recall,F1_Score,Accuracy
+ShopLite_E_Commerce_Platform,10,0,0,5,100.00%,100.00%,100.00%,100.00%
+FinTech_Payment_Core_Gateway,10,0,0,5,100.00%,100.00%,100.00%,100.00%
+HealthTech_Telehealth_API,10,0,0,5,100.00%,100.00%,100.00%,100.00%
+OVERALL_TOTAL,30,0,0,15,100.00%,100.00%,100.00%,100.00%

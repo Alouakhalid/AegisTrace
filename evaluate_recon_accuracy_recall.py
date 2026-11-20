@@ -19,7 +19,7 @@ os.environ["CREWAI_TRACING_ENABLED"] = "false"
 os.environ["CREWAI_TESTING"] = "true"
 sys.path.insert(0, workspace_dir)
 
-agent_file_path = os.path.join(workspace_dir, "agents", "Recon agent", "recon_agent.py")
+agent_file_path = os.path.join(workspace_dir, "agents", "recon_agent", "recon_agent.py")
 spec = importlib.util.spec_from_file_location("recon_agent", agent_file_path)
 recon_mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(recon_mod)
@@ -422,7 +422,7 @@ print("-" * 75)
 print(f"OVERALL RECON BENCHMARK   | {overall_prec*100:>7.1f}%   | {overall_rec*100:>7.1f}%   | {overall_f1*100:>7.1f}%   | {overall_acc*100:>7.1f}%")
 print("-" * 75)
 
-out_agent_dir = os.path.join(workspace_dir, "agents", "Recon agent")
+out_agent_dir = os.path.join(workspace_dir, "agents", "recon_agent")
 csv_path = os.path.join(out_agent_dir, "evaluation_report.csv")
 with open(csv_path, "w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)

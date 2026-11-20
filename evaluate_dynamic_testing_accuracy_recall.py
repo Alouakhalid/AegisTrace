@@ -19,7 +19,7 @@ os.environ["CREWAI_TRACING_ENABLED"] = "false"
 os.environ["CREWAI_TESTING"] = "true"
 sys.path.insert(0, workspace_dir)
 
-agent_dir = os.path.join(workspace_dir, "agents", "Dynamic Testing Agent")
+agent_dir = os.path.join(workspace_dir, "agents", "dynamic_testing_agent")
 sys.path.insert(0, agent_dir)
 
 agent_file_path = os.path.join(agent_dir, "dynamic_testing_agent.py")

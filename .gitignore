@@ -42,3 +42,6 @@ env/
 node_modules/
 dist/
 .parcel-cache/
+
+# Target cloned repositories
+target_repos/

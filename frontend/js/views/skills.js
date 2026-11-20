@@ -1,75 +1,17 @@
 export async function renderSkills(container, navigate, state, api, showModal) {
   let skills = [];
+  let skillsInstalled = false;
   try {
-    skills = await api.listSkills();
+    const res = await api.listSkills();
+    if (Array.isArray(res)) {
+      skills = res;
+      skillsInstalled = skills.length > 0;
+    } else if (res && typeof res === "object") {
+      skills = res.skills || [];
+      skillsInstalled = res.skills_installed !== undefined ? res.skills_installed : skills.length > 0;
+    }
   } catch (e) {
     console.warn("Failed to load skills:", e);
-  }
-
-  // Fallback skills if needed
-  if (!skills || skills.length === 0) {
-    skills = [
-      {
-        id: "skl_bola_jwt",
-        name: "Dual-Token BOLA Invariant Hunter",
-        category: "Access Control",
-        description: "Specialized knowledge pack for detecting Broken Object Level Authorization using asynchronous dual-tenant JWT role rotation and mutated resource ID replay.",
-        supported_cwes: ["CWE-639", "CWE-284"],
-        compatible_agents: ["VulnResearchAgent", "DynamicTestingAgent", "VerificationAgent"],
-        sandbox_tested: true,
-        complexity: "Advanced"
-      },
-      {
-        id: "skl_mass_assign",
-        name: "AST Mass Assignment Mutation",
-        category: "Access Control",
-        description: "Extracts ORM schema fields from AST definitions and synthesizes payloads injecting privileged attributes (e.g., is_admin, role, balance).",
-        supported_cwes: ["CWE-915"],
-        compatible_agents: ["VulnResearchAgent", "DynamicTestingAgent"],
-        sandbox_tested: true,
-        complexity: "Intermediate"
-      },
-      {
-        id: "skl_race_condition",
-        name: "Concurrent Limit-Overrun Hunter",
-        category: "Business Logic",
-        description: "Fires synchronized HTTP/2 multiplexed bursts to exploit TOCTOU race windows in coupon applications and financial transfers.",
-        supported_cwes: ["CWE-362"],
-        compatible_agents: ["DynamicTestingAgent"],
-        sandbox_tested: true,
-        complexity: "Advanced"
-      },
-      {
-        id: "skl_ssrf_egress",
-        name: "Cloud Metadata Blind SSRF Trap",
-        category: "Server-Side",
-        description: "Detects internal network pivoting through webhook endpoints, cloud provider 169.254.169.254 metadata calls, and DNS rebinding.",
-        supported_cwes: ["CWE-918"],
-        compatible_agents: ["DynamicTestingAgent", "VerificationAgent"],
-        sandbox_tested: true,
-        complexity: "Expert"
-      },
-      {
-        id: "skl_idor_numeric",
-        name: "Sequential Resource IDOR Sweeper",
-        category: "Access Control",
-        description: "Identifies sequential numeric identifiers across REST endpoints and validates resource isolation across non-privileged tenants.",
-        supported_cwes: ["CWE-639"],
-        compatible_agents: ["DynamicTestingAgent"],
-        sandbox_tested: true,
-        complexity: "Standard"
-      },
-      {
-        id: "skl_crypto_weak_token",
-        name: "JWT Algorithm Confusion Analyzer",
-        category: "Cryptography",
-        description: "Analyzes asymmetric to symmetric (RS256 to HS256) signature algorithm confusion and null signature vulnerabilities.",
-        supported_cwes: ["CWE-327", "CWE-347"],
-        compatible_agents: ["VulnResearchAgent", "VerificationAgent"],
-        sandbox_tested: true,
-        complexity: "Advanced"
-      }
-    ];
   }
 
   container.innerHTML = `
@@ -101,7 +43,16 @@ export async function renderSkills(container, navigate, state, api, showModal) {
 
       <!-- Skills Grid -->
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px;" id="skills-grid">
-        ${skills.map((sk, idx) => `
+        ${skills.length === 0 ? `
+          <div class="card card-glass" style="grid-column: 1 / -1; padding: 48px; text-align: center;">
+            <div style="font-size: 2.5rem; margin-bottom: 14px;">📦</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 8px;">No Skills Installed</h3>
+            <p style="font-size: 0.88rem; color: var(--gold-light); max-width: 600px; margin: 0 auto 20px auto; line-height: 1.6;">
+              BugHunter intelligence packs are loaded dynamically from <code>skills/Claude-BugHunter/skills/*/SKILL.md</code>.
+              Populate the directory or copy Claude-BugHunter into <code>skills/Claude-BugHunter</code> to activate automated heuristic matching.
+            </p>
+          </div>
+        ` : skills.map((sk, idx) => `
           <div class="card card-glass skill-card" data-cat="${sk.category}" data-search="${sk.name.toLowerCase()} ${sk.description.toLowerCase()} ${(sk.supported_cwes || []).join(' ').toLowerCase()}" style="display: flex; flex-direction: column; justify-content: space-between; border-radius: var(--radius-lg); transition: all 0.3s ease;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">

@@ -44,7 +44,7 @@ from tools.vuln_research_tools import (
     CodeGraphQueryCrewTool
 )
 
-agent_code_dir = os.path.join(workspace_dir, "agents", "codeing agent")
+agent_code_dir = os.path.join(workspace_dir, "agents", "code_intelligence_agent")
 sys.path.insert(0, agent_code_dir)
 from code_intelligence_agent import CodeIntelligenceAgent
 

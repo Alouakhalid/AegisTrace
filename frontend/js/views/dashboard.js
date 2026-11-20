@@ -2,14 +2,14 @@ import { drawRadialGauge, drawLineTrendChart } from "../charts.js";
 
 export async function renderDashboard(container, navigate, state, api) {
   let stats = {
-    total_projects: 1,
-    total_scans: 2,
-    total_findings: 1,
-    confirmed_findings: 1,
+    total_projects: 0,
+    total_scans: 0,
+    total_findings: 0,
+    confirmed_findings: 0,
     resolved_findings: 0,
-    critical_findings: 1,
-    security_score: 94,
-    pending_approvals: 1
+    critical_findings: 0,
+    security_score: null,
+    pending_approvals: 0
   };
   
   let recentScans = [];
@@ -18,7 +18,7 @@ export async function renderDashboard(container, navigate, state, api) {
     stats = await api.getOverviewStats();
     recentScans = await api.listScans();
   } catch (e) {
-    console.warn("Using default dashboard state:", e);
+    console.warn("Could not fetch dashboard telemetry:", e);
   }
 
   container.innerHTML = `
@@ -46,7 +46,7 @@ export async function renderDashboard(container, navigate, state, api) {
             <span class="stat-label">Total Projects</span>
             <div class="stat-icon">📁</div>
           </div>
-          <div class="stat-value">${stats.total_projects || 1}</div>
+          <div class="stat-value">${stats.total_projects ?? 0}</div>
           <div class="stat-desc">Target repositories & services</div>
         </div>
 
@@ -55,7 +55,7 @@ export async function renderDashboard(container, navigate, state, api) {
             <span class="stat-label">Total Scans Run</span>
             <div class="stat-icon">⚡</div>
           </div>
-          <div class="stat-value">${stats.total_scans || 1}</div>
+          <div class="stat-value">${stats.total_scans ?? 0}</div>
           <div class="stat-desc">Full autonomous cycles executed</div>
         </div>
 
@@ -64,8 +64,8 @@ export async function renderDashboard(container, navigate, state, api) {
             <span class="stat-label">Confirmed Findings</span>
             <div class="stat-icon">⚠️</div>
           </div>
-          <div class="stat-value" style="color: var(--critical);">${stats.confirmed_findings || 1}</div>
-          <div class="stat-desc">0% False positives verified</div>
+          <div class="stat-value" style="color: var(--critical);">${stats.confirmed_findings ?? 0}</div>
+          <div class="stat-desc">Empirically verified findings</div>
         </div>
 
         <div class="stat-card green">
@@ -73,7 +73,7 @@ export async function renderDashboard(container, navigate, state, api) {
             <span class="stat-label">Resolved Patches</span>
             <div class="stat-icon">🛡️</div>
           </div>
-          <div class="stat-value" style="color: var(--success);">${stats.resolved_findings || 0}</div>
+          <div class="stat-value" style="color: var(--success);">${stats.resolved_findings ?? 0}</div>
           <div class="stat-desc">AST verified & test-passed</div>
         </div>
       </div>
@@ -100,10 +100,20 @@ export async function renderDashboard(container, navigate, state, api) {
 
         <div class="card card-central-glow" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
           <div class="card-title" style="margin-bottom: 12px; font-size: 1.15rem;">Security Posture Score</div>
-          <canvas id="gaugeCanvas" style="width: 180px; height: 180px;"></canvas>
-          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
-            Target API: <span style="color: var(--gold-light); font-weight: 600;">Enterprise Core API</span>
-          </div>
+          ${stats.security_score !== null && stats.security_score !== undefined ? `
+            <canvas id="gaugeCanvas" style="width: 180px; height: 180px;"></canvas>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
+              System Health: <span style="color: var(--gold-light); font-weight: 600;">Active Pipeline</span>
+            </div>
+          ` : `
+            <div style="height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-muted); margin-bottom: 8px;">N/A</div>
+              <span class="badge badge-secondary" style="color: var(--text-muted);">Not Measured</span>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
+              Run a completed assessment to compute posture score.
+            </div>
+          `}
         </div>
       </div>
 
@@ -181,8 +191,8 @@ export async function renderDashboard(container, navigate, state, api) {
   // Draw Charts
   setTimeout(() => {
     const gaugeCanvas = document.getElementById("gaugeCanvas");
-    if (gaugeCanvas) {
-      drawRadialGauge(gaugeCanvas, stats.security_score || 94, 100, "Security Posture", "#c9b8a0");
+    if (gaugeCanvas && stats.security_score !== null && stats.security_score !== undefined) {
+      drawRadialGauge(gaugeCanvas, stats.security_score, 100, "Security Posture", "#c9b8a0");
     }
 
     const trendCanvas = document.getElementById("trendChartCanvas");

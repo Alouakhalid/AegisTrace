@@ -14,7 +14,7 @@ mem_db_dir = os.path.join(workspace_root, "memory and database")
 if mem_db_dir not in sys.path:
     sys.path.insert(0, mem_db_dir)
 
-agent_dir = os.path.join(workspace_root, "agents", "orchestrator agent")
+agent_dir = os.path.join(workspace_root, "agents", "orchestrator_agent")
 if agent_dir not in sys.path:
     sys.path.insert(0, agent_dir)
 

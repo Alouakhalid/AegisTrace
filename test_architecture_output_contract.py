@@ -6,7 +6,7 @@ import jsonschema
 
 workspace_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, workspace_dir)
-agent_dir = os.path.join(workspace_dir, "agents", "vulnberability agent")
+agent_dir = os.path.join(workspace_dir, "agents", "vulnerability_research_agent")
 sys.path.insert(0, agent_dir)
 
 from validation import validate_research_response, ResearchResponse

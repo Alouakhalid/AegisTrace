@@ -13,12 +13,12 @@ os.environ["CREWAI_TRACING_ENABLED"] = "false"
 os.environ["CREWAI_TESTING"] = "true"
 sys.path.insert(0, workspace_dir)
 
-agent_file_path = os.path.join(workspace_dir, "agents", "codeing agent", "code_intelligence_agent.py")
+agent_file_path = os.path.join(workspace_dir, "agents", "code_intelligence_agent", "code_intelligence_agent.py")
 spec = importlib.util.spec_from_file_location("code_intelligence_agent", agent_file_path)
 agent_mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(agent_mod)
 
-val_file_path = os.path.join(workspace_dir, "agents", "codeing agent", "validation.py")
+val_file_path = os.path.join(workspace_dir, "agents", "code_intelligence_agent", "validation.py")
 val_spec = importlib.util.spec_from_file_location("validation", val_file_path)
 val_mod = importlib.util.module_from_spec(val_spec)
 val_spec.loader.exec_module(val_mod)

@@ -19,7 +19,7 @@ os.environ["CREWAI_TRACING_ENABLED"] = "false"
 os.environ["CREWAI_TESTING"] = "true"
 sys.path.insert(0, workspace_dir)
 
-agent_file_path = os.path.join(workspace_dir, "agents", "vulnberability agent", "vuln_research_agent.py")
+agent_file_path = os.path.join(workspace_dir, "agents", "vulnerability_research_agent", "vuln_research_agent.py")
 spec = importlib.util.spec_from_file_location("vuln_research_agent", agent_file_path)
 vr_mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(vr_mod)
@@ -652,7 +652,7 @@ print("-" * 75)
 print(f"{'OVERALL AGENT BENCHMARK':<27} | {overall_prec*100:6.1f}%   | {overall_rec*100:6.1f}%   | {overall_f1*100:6.1f}%   | {overall_acc*100:6.1f}%")
 print("-" * 75)
 
-out_agent_dir = os.path.join(workspace_dir, "agents", "vulnberability agent")
+out_agent_dir = os.path.join(workspace_dir, "agents", "vulnerability_research_agent")
 csv_path = os.path.join(out_agent_dir, "evaluation_report.csv")
 csv_matrix_rows = [
     ["Category", "True_Positives", "False_Positives", "False_Negatives", "True_Negatives", "Precision", "Recall", "F1_Score", "Accuracy"],

@@ -6,7 +6,7 @@ import importlib.util
 workspace_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, workspace_dir)
 
-agent_file_path = os.path.join(workspace_dir, "agents", "vulnberability agent", "vuln_research_agent.py")
+agent_file_path = os.path.join(workspace_dir, "agents", "vulnerability_research_agent", "vuln_research_agent.py")
 spec = importlib.util.spec_from_file_location("vuln_research_agent", agent_file_path)
 vr_mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(vr_mod)

@@ -7,9 +7,9 @@ import importlib.util
 workspace_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, workspace_dir)
 
-agent2_dir = os.path.join(workspace_dir, "agents", "codeing agent")
-agent3_dir = os.path.join(workspace_dir, "agents", "Recon agent")
-agent4_dir = os.path.join(workspace_dir, "agents", "vulnberability agent")
+agent2_dir = os.path.join(workspace_dir, "agents", "code_intelligence_agent")
+agent3_dir = os.path.join(workspace_dir, "agents", "recon_agent")
+agent4_dir = os.path.join(workspace_dir, "agents", "vulnerability_research_agent")
 
 def load_agent_module(agent_dir, module_filename):
     if "validation" in sys.modules:

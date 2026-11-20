@@ -126,7 +126,7 @@ async def probe_target_endpoint(request: Request):
         return result
 
 def get_orchestrator():
-    p = os.path.join(workspace_root, "agents", "orchestrator agent")
+    p = os.path.join(workspace_root, "agents", "orchestrator_agent")
     if p not in sys.path:
         sys.path.insert(0, p)
     sys.modules.pop("validation", None)
@@ -134,7 +134,7 @@ def get_orchestrator():
     return orchestrator_agent.OrchestratorAgent
 
 def get_code_intel():
-    p = os.path.join(workspace_root, "agents", "codeing agent")
+    p = os.path.join(workspace_root, "agents", "code_intelligence_agent")
     if p not in sys.path:
         sys.path.insert(0, p)
     sys.modules.pop("validation", None)
@@ -142,7 +142,7 @@ def get_code_intel():
     return code_intelligence_agent.run_code_intelligence
 
 def get_recon():
-    p = os.path.join(workspace_root, "agents", "Recon agent")
+    p = os.path.join(workspace_root, "agents", "recon_agent")
     if p not in sys.path:
         sys.path.insert(0, p)
     sys.modules.pop("validation", None)
@@ -150,7 +150,7 @@ def get_recon():
     return recon_agent.run_recon
 
 def get_vuln_research():
-    p = os.path.join(workspace_root, "agents", "vulnberability agent")
+    p = os.path.join(workspace_root, "agents", "vulnerability_research_agent")
     if p not in sys.path:
         sys.path.insert(0, p)
     sys.modules.pop("validation", None)
@@ -158,7 +158,7 @@ def get_vuln_research():
     return vuln_research_agent.run_vulnerability_research
 
 def get_dynamic_testing():
-    p = os.path.join(workspace_root, "agents", "Dynamic Testing Agent")
+    p = os.path.join(workspace_root, "agents", "dynamic_testing_agent")
     if p not in sys.path:
         sys.path.insert(0, p)
     sys.modules.pop("validation", None)
@@ -166,7 +166,7 @@ def get_dynamic_testing():
     return dynamic_testing_agent.DynamicTestingAgent
 
 def get_verification():
-    p = os.path.join(workspace_root, "agents", "verfication agent")
+    p = os.path.join(workspace_root, "agents", "verification_agent")
     if p not in sys.path:
         sys.path.insert(0, p)
     sys.modules.pop("validation", None)
@@ -174,7 +174,7 @@ def get_verification():
     return verification_agent.VerificationAgent, verification_agent.EvidenceStore
 
 def get_remediation():
-    p = os.path.join(workspace_root, "agents", "Remediation agent")
+    p = os.path.join(workspace_root, "agents", "remediation_agent")
     if p not in sys.path:
         sys.path.insert(0, p)
     sys.modules.pop("validation", None)

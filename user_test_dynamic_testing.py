@@ -8,7 +8,7 @@ workspace_dir = os.path.dirname(os.path.abspath(__file__))
 if workspace_dir not in sys.path:
     sys.path.insert(0, workspace_dir)
 
-agent_dir = os.path.join(workspace_dir, "agents", "Dynamic Testing Agent")
+agent_dir = os.path.join(workspace_dir, "agents", "dynamic_testing_agent")
 if agent_dir not in sys.path:
     sys.path.insert(0, agent_dir)
 

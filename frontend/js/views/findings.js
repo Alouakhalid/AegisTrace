@@ -6,62 +6,8 @@ export async function renderFindings(container, navigate, state, api, showModal)
     console.error("Failed to load findings:", e);
   }
 
-  // Fallback findings if scan is fresh or demo
-  if (!findings || findings.length === 0) {
-    findings = [
-      {
-        id: "fnd_prod_001",
-        title: "Broken Object-Level Authorization (BOLA) in Order Mutation",
-        severity: "CRITICAL",
-        cvss_score: 8.8,
-        cwe_id: "CWE-639",
-        endpoint: "/api/v1/orders/{order_id}",
-        http_method: "PATCH",
-        root_cause: "Missing resource ownership verification against JWT tenant claims prior to record mutation.",
-        verification_verdict: "CONFIRMED",
-        status: "OPEN",
-        evidence: {
-          http_method: "PATCH",
-          http_url: "http://127.0.0.1:5050/api/v1/orders/100",
-          http_status: 200,
-          request_body: '{\n  "delivery_address": "99 Elite Penthouse, Unauthorized Buyer B"\n}',
-          response_body: '{\n  "id": 100,\n  "status": "updated",\n  "delivery_address": "99 Elite Penthouse, Unauthorized Buyer B"\n}',
-          identity_used: "id_buyer_b (Buyer Role - Tenant 2)",
-          target_resource_owner: "id_buyer_a (Buyer Role - Tenant 1)",
-          state_before: 'delivery_address: "12 King Fahd Rd, Riyadh" | owner_id: "id_buyer_a"',
-          state_after: 'delivery_address: "99 Elite Penthouse, Unauthorized Buyer B" | owner_id: "id_buyer_a"',
-          sha256_snapshot_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          reproduction_attempts: 3,
-          reproduction_successes: 3
-        }
-      },
-      {
-        id: "fnd_prod_002",
-        title: "Arbitrary Financial Balance Ledger Mutation (IDOR)",
-        severity: "HIGH",
-        cvss_score: 7.5,
-        cwe_id: "CWE-639",
-        endpoint: "/api/v1/transfers/{transfer_id}",
-        http_method: "PATCH",
-        root_cause: "User-supplied transfer_id can be manipulated without organization account ownership check.",
-        verification_verdict: "CONFIRMED",
-        status: "OPEN",
-        evidence: {
-          http_method: "PATCH",
-          http_url: "http://127.0.0.1:5050/api/v1/transfers/501",
-          http_status: 200,
-          request_body: '{\n  "amount": 250000.00\n}',
-          response_body: '{\n  "id": 501,\n  "status": "approved",\n  "amount": 250000.00\n}',
-          identity_used: "id_attacker (Buyer Role - Tenant 2)",
-          target_resource_owner: "id_corporate (Enterprise Tenant 1)",
-          state_before: 'balance_delta: 0.00 | owner_id: "id_corporate"',
-          state_after: 'balance_delta: 250000.00 | owner_id: "id_corporate"',
-          sha256_snapshot_hash: "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-          reproduction_attempts: 3,
-          reproduction_successes: 3
-        }
-      }
-    ];
+  if (!findings) {
+    findings = [];
   }
 
   const criticalCount = findings.filter(f => f.severity === "CRITICAL").length;
@@ -143,7 +89,14 @@ export async function renderFindings(container, navigate, state, api, showModal)
               </tr>
             </thead>
             <tbody>
-              ${findings.map(f => `
+              ${findings.length === 0 ? `
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 48px 20px; color: var(--gold-light);">
+                    <div style="font-weight: 600; font-size: 1rem; color: #fff; margin-bottom: 6px;">No Security Findings Recorded</div>
+                    <div style="font-size: 0.8rem;">No verified vulnerabilities exist for this scan. Run a security assessment to populate findings.</div>
+                  </td>
+                </tr>
+              ` : findings.map(f => `
                 <tr class="finding-row" data-sev="${f.severity}">
                   <td style="font-family: monospace; font-weight: 700; color: #fff;">${f.id}</td>
                   <td>

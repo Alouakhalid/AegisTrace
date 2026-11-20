@@ -6,7 +6,7 @@ import importlib.util
 workspace_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, workspace_dir)
 
-agent_file_path = os.path.join(workspace_dir, "agents", "Recon agent", "recon_agent.py")
+agent_file_path = os.path.join(workspace_dir, "agents", "recon_agent", "recon_agent.py")
 spec = importlib.util.spec_from_file_location("recon_agent", agent_file_path)
 recon_mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(recon_mod)

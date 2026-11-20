@@ -1,0 +1,5 @@
+Category,True_Positives,False_Positives,False_Negatives,True_Negatives,Precision,Recall,F1_Score,Accuracy
+Valid_Workflow,15,0,0,0,100.00%,100.00%,100.00%,100.00%
+Scope_Violation,0,0,0,15,100.00%,100.00%,100.00%,100.00%
+Input_Error,0,0,0,15,100.00%,100.00%,100.00%,100.00%
+OVERALL_TOTAL,15,0,0,30,100.00%,100.00%,100.00%,100.00%

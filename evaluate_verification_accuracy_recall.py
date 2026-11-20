@@ -20,7 +20,7 @@ os.environ["CREWAI_TRACING_ENABLED"] = "false"
 os.environ["CREWAI_TESTING"] = "true"
 sys.path.insert(0, workspace_dir)
 
-agent_dir = os.path.join(workspace_dir, "agents", "verfication agent")
+agent_dir = os.path.join(workspace_dir, "agents", "verification_agent")
 sys.path.insert(0, agent_dir)
 
 agent_file_path = os.path.join(agent_dir, "verification_agent.py")
@@ -202,6 +202,15 @@ for tid, m in target_metrics.items():
     print(f"{m['name']:<35} | {m['tp']:<4} | {m['fp']:<4} | {m['tn']:<4} | {m['fn']:<4} | {m['precision']*100:<9.1f}% | {m['recall']*100:<9.1f}% | {m['f1']:<8.3f} | {m['accuracy']*100:<7.1f}%")
 print("-" * 105)
 print(f"{'OVERALL BENCHMARK PERFORMANCE':<35} | {overall_tp:<4} | {overall_fp:<4} | {overall_tn:<4} | {overall_fn:<4} | {total_prec*100:<9.1f}% | {total_rec*100:<9.1f}% | {total_f1:<8.3f} | {total_acc*100:<7.1f}%")
+
+csv_path = os.path.join(agent_dir, "evaluation_report.csv")
+with open(csv_path, "w", encoding="utf-8") as f:
+    f.write("Category,True_Positives,False_Positives,False_Negatives,True_Negatives,Precision,Recall,F1_Score,Accuracy\n")
+    for tid, m in target_metrics.items():
+        cat_name = m["name"].replace(" ", "_").replace("-", "_")
+        f.write(f"{cat_name},{m['tp']},{m['fp']},{m['fn']},{m['tn']},{m['precision']*100:.2f}%,{m['recall']*100:.2f}%,{m['f1']*100:.2f}%,{m['accuracy']*100:.2f}%\n")
+    f.write(f"OVERALL_TOTAL,{overall_tp},{overall_fp},{overall_fn},{overall_tn},{total_prec*100:.2f}%,{total_rec*100:.2f}%,{total_f1*100:.2f}%,{total_acc*100:.2f}%\n")
+print(f"[+] Saved evaluation report to: {csv_path}")
 
 fig, ax = plt.subplots(figsize=(10, 5), facecolor="#1e1e2e")
 ax.set_facecolor("#181825")

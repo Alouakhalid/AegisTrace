@@ -49,9 +49,15 @@ export async function renderProjects(container, navigate, state, api, showModal,
                   <td>${p.last_scan_at || "Recent"}</td>
                   <td><span style="color: var(--critical); font-weight: 700;">${p.open_findings || 0}</span></td>
                   <td>
-                    <span class="badge ${p.security_score >= 90 ? 'badge-success' : 'badge-gold'}">
-                      ${p.security_score || 94}/100
-                    </span>
+                    ${p.security_score !== null && p.security_score !== undefined ? `
+                      <span class="badge ${p.security_score >= 90 ? 'badge-success' : 'badge-gold'}">
+                        ${p.security_score}/100
+                      </span>
+                    ` : `
+                      <span class="badge badge-secondary" style="color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1);">
+                        Not Measured
+                      </span>
+                    `}
                   </td>
                   <td>
                     <button class="btn btn-primary btn-sm btn-scan-project" data-id="${p.id}" data-name="${p.name}">

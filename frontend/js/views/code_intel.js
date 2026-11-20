@@ -1,38 +1,41 @@
 export async function renderCodeIntel(container, navigate, state, api) {
-  let intelData = {
-    endpoints: [
-      { path: "/api/v1/orders/{order_id}", method: "PATCH", auth_required: true, controller: "update_order" },
-      { path: "/api/v1/orders/{order_id}", method: "GET", auth_required: true, controller: "get_order" },
-      { path: "/api/v1/transfers/{transfer_id}", method: "PATCH", auth_required: true, controller: "update_transfer" },
-      { path: "/api/v1/users/profile", method: "GET", auth_required: true, controller: "get_profile" }
-    ],
-    invariants: [
-      { id: "inv_order_01", title: "Tenant isolation on orders table", rule: "orders.owner_id == session.user_id", status: "verified" },
-      { id: "inv_transfer_02", title: "Transfer authorization gate", rule: "transfers.sender_id == session.user_id", status: "verified" }
-    ],
-    graph: {
-      nodes: [
-        { id: "router", label: "FastAPI Router", type: "entry" },
-        { id: "auth_mw", label: "Auth Middleware (get_current_user)", type: "security" },
-        { id: "ctrl_order", label: "OrderController (update_order)", type: "logic" },
-        { id: "model_order", label: "ORM Model (Order)", type: "model" },
-        { id: "db_table", label: "Database (orders table)", type: "storage" }
-      ],
-      edges: [
-        { from: "router", to: "auth_mw", label: "Depends()" },
-        { from: "auth_mw", to: "ctrl_order", label: "Session Token" },
-        { from: "ctrl_order", to: "model_order", label: "db.query()" },
-        { from: "model_order", to: "db_table", label: "SQL Mutation" }
-      ]
-    }
-  };
+  let intelData = null;
+  const scanId = state.currentScanId || "";
 
-  const scanId = state.currentScanId || "scn_demo";
-  try {
-    const fetched = await api.getCodeIntel(scanId);
-    if (fetched) intelData = fetched;
-  } catch (e) {
-    console.warn("Using fallback code intel data:", e);
+  if (scanId) {
+    try {
+      intelData = await api.getCodeIntel(scanId);
+    } catch (e) {
+      console.warn("No code intel data found for scan:", scanId, e);
+    }
+  }
+
+  if (!intelData || !intelData.graph || !intelData.graph.nodes || intelData.graph.nodes.length === 0) {
+    container.innerHTML = `
+      <div>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Code Intelligence & Invariant Derivation</h1>
+            <p class="page-subtitle">Static AST analysis, ORM model extraction, and architectural flow modeling.</p>
+          </div>
+          <button class="btn btn-primary" id="ci-btn-new-scan">+ New Assessment</button>
+        </div>
+
+        <div class="card card-central-glow" style="padding: 60px 40px; text-align: center; border: 1px dashed var(--border-gold);">
+          <div style="font-size: 2.5rem; margin-bottom: 16px;">🔍</div>
+          <h2 style="font-family: var(--font-serif); font-style: italic; font-size: 1.5rem; color: #fff; margin-bottom: 8px;">
+            No Code Intelligence Generated
+          </h2>
+          <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 540px; margin: 0 auto 24px auto; line-height: 1.6;">
+            ${scanId ? `No AST artifacts or security invariants recorded for scan <code style="color: var(--gold-light);">${scanId}</code>.` : 'No scan selected.'} Launch an assessment to extract real AST routes, ORM schemas, and invariants.
+          </p>
+          <button class="btn btn-primary" id="ci-btn-start-scan">Launch Assessment Wizard &rarr;</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("ci-btn-new-scan")?.addEventListener("click", () => navigate("wizard"));
+    document.getElementById("ci-btn-start-scan")?.addEventListener("click", () => navigate("wizard"));
+    return;
   }
 
   container.innerHTML = `

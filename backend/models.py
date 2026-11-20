@@ -22,7 +22,7 @@ class ProjectResponse(BaseModel):
     last_scan_at: Optional[str] = None
     total_scans: int = 0
     open_findings: int = 0
-    security_score: int = 94
+    security_score: Optional[int] = None
 
 class ScanCreateRequest(BaseModel):
     project_id: Optional[str] = None
@@ -166,7 +166,7 @@ class OverviewStatsResponse(BaseModel):
     confirmed_findings: int
     resolved_findings: int
     critical_findings: int
-    security_score: int
+    security_score: Optional[int] = None
     pending_approvals: int
     active_skills: int
     system_status: str

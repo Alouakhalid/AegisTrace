@@ -8,7 +8,7 @@ workspace_dir = os.path.dirname(os.path.abspath(__file__))
 if workspace_dir not in sys.path:
     sys.path.insert(0, workspace_dir)
 
-agent_dir = os.path.join(workspace_dir, "agents", "verfication agent")
+agent_dir = os.path.join(workspace_dir, "agents", "verification_agent")
 if agent_dir not in sys.path:
     sys.path.insert(0, agent_dir)
 
@@ -97,10 +97,10 @@ print(f"  - evd_0192f21c: {hash_c[:16]}...")
 
 print("\n[3] Executing Verification Agent Full Exploit Arbitration Workflow...")
 agent = VerificationAgent()
-# The verification agent replays the real dynamic-testing scenario.  These
-# steps are supplied explicitly because this standalone suite does not run the
-# Dynamic Testing agent first; the target application is the real bundled
-# sandbox fixture (PATCH without an ownership check).
+"""The verification agent replays the real dynamic-testing scenario. These
+steps are supplied explicitly because this standalone suite does not run the
+Dynamic Testing agent first; the target application is the real bundled
+sandbox fixture (PATCH without an ownership check)."""
 replay_steps = [
     {
         "method": "PATCH",

@@ -11,7 +11,7 @@ workspace_dir = os.path.dirname(os.path.abspath(__file__))
 if workspace_dir not in sys.path:
     sys.path.insert(0, workspace_dir)
 
-agent_dir = os.path.join(workspace_dir, "agents", "Remediation agent")
+agent_dir = os.path.join(workspace_dir, "agents", "remediation_agent")
 if agent_dir not in sys.path:
     sys.path.insert(0, agent_dir)
 

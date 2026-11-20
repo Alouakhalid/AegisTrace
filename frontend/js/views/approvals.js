@@ -6,22 +6,8 @@ export async function renderApprovals(container, navigate, state, api, showModal
     console.warn("Failed to load approvals:", e);
   }
 
-  // Fallback approval if empty
-  if (!approvals || approvals.length === 0) {
-    approvals = [
-      {
-        approval_id: "appr_9901",
-        patch_id: "ptch_bola_orders_01",
-        finding_id: "fnd_prod_001",
-        finding_title: "Broken Object-Level Authorization (BOLA) in Order Mutation",
-        status: "pending",
-        target_file: "target_app.py",
-        branch: "aegis-remediation-branch",
-        patch_sha256: "7d1a2f64e29b01c3d4f88190e21bc5672901a88b1f5e8880291724ac661e8920",
-        unified_diff: `--- a/target_app.py\n+++ b/target_app.py\n@@ -88,6 +88,9 @@ def update_order(order_id: int, payload: dict, user = Depends(get_current_user)):\n     order = db.query(Order).filter(Order.id == order_id).first()\n     if not order:\n         raise HTTPException(status_code=404, detail="Order not found")\n+    if order.owner_id != user.id and user.role != "admin":\n+        raise HTTPException(status_code=403, detail="Access forbidden: not resource owner")\n     order.delivery_address = payload.get("delivery_address", order.delivery_address)\n     db.commit()\n     return order`,
-        requested_at: new Date().toISOString()
-      }
-    ];
+  if (!approvals) {
+    approvals = [];
   }
 
   container.innerHTML = `
@@ -53,7 +39,12 @@ export async function renderApprovals(container, navigate, state, api, showModal
 
       <!-- Approvals List -->
       <div style="display: flex; flex-direction: column; gap: 24px;">
-        ${approvals.map(apr => `
+        ${approvals.length === 0 ? `
+          <div class="card card-glass" style="text-align: center; padding: 48px 20px;">
+            <div style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 8px;">No Pending Patch Approvals</div>
+            <div style="font-size: 0.85rem; color: var(--gold-light);">All remediation patches have been reviewed or none are pending cryptographic verification.</div>
+          </div>
+        ` : approvals.map(apr => `
           <div class="card" style="border: 1px solid ${apr.status === 'approved' ? 'rgba(32, 214, 160, 0.4)' : (apr.status === 'rejected' ? 'rgba(220, 38, 38, 0.4)' : 'var(--border-gold)')};">
             <div class="card-header">
               <div>
