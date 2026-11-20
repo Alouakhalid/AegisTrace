@@ -78,6 +78,30 @@ export async function renderDashboard(container, navigate, state, api) {
         </div>
       </div>
 
+      <!-- Repository Quick Audit Launcher -->
+      <div class="card card-central-glow" style="padding: 22px 28px; margin-bottom: 28px; border: 1px solid var(--border-accent); background: rgba(13, 16, 34, 0.95); border-radius: var(--radius-lg);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div style="font-size: 0.82rem; font-weight: 700; color: var(--cyan-accent); text-transform: uppercase; letter-spacing: 1.2px; display: flex; align-items: center; gap: 8px;">
+            <span>🐙</span> <span>Scan a GitHub Repository with 7 AI Agents</span>
+          </div>
+          <span class="badge badge-cyan" style="font-size: 0.70rem;">Zero-Config Autonomous Audit</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" id="dash-repo-input" value="https://github.com/Alouakhalid/SQL_Mentor" 
+                 placeholder="https://github.com/owner/repository" 
+                 style="flex: 1; padding: 12px 16px; font-size: 0.92rem; font-family: var(--font-mono); background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-md); color: #fff;">
+          <button class="btn btn-primary" id="dash-btn-run-audit" style="padding: 12px 24px; font-size: 0.92rem; font-weight: 700; white-space: nowrap;">
+            <span>⚡</span> Analyze & Audit
+          </button>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
+          <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Quick Targets:</span>
+          <button class="dash-preset-btn" data-url="https://github.com/Alouakhalid/SQL_Mentor" style="background: rgba(121,59,255,0.15); border: 1px solid rgba(121,59,255,0.35); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; cursor: pointer;">🎯 SQL_Mentor</button>
+          <button class="dash-preset-btn" data-url="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" style="background: rgba(66,107,255,0.15); border: 1px solid rgba(66,107,255,0.35); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; cursor: pointer;">🧠 Neurovain-AI</button>
+          <button class="dash-preset-btn" data-url="https://github.com/Alouakhalid/chess_RL" style="background: rgba(36,200,245,0.15); border: 1px solid rgba(36,200,245,0.35); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; cursor: pointer;">♟️ chess_RL</button>
+        </div>
+      </div>
+
       <!-- Charts Row -->
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px; margin-bottom: 32px;">
         <div class="card">
@@ -209,6 +233,31 @@ export async function renderDashboard(container, navigate, state, api) {
   document.getElementById("dash-btn-view-pipeline")?.addEventListener("click", () => navigate("workspace"));
   document.getElementById("link-all-scans")?.addEventListener("click", () => navigate("workspace"));
   document.getElementById("dash-btn-go-approvals")?.addEventListener("click", () => navigate("approvals"));
+
+  const dashRepoInput = container.querySelector("#dash-repo-input");
+  const dashBtnAudit = container.querySelector("#dash-btn-run-audit");
+  if (dashBtnAudit && dashRepoInput) {
+    dashBtnAudit.addEventListener("click", () => {
+      const val = dashRepoInput.value.trim();
+      if (val) {
+        state.targetRepoUrl = val;
+        navigate("wizard");
+      }
+    });
+    dashRepoInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") dashBtnAudit.click();
+    });
+  }
+
+  container.querySelectorAll(".dash-preset-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const u = btn.getAttribute("data-url");
+      if (u) {
+        state.targetRepoUrl = u;
+        navigate("wizard");
+      }
+    });
+  });
 
   container.querySelectorAll(".btn-view-scan").forEach(btn => {
     btn.addEventListener("click", (e) => {

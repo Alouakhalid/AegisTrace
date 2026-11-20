@@ -204,7 +204,7 @@ export function navigate(route) {
   try {
     let p;
     switch (route) {
-      case "landing": p = renderLanding(viewRoot, navigate); break;
+      case "landing": p = renderLanding(viewRoot, navigate, state); break;
       case "auth": p = renderAuth(viewRoot, navigate, state, api, toast); break;
       case "dashboard": p = renderDashboard(viewRoot, navigate, state, api); break;
       case "projects": p = renderProjects(viewRoot, navigate, state, api, showModal, toast); break;
@@ -290,7 +290,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Handle hash routing on initial load (defaults to full Hero Showcase!)
+  // Handle hash routing on initial load (defaults to Dashboard so tabs are immediately visible)
   const hashRoute = window.location.hash.replace("#", "");
-  navigate(hashRoute || "landing");
+  navigate(hashRoute || "dashboard");
 });

@@ -1,4 +1,4 @@
-export function renderLanding(container, navigate) {
+export function renderLanding(container, navigate, state) {
   container.innerHTML = `
     <!-- 3.1 Floating Fixed Glass Navigation Bar -->
     <header class="landing-navbar" id="landing-navbar">
@@ -474,7 +474,7 @@ export function renderLanding(container, navigate) {
     btnAnalyze.onclick = () => {
       const val = repoInput.value.trim();
       if (val) {
-        state.targetRepoUrl = val;
+        if (state) state.targetRepoUrl = val;
         navigate("wizard");
       }
     };
@@ -489,7 +489,7 @@ export function renderLanding(container, navigate) {
       const u = btn.getAttribute("data-url");
       if (repoInput && u) {
         repoInput.value = u;
-        state.targetRepoUrl = u;
+        if (state) state.targetRepoUrl = u;
         navigate("wizard");
       }
     };
