@@ -173,9 +173,9 @@ class ScanExecutionManager:
             is_valid, owner, repo_name, norm_url = validate_github_url(raw_github_url)
             if is_valid and repo_name and owner:
                 try:
-                    target_dir, commit_sha, branch = clone_or_fetch_repo(norm_url, repo_name, auth_token=auth_token)
+                    target_dir, commit_sha, branch = await asyncio.to_thread(clone_or_fetch_repo, norm_url, repo_name, auth_token)
                     engine = RepositoryIntelligenceEngine(target_dir, repo_name, owner, commit_sha, branch)
-                    repo_intel = engine.analyze()
+                    repo_intel = await asyncio.to_thread(engine.analyze)
                 except Exception as exc:
                     await self.emit_log(scan_id, 'initialization', 'OrchestratorAgent', f'Repository retrieval error: {str(exc)}', 'CRITICAL')
             elif not target_dir:
@@ -186,10 +186,10 @@ class ScanExecutionManager:
 
         if target_dir and os.path.isdir(target_dir) and not repo_intel:
             try:
-                commit_sha = get_repo_commit_sha(target_dir)
+                commit_sha = await asyncio.to_thread(get_repo_commit_sha, target_dir)
                 rname = os.path.basename(target_dir)
                 engine = RepositoryIntelligenceEngine(target_dir, rname, "local", commit_sha, "main")
-                repo_intel = engine.analyze()
+                repo_intel = await asyncio.to_thread(engine.analyze)
             except Exception:
                 pass
 

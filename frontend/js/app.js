@@ -20,7 +20,9 @@ import { renderSupporting } from "./views/supporting.js";
 // Global API Client
 export const api = {
   async req(url, options = {}) {
-    const timeout = options.timeout || (url.includes('/analyze') ? 45000 : 7000);
+    const isHeavy = url.includes('/analyze') || url.includes('/assessments') || url.includes('/scans');
+    const defaultTimeout = isHeavy ? 60000 : 15000;
+    const timeout = options.timeout || defaultTimeout;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
@@ -55,7 +57,7 @@ export const api = {
   listScans() { return this.req("/api/v1/scans"); },
   getScanStatus(id) { return this.req(`/api/v1/scans/${id}`); },
   getScanLogs(id) { return this.req(`/api/v1/scans/${id}/logs`); },
-  startScan(data) { return this.req("/api/v1/scans", { method: "POST", body: JSON.stringify(data) }); },
+  startScan(data) { return this.req("/api/v1/scans", { method: "POST", body: JSON.stringify(data), timeout: 60000 }); },
   listFindings(scanId) { return this.req(`/api/v1/findings${scanId ? `?scan_id=${scanId}` : ''}`); },
   getFindingDetail(id) { return this.req(`/api/v1/findings/${id}`); },
   getCodeIntel(scanId) { return this.req(`/api/v1/code-intel/${scanId}`); },
@@ -71,8 +73,8 @@ export const api = {
   getReport(scanId) { return this.req(`/api/v1/reports/${scanId}`); },
   getSettings() { return this.req("/api/v1/settings"); },
   getAuditLogs() { return this.req("/api/v1/audit-logs"); },
-  analyzeRepository(url, token) { return this.req("/api/v1/repositories/analyze", { method: "POST", body: JSON.stringify({ repository_url: url, auth_token: token }) }); },
-  createAssessment(data) { return this.req("/api/v1/assessments", { method: "POST", body: JSON.stringify(data) }); },
+  analyzeRepository(url, token) { return this.req("/api/v1/repositories/analyze", { method: "POST", body: JSON.stringify({ repository_url: url, auth_token: token }), timeout: 60000 }); },
+  createAssessment(data) { return this.req("/api/v1/assessments", { method: "POST", body: JSON.stringify(data), timeout: 60000 }); },
   getAssessment(id) { return this.req(`/api/v1/assessments/${id}`); },
   getAssessmentEvents(id) { return this.req(`/api/v1/assessments/${id}/events`); },
   getAssessmentFindings(id) { return this.req(`/api/v1/assessments/${id}/findings`); },
