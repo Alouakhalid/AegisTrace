@@ -168,17 +168,19 @@ class RepositoryIntelligenceEngine:
         files_data = self._enumerate_files()
         tech_data = self._detect_technologies(files_data["all_files"])
         arch_data = self._analyze_architecture(files_data["code_files"])
-        risk_data = self._identify_risk_areas(files_data["code_files"], tech_data)
+        risk_data = self._identify_risk_areas(files_data["code_files"], tech_data, files_data["all_files"])
 
         return {
             "repository_name": self.repo_name,
             "owner": self.owner,
             "branch": self.branch,
             "commit_sha": self.commit_sha,
+            "primary_language": tech_data["languages"][0] if tech_data["languages"] else "Python",
             "languages": tech_data["languages"],
             "frameworks": tech_data["frameworks"],
             "database_technologies": tech_data["databases"],
             "auth_mechanisms": tech_data["auth_mechanisms"],
+            "manifests": tech_data.get("manifests", []),
             "dependencies": tech_data["dependencies"][:50],
             "total_dependencies": len(tech_data["dependencies"]),
             "architecture_summary": arch_data["summary"],
@@ -248,10 +250,12 @@ class RepositoryIntelligenceEngine:
             "package.json"
         ]
 
+        found_manifests = []
         manifest_text = ""
         for m in manifest_candidates:
             m_path = os.path.join(self.repo_path, m)
             if os.path.exists(m_path):
+                found_manifests.append(m)
                 try:
                     with open(m_path, "r", encoding="utf-8", errors="ignore") as fh:
                         content = fh.read()
@@ -323,7 +327,8 @@ class RepositoryIntelligenceEngine:
             "frameworks": sorted(list(frameworks)),
             "databases": sorted(list(databases)),
             "auth_mechanisms": sorted(list(auth_mechanisms)),
-            "dependencies": dependencies
+            "dependencies": dependencies,
+            "manifests": found_manifests
         }
 
     def _analyze_architecture(self, code_files: List[str]) -> Dict[str, Any]:
@@ -452,17 +457,27 @@ class RepositoryIntelligenceEngine:
 
         return None
 
-    def _identify_risk_areas(self, code_files: List[str], tech_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _identify_risk_areas(self, code_files: List[str], tech_data: Dict[str, Any], all_files: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """Correlates detected technologies and sensitive modules into risk areas."""
         risk_areas = []
 
-        has_env_file = any(f.endswith(".env") or ".env" in f for f in code_files)
+        all_f = all_files or code_files
+        has_env_file = any(f.endswith(".env") or ".env" in f for f in all_f)
         if has_env_file:
             risk_areas.append({
                 "category": "Data Security & Secrets",
                 "severity": "medium",
                 "title": "Local Environment Config (.env) Detected in Repository",
                 "description": "Repository contains environment configuration files that may leak credentials or sensitive endpoints."
+            })
+
+        db_binaries = [f for f in all_f if f.endswith((".db", ".sqlite", ".sqlite3"))]
+        if db_binaries:
+            risk_areas.append({
+                "category": "Data Security & Secrets",
+                "severity": "high",
+                "title": "Committed SQLite / Database Binary Files",
+                "description": f"Repository contains committed database binary files ({', '.join(db_binaries[:3])}) exposing local data records or schemas."
             })
 
         frameworks = tech_data.get("frameworks", [])
@@ -484,5 +499,52 @@ class RepositoryIntelligenceEngine:
                     "description": "Usage of joblib/pickle requires cryptographic verification of model artifacts."
                 })
                 break
+
+        hardcoded_secrets_found = False
+        default_jwt_found = False
+        raw_sql_found = False
+
+        for cf in code_files[:50]:
+            fpath = os.path.join(self.repo_path, cf)
+            if not os.path.isfile(fpath):
+                continue
+            try:
+                with open(fpath, "r", encoding="utf-8", errors="ignore") as fh:
+                    content = fh.read()
+                    if not hardcoded_secrets_found and re.search(r"(?:postgres(?:ql)?|mysql|mongodb)://[a-zA-Z0-9_.-]+:[^@\s]+@[a-zA-Z0-9_.-]+", content):
+                        hardcoded_secrets_found = True
+                        risk_areas.append({
+                            "category": "Data Security & Secrets",
+                            "severity": "critical",
+                            "title": "Hardcoded Production Database Credentials",
+                            "description": f"Live database connection string with plaintext credentials detected in {cf}."
+                        })
+                    if not hardcoded_secrets_found and re.search(r"ADMIN_PASSWORD\s*=\s*os\.getenv\([^)]+,\s*[\"'][^\"']+[\"']\)", content):
+                        hardcoded_secrets_found = True
+                        risk_areas.append({
+                            "category": "Authentication & Secrets",
+                            "severity": "critical",
+                            "title": "Hardcoded Administrative Plaintext Password",
+                            "description": f"Fallback administrator credentials hardcoded in source file {cf}."
+                        })
+                    if not default_jwt_found and "default_jwt_secret_key" in content:
+                        default_jwt_found = True
+                        risk_areas.append({
+                            "category": "Authentication",
+                            "severity": "high",
+                            "title": "Default Static JWT Secret Key",
+                            "description": f"JWT signing uses predictable default secret key in {cf}, allowing forged session tokens."
+                        })
+                    if not raw_sql_found and ("cur.execute(" in content or "cursor.execute(" in content):
+                        if "f\"" in content or ".format(" in content or "% " in content or "user_query" in content:
+                            raw_sql_found = True
+                            risk_areas.append({
+                                "category": "SQL Injection & Database Security",
+                                "severity": "high",
+                                "title": "Dynamic SQL Execution / Potential Injection",
+                                "description": f"Direct database cursor execution detected in {cf} with potential dynamic query parameters."
+                            })
+            except Exception:
+                pass
 
         return risk_areas

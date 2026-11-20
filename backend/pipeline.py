@@ -563,6 +563,7 @@ class ScanExecutionManager:
             self.active_scans[scan_id]['progress_percentage'] = 100
             self.active_scans[scan_id]['current_stage'] = 'completed'
             self.active_scans[scan_id]['active_agent'] = 'Completed'
+            self.active_scans[scan_id]['findings'] = confirmed_findings
             self.active_scans[scan_id]['findings_count'] = len(confirmed_findings)
             self.active_scans[scan_id]['resolved_count'] = len(patches)
 

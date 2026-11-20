@@ -310,14 +310,16 @@ async def get_assessment_events(assessment_id: str):
 @app.get('/api/v1/assessments/{assessment_id}/findings')
 async def get_assessment_findings(assessment_id: str):
     active = manager.active_scans.get(assessment_id)
-    if active and 'repo_intelligence' in active:
+    if active:
+        if active.get('findings'):
+            return active['findings']
         cursor = manager.db.conn.cursor()
         cursor.execute('SELECT * FROM findings WHERE scan_id = ?;', (assessment_id,))
         rows = cursor.fetchall()
         if rows:
             return [dict(r) for r in rows]
-        if active.get('findings_count'):
-            return active.get('repo_intelligence', {}).get('potential_risk_areas', [])
+        if active.get('repo_intelligence', {}).get('potential_risk_areas'):
+            return active['repo_intelligence']['potential_risk_areas']
     return await list_findings(scan_id=assessment_id)
 
 @app.get('/api/v1/categories')
