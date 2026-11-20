@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AegisTrace — Multi-Agent Assessment Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.ico">
+  <link rel="alternate icon" href="/static/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          A
+        </div>
+        <div>
+          <span class="font-bold text-slate-900 text-lg tracking-tight">AegisTrace</span>
+          <span class="text-xs text-slate-500 ml-2 font-mono">Agent Testing Lab</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="badge badge-blue">7 Autonomous Agents</span>
+        <span class="badge badge-green">Memory & Database Connected</span>
+        <button onclick="loadShopLitePreset()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 px-3 rounded-lg border border-slate-300 transition">
+          ⚡ Load ShopLite Scenario
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+
+    <!-- 1. Assessment Target -->
+    <div class="card p-6">
+      <h2 class="text-base font-semibold text-slate-900 mb-4">Assessment Target</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <div id="target-source" class="option-card target-card selected" onclick="setTarget('source')">
+          <div class="custom-radio">
+            <div class="custom-radio-inner"></div>
+          </div>
+          <div>
+            <div class="font-medium text-slate-900 text-sm">Source Codes</div>
+            <div class="text-xs text-slate-500 mt-0.5">Statically explores the codes to review.</div>
+          </div>
+        </div>
+
+        <div id="target-url" class="option-card target-card" onclick="setTarget('url')">
+          <div class="custom-radio">
+            <div class="custom-radio-inner"></div>
+          </div>
+          <div>
+            <div class="font-medium text-slate-900 text-sm">Web App URLs</div>
+            <div class="text-xs text-slate-500 mt-0.5">Dynamically attacks the given URLs to review.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 2. Assessment Type -->
+    <div class="card p-6">
+      <h2 class="text-base font-semibold text-slate-900 mb-4">Assessment Type</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div id="type-full" class="option-card type-card" onclick="setType('full')">
+          <div class="custom-radio">
+            <div class="custom-radio-inner"></div>
+          </div>
+          <div>
+            <div class="font-medium text-slate-900 text-sm">Full Assessment</div>
+            <div class="text-xs text-slate-500 mt-1 leading-relaxed">
+              The scan will cover the entire target application. Please note that it may consume many credits and take a long time to complete.
+            </div>
+          </div>
+        </div>
+
+        <div id="type-scoped" class="option-card type-card selected" onclick="setType('scoped')">
+          <div class="custom-radio">
+            <div class="custom-radio-inner"></div>
+          </div>
+          <div>
+            <div class="font-medium text-slate-900 text-sm">Scoped Assessment</div>
+            <div class="text-xs text-slate-500 mt-1 leading-relaxed">
+              The scan will first crawl the features of the target application, then only assess the given features or perspectives. This helps shorten the time required and minimizes credit usage.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 3. Source code Configuration -->
+    <div id="config-source-section" class="card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold text-slate-900">Source code Configuration</h2>
+        <button onclick="loadShopLitePreset()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+          + Reset Defaults
+        </button>
+      </div>
+
+      <!-- Pill Toggle -->
+      <div class="mb-4">
+        <div class="pill-toggle">
+          <button id="pill-github" class="pill-btn active" onclick="setConfigMode('github')">GitHub Repository</button>
+          <button id="pill-local" class="pill-btn" onclick="setConfigMode('local')">File Upload / Local Path</button>
+        </div>
+      </div>
+
+      <!-- Repository Table Input -->
+      <div class="border border-slate-200 rounded-lg overflow-hidden mb-3">
+        <div class="grid grid-cols-12 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-600 border-b border-slate-200">
+          <div class="col-span-8" id="repo-input-label">Repository</div>
+          <div class="col-span-4">Branch</div>
+        </div>
+        <div class="grid grid-cols-12 px-4 py-3 items-center gap-3 bg-white">
+          <div class="col-span-8">
+            <input type="text" id="repo-url" value="https://github.com/shoplite/shoplite" class="w-full text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 border border-slate-200 rounded px-2.5 py-1.5" placeholder="https://github.com/shoplite/shoplite">
+          </div>
+          <div class="col-span-3">
+            <input type="text" id="repo-branch" value="main" class="w-full text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 border border-slate-200 rounded px-2.5 py-1.5" placeholder="main">
+          </div>
+          <div class="col-span-1 text-right">
+            <button onclick="document.getElementById('repo-url').value=''" class="text-slate-400 hover:text-red-500">
+              <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-5">
+        Analyzing large or numerous repositories increases execution time and credit usage. Using file scopes below to narrow the analysis scope may help achieve more efficient results.
+      </p>
+
+      <!-- Advanced Target Connection Details -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Target Web URL (Sandbox Environment)</label>
+          <input type="text" id="target-base-url" value="http://127.0.0.1:5050" class="w-full text-xs font-mono border border-slate-200 rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">OpenAPI Specification File</label>
+          <input type="text" id="openapi-path" value="openapi_test.json" class="w-full text-xs font-mono border border-slate-200 rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3B. Web App URL Configuration (Live Link Testing) -->
+    <div id="config-url-section" class="card p-6" style="display: none;">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-base font-semibold text-slate-900">Web App URL Configuration (اختبار الروابط الحية المباشرة)</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Dynamically attacks the given URLs to review for vulnerabilities.</p>
+        </div>
+        <span class="badge badge-green" id="target-live-status-badge">Live Target Ready</span>
+      </div>
+
+      <p class="text-xs text-slate-600 mb-4">
+        اختر رابطاً جاهزاً للتجربة أو أدخل أي رابط ويب حي مباشر (Local Web App أو Live Public URL) لاختبار استجابة العملاء المستقلين ضد ثغرات BOLA/IDOR والتحقق الجنائي اللحظي:
+      </p>
+
+      <!-- URL Presets -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <div onclick="selectUrlPreset('shoplite_local')" class="url-preset-card p-3 border-2 border-blue-600 rounded-lg cursor-pointer bg-blue-50/40 transition" id="preset-shoplite">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-bold text-slate-900">🎯 ShopLite API (Local)</span>
+            <span class="badge badge-green text-[10px]">Port 5050</span>
+          </div>
+          <div class="text-[11px] text-slate-700 font-mono">http://127.0.0.1:5050</div>
+          <div class="text-[10px] text-amber-700 font-medium mt-1">✓ Live Vulnerable IDOR Sandbox</div>
+        </div>
+
+        <div onclick="selectUrlPreset('httpbin')" class="url-preset-card p-3 border border-slate-200 hover:border-blue-500 rounded-lg cursor-pointer bg-white transition" id="preset-httpbin">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-bold text-slate-900">🌐 HTTPBin (Public Cloud)</span>
+            <span class="badge badge-blue text-[10px]">Cloud API</span>
+          </div>
+          <div class="text-[11px] text-slate-500 font-mono">https://httpbin.org</div>
+          <div class="text-[10px] text-slate-400 mt-1">Live HTTP test mirror</div>
+        </div>
+
+        <div onclick="selectUrlPreset('custom')" class="url-preset-card p-3 border border-slate-200 hover:border-blue-500 rounded-lg cursor-pointer bg-white transition" id="preset-custom">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-bold text-slate-900">✏️ Custom URL Link</span>
+            <span class="badge badge-purple text-[10px]">Any Link</span>
+          </div>
+          <div class="text-[11px] text-slate-500">أدخل أي رابط تريده للاختبار</div>
+          <div class="text-[10px] text-slate-400 mt-1">Custom Web Target</div>
+        </div>
+      </div>
+
+      <!-- Main URL Input & Live Probe Bar -->
+      <div class="space-y-3 pt-2 border-t border-slate-100">
+        <label class="block text-xs font-semibold text-slate-700">Target Web App URL (رابط التطبيق أو الموقع المباشر)</label>
+        <div class="flex gap-2">
+          <input type="text" id="target-live-url" value="http://127.0.0.1:5050" class="flex-1 text-xs font-mono border border-slate-200 rounded px-3 py-2 focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="http://127.0.0.1:5050 or https://your-app.com">
+          <button type="button" onclick="probeTargetUrl()" id="btn-probe-url" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-medium py-2 px-4 rounded transition flex items-center gap-1.5">
+            <span>🔍</span> Probe & Test Link
+          </button>
+        </div>
+
+        <!-- Live Probe Result Box (appears when probed) -->
+        <div id="probe-result-card" style="display: none;" class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono space-y-1">
+          <div class="flex items-center justify-between">
+            <span id="probe-target-title" class="font-bold text-slate-800"></span>
+            <span id="probe-target-badge" class="badge"></span>
+          </div>
+          <div id="probe-target-details" class="text-slate-600"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 4. File Scopes -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-base font-semibold text-slate-900">File Scopes</h2>
+        <div class="flex items-center gap-3">
+          <span id="scope-status-label" class="text-xs font-medium text-slate-600">Disabled</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="scope-toggle" onchange="toggleScopes(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500 leading-relaxed mb-4">
+        Define which files to include in or exclude from analysis. Use 'Include Scopes' to specify areas to focus on, or 'Exclusions' to skip specific paths.
+      </p>
+
+      <div id="scope-fields" style="display: none;" class="space-y-3 pt-3 border-t border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Allowed Hosts (Scope Gate)</label>
+            <input type="text" id="allowed-hosts" value="127.0.0.1:5050, 127.0.0.1:5000, shoplite.example.com" class="w-full text-xs font-mono border border-slate-200 rounded px-3 py-1.5">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Forbidden Paths (Strict Exclusion)</label>
+            <input type="text" id="forbidden-paths" value="/admin/shutdown, /admin/danger/*" class="w-full text-xs font-mono border border-slate-200 rounded px-3 py-1.5">
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-400 mt-3">
+        Leave empty to analyze the entire codebase. You can use glob patterns (e.g., src/auth/**) for file paths. Note that AegisTrace may still exclude specified paths based on security relevance.
+      </p>
+    </div>
+
+    <!-- Action Section -->
+    <div class="flex items-center justify-end gap-4 py-2">
+      <button id="btn-start-scan" onclick="startScan()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 px-6 rounded-lg shadow-sm transition flex items-center gap-2">
+        Start AegisTrace Assessment
+      </button>
+    </div>
+
+    <!-- 5. Execution Progress Section (Hidden initially) -->
+    <div id="execution-section" style="display: none;" class="card p-6 space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h2 class="text-base font-semibold text-slate-900">Multi-Agent Workflow Execution (6 Stages)</h2>
+        <span class="badge badge-blue">Live Coordination via AegisDatabase & Memory</span>
+      </div>
+
+      <!-- Agent Steps DAG -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+
+        <div id="stage-orchestrator" class="stage-step">
+          <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">1</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-900">Orchestrator Agent</span>
+              <span class="stage-status"><span class="badge badge-yellow">Queued</span></span>
+            </div>
+            <div class="text-[11px] text-slate-500 stage-details">Scope gate verification & workflow DAG planning</div>
+          </div>
+        </div>
+
+        <div id="stage-code_intelligence" class="stage-step">
+          <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">2</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-900">Code Intelligence</span>
+              <span class="stage-status"><span class="badge badge-yellow">Queued</span></span>
+            </div>
+            <div class="text-[11px] text-slate-500 stage-details">Tree-sitter AST, routes & security invariants</div>
+          </div>
+        </div>
+
+        <div id="stage-recon" class="stage-step">
+          <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">3</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-900">Recon Agent</span>
+              <span class="stage-status"><span class="badge badge-yellow">Queued</span></span>
+            </div>
+            <div class="text-[11px] text-slate-500 stage-details">OpenAPI parsing & attack surface endpoint mapping</div>
+          </div>
+        </div>
+
+        <div id="stage-vulnerability_research" class="stage-step">
+          <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">4</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-900">Vuln Research</span>
+              <span class="stage-status"><span class="badge badge-yellow">Queued</span></span>
+            </div>
+            <div class="text-[11px] text-slate-500 stage-details">384-dim vector skill retrieval & hypothesis formulation</div>
+          </div>
+        </div>
+
+        <div id="stage-dynamic_testing" class="stage-step">
+          <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">5</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-900">Dynamic Testing</span>
+              <span class="stage-status"><span class="badge badge-yellow">Queued</span></span>
+            </div>
+            <div class="text-[11px] text-slate-500 stage-details">Paired-identity exploitation & state-diff capture</div>
+          </div>
+        </div>
+
+        <div id="stage-verification" class="stage-step">
+          <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">6</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-900">Verification Agent</span>
+              <span class="stage-status"><span class="badge badge-yellow">Queued</span></span>
+            </div>
+            <div class="text-[11px] text-slate-500 stage-details">Forensic exploit arbitration, CVSS & SHA-256 evidence</div>
+          </div>
+        </div>
+
+        <div id="stage-remediation" class="stage-step col-span-1 md:col-span-2 lg:col-span-3">
+          <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-700">7</div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-900">Remediation Agent</span>
+              <span class="stage-status"><span class="badge badge-yellow">Queued</span></span>
+            </div>
+            <div class="text-[11px] text-slate-500 stage-details">Root-cause patch synthesis, multi-suite tests & human approval gate</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Terminal Streaming Logs -->
+      <div>
+        <div class="text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
+          <span>Real-Time Agent Execution Console</span>
+          <span class="text-[11px] text-slate-400 font-mono">Stream: Server-Sent Events (SSE)</span>
+        </div>
+        <div id="log-terminal" class="log-terminal">
+          <div>Waiting for assessment to begin...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Results & Insights Section (Hidden initially) -->
+    <div id="results-section" style="display: none;" class="card p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h2 class="text-base font-semibold text-slate-900">Assessment Insights & Forensic Artifacts</h2>
+        <span class="badge badge-green">Scan Succeeded</span>
+      </div>
+
+      <!-- Tabs Header -->
+      <div class="flex border-b border-slate-200 text-xs font-medium">
+        <button id="tab-btn-findings" onclick="switchTab('findings')" class="tab-btn py-2.5 px-4 border-b-2 border-blue-600 text-blue-600 active">
+          Confirmed Findings
+        </button>
+        <button id="tab-btn-diffs" onclick="switchTab('diffs')" class="tab-btn py-2.5 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700">
+          State Diffs & Evidence
+        </button>
+        <button id="tab-btn-patch" onclick="switchTab('patch')" class="tab-btn py-2.5 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700">
+          Remediation Patch Diff
+        </button>
+        <button id="tab-btn-database" onclick="switchTab('database')" class="tab-btn py-2.5 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700">
+          Database & Memory Records
+        </button>
+      </div>
+
+      <!-- Tab 1: Findings -->
+      <div id="tab-content-findings" class="tab-content">
+        <div id="findings-list"></div>
+      </div>
+
+      <!-- Tab 2: State Diffs -->
+      <div id="tab-content-diffs" class="tab-content" style="display: none;">
+        <div id="diffs-list"></div>
+      </div>
+
+      <!-- Tab 3: Remediation Patch -->
+      <div id="tab-content-patch" class="tab-content" style="display: none;">
+        <div id="patch-container"></div>
+      </div>
+
+      <!-- Tab 4: Database Explorer -->
+      <div id="tab-content-database" class="tab-content" style="display: none;">
+        <div class="text-xs text-slate-500 mb-2">Relational records and memory categories populated across pipeline execution:</div>
+        <div id="db-summary-list" class="space-y-1"></div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="text-center text-xs text-slate-400 py-8 border-t border-slate-200 mt-12 bg-white">
+    AegisTrace Multi-Agent Architecture © 2026 — Testing Lab UI for Agent Evaluation
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

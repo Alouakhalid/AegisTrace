@@ -1,0 +1,17 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5]; node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.18,0.10"]; edge [fontname="DejaVu Sans", fontsize=9, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=TB; labelloc=t; label="Figure 4 - End-to-End Assessment Workflow (with loops and gates)"; fontsize=15; fontcolor="#0B1F3A";
+s [label="User request", shape=oval, fillcolor="#0B1F3A", fontcolor="white"];
+v [label="Orchestrator: scope validation", shape=diamond, fillcolor="#FDE68A", color="#92400E"];
+stop [label="STOP: scope or precondition missing", shape=oval, fillcolor="#FECACA", color="#991B1B"];
+ci [label="Code Intelligence"]; rc [label="Recon"];
+vr [label="Vulnerability Research"]; dt [label="Dynamic Testing (sandbox)"];
+vf [label="Verification", shape=diamond];
+rj [label="Rejected / Unconfirmed\n(recorded with reason)", fillcolor="#E5E7EB"];
+rm [label="Remediation (isolated branch)"]; tr [label="Replay + unit + integration + regression"];
+ha [label="Human approval", shape=octagon, fillcolor="#FDE68A", color="#92400E"];
+rep [label="Final report (deterministic service)", shape=oval, fillcolor="#0B1F3A", fontcolor="white"];
+s->v; v->stop [label="invalid"]; v->ci [label="valid"]; v->rc [label="valid (parallel)"];
+ci->vr; rc->vr; vr->ci [style=dashed, label="needs more code context"];
+vr->dt; dt->vf; vf->dt [style=dashed, label="insufficient evidence\n(max retries)"];
+vf->rj [label="rejected"]; vf->rm [label="confirmed"]; rm->tr; tr->ha;
+ha->rm [style=dashed, label="changes requested"]; ha->rep [label="approved / declined"]; rj->rep;
+}

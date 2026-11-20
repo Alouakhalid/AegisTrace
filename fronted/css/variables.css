@@ -1,0 +1,73 @@
+:root {
+  /* Monochromatic Dark Base */
+  --bg-base: #0a0a0a;
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.05);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
+  --bg-glass: rgba(255, 255, 255, 0.03);
+  --bg-glass-strong: rgba(20, 18, 16, 0.7);
+  
+  /* Luxury Gold & Bronze Spectrum */
+  --primary: #a78b71;
+  --primary-light: #c9b8a0;
+  --primary-hover: #e8d5b7;
+  --primary-glow: rgba(167, 139, 113, 0.35);
+  --gold-base: #a78b71;
+  --gold-light: #c9b8a0;
+  --gold-hover: #e8d5b7;
+  --gold-bronze: #755f4c;
+  --gold-glow: rgba(167, 139, 113, 0.25);
+  
+  /* Luxury Functional Accents */
+  --accent: #c9b8a0;
+  --accent-glow: rgba(201, 184, 160, 0.3);
+  
+  --success: #20D6A0;
+  --success-glow: rgba(32, 214, 160, 0.3);
+  --success-bg: rgba(32, 214, 160, 0.08);
+  
+  --warning: #c9b8a0;
+  --warning-bg: rgba(167, 139, 113, 0.12);
+  
+  --critical: #e0536c;
+  --critical-glow: rgba(224, 83, 108, 0.35);
+  --critical-bg: rgba(224, 83, 108, 0.1);
+  
+  /* High-Contrast Typography */
+  --text-primary: #FFFFFF;
+  --text-secondary: #c9b8a0;
+  --text-muted: #8a8885;
+  --text-dark: #0a0a0a;
+  
+  /* Glass Borders */
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-gold: rgba(167, 139, 113, 0.35);
+  --border-gold-strong: rgba(201, 184, 160, 0.6);
+  
+  /* Dimensions */
+  --sidebar-width: 270px;
+  --topbar-height: 72px;
+  
+  /* Editorial & Precision Typography */
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, monospace;
+  
+  /* Luxury High-Radius Corners (24px - 48px) */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --radius-xl: 36px;
+  --radius-full: 9999px;
+  
+  /* Shadows & Glow */
+  --shadow-central-glow: 0 0 100px rgba(167, 139, 113, 0.2);
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.6);
+  --shadow-gold-hover: 0 0 60px rgba(167, 139, 113, 0.3);
+  
+  /* Animations */
+  --ease-luxury: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}

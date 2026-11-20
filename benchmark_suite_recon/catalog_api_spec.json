@@ -1,0 +1,38 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Inventory Catalog API",
+    "description": "Flask service for managing warehouse catalog items",
+    "version": "0.9.5"
+  },
+  "paths": {
+    "/api/v1/items/{item_id}": {
+      "get": {
+        "summary": "Item details"
+      },
+      "put": {
+        "summary": "Modify item",
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/api/v1/items": {
+      "post": {
+        "summary": "Add item",
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/system/emergency_halt": {
+      "post": {
+        "summary": "Emergency halt"
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+Metric Category,TP,FP,FN,TN,Precision,Recall,F1-Score,Accuracy
+تنفيذ الهويات المزدوجة (Paired Identity Execution),6,0,0,3,100.00%,100.00%,100.00%,100.00%
+حماية بوابة النطاق (ScopeGate Enforcement),6,0,0,3,100.00%,100.00%,100.00%,100.00%
+اكتشاف الفروقات البرمجية (State-Diff Detection),6,0,0,3,100.00%,100.00%,100.00%,100.00%
+تنقيح وتوليد الأدلة (Evidence Hygiene & Redaction),6,0,0,3,100.00%,100.00%,100.00%,100.00%
+إدارة الميزانية وإعادة المحاولة (Budget & Resilience),6,0,0,3,100.00%,100.00%,100.00%,100.00%
+OVERALL BENCHMARK PERFORMANCE,30,0,0,15,100.00%,100.00%,100.00%,100.00%

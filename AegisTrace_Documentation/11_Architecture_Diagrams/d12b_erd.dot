@@ -1,0 +1,25 @@
+digraph Eb { graph [bgcolor=white, fontname="DejaVu Sans", pad=0.3, nodesep=0.3, ranksep=0.6, rankdir=TB, labelloc=t, fontsize=17, fontcolor="#0B1F3A", label="Figure 12b - ERD: Code Intelligence, Research and Testing"]; node [fontname="DejaVu Sans", fontsize=14, shape=box, style="rounded,filled", penwidth=1.2, color="#0B1F3A"]; edge [color="#0E7490", arrowsize=0.7, penwidth=1.1];
+subgraph cluster_0 { label="Code intelligence"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  repositories_analysis [fillcolor="#0E7490", fontcolor="white"];
+  code_nodes [fillcolor="#0E7490", fontcolor="white"];
+  code_edges [fillcolor="#0E7490", fontcolor="white"];
+  security_invariants [fillcolor="#0E7490", fontcolor="white"];
+  endpoints [fillcolor="#0E7490", fontcolor="white"];
+}
+subgraph cluster_1 { label="Research & testing"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  vulnerability_hypotheses [fillcolor="#22A6C4", fontcolor="black"];
+  test_cases [fillcolor="#22A6C4", fontcolor="black"];
+  test_executions [fillcolor="#22A6C4", fontcolor="black"];
+  state_snapshots [fillcolor="#22A6C4", fontcolor="black"];
+}
+  code_edges -> code_nodes;
+  code_edges -> repositories_analysis;
+  code_nodes -> repositories_analysis;
+  endpoints -> code_nodes;
+  security_invariants -> repositories_analysis;
+  state_snapshots -> test_executions;
+  test_cases -> vulnerability_hypotheses;
+  test_executions -> test_cases;
+  vulnerability_hypotheses -> endpoints;
+  vulnerability_hypotheses -> security_invariants;
+}

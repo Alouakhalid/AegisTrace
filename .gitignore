@@ -1,0 +1,44 @@
+# Environment & Secrets
+.env
+*.env
+!.env.example
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing & Execution Caches
+.pytest_cache/
+.aegistrace_cache/
+.crewai/
+*.cache
+
+# Databases & Local SQLite
+*.db
+*.sqlite
+*.sqlite3
+aegis_production.db
+
+# OS Generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary scan spec snapshots
+.aegis_spec_*.json
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Node / Frontend temporary
+node_modules/
+dist/
+.parcel-cache/

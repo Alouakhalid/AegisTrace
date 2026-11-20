@@ -1,0 +1,7 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5, labelloc=t, fontsize=16, fontcolor="#0B1F3A"]; node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.16,0.09"]; edge [fontname="DejaVu Sans", fontsize=10, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=TB; label="Figure 11 - Memory Retrieval Pipeline";
+node [width=3.2];
+q [label="Agent query\n+ task context", fillcolor="#0B1F3A", fontcolor=white];
+f [label="1. Metadata filter\nproject_id, type,\ncategory, not expired"]; k [label="2a. Keyword search\ntsvector rank"]; v [label="2b. Vector search\ncosine, top 20"];
+m [label="3. Merge\nReciprocal Rank Fusion"]; d [label="4. Deduplicate\ncontent hash,\nsuperseded_by IS NULL"]; r [label="5. Rank\nrelevance x freshness\nx importance"]; b [label="6. Trim to token budget\n+ attribution", fillcolor="#FDE68A", color="#92400E"]; o [label="Context for agent\n(delimited as untrusted data)", fillcolor="#0B1F3A", fontcolor=white];
+q->f; f->k; f->v; k->m; v->m; m->d; d->r; r->b; b->o;
+}

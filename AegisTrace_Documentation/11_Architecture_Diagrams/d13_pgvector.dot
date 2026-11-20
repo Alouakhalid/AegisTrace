@@ -1,0 +1,6 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5, labelloc=t, fontsize=16, fontcolor="#0B1F3A"]; node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.16,0.09"]; edge [fontname="DejaVu Sans", fontsize=10, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=TB; label="Figure 13 - pgvector Integration";
+src [label="Skill chunks\nand memory text", fillcolor="#BDEBF5"]; emb [label="Embedding model\n(proposal: 384 dims;\nchosen in Phase 1)", fillcolor="#FDE68A", color="#92400E"];
+t1 [label="skill_metadata\nembedding vector(384)", shape=cylinder, fillcolor="#0B1F3A", fontcolor=white]; t2 [label="memory_items\nembedding vector(384)", shape=cylinder, fillcolor="#0B1F3A", fontcolor=white];
+ix [label="HNSW index\nvector_cosine_ops"]; qy [label="Query: ORDER BY\nembedding <=> :qvec\nLIMIT k"]; res [label="Candidates + scores\n(then fused with keyword results)"];
+src->emb; emb->t1; emb->t2; t1->ix; t2->ix; ix->qy; qy->res;
+}

@@ -1,0 +1,29 @@
+digraph Ea { graph [bgcolor=white, fontname="DejaVu Sans", pad=0.3, nodesep=0.3, ranksep=0.6, rankdir=TB, labelloc=t, fontsize=17, fontcolor="#0B1F3A", label="Figure 12a - ERD: Access, Scope and Agent Execution"]; node [fontname="DejaVu Sans", fontsize=14, shape=box, style="rounded,filled", penwidth=1.2, color="#0B1F3A"]; edge [color="#0E7490", arrowsize=0.7, penwidth=1.1];
+subgraph cluster_0 { label="Access & scope"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  users [fillcolor="#0B1F3A", fontcolor="white"];
+  projects [fillcolor="#0B1F3A", fontcolor="white"];
+  repositories [fillcolor="#0B1F3A", fontcolor="white"];
+  engagements [fillcolor="#0B1F3A", fontcolor="white"];
+  scope_manifests [fillcolor="#0B1F3A", fontcolor="white"];
+  scans [fillcolor="#0B1F3A", fontcolor="white"];
+}
+subgraph cluster_1 { label="Agent execution"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  agent_tasks [fillcolor="#123A63", fontcolor="white"];
+  agent_runs [fillcolor="#123A63", fontcolor="white"];
+  agent_messages [fillcolor="#123A63", fontcolor="white"];
+}
+  agent_messages -> agent_tasks;
+  agent_messages -> scans;
+  agent_runs -> agent_tasks;
+  agent_tasks -> scans;
+  engagements -> projects;
+  engagements -> users;
+  projects -> users;
+  repositories -> projects;
+  scans -> engagements;
+  scans -> repositories;
+  scans -> scope_manifests;
+  scans -> users;
+  scope_manifests -> engagements;
+  scope_manifests -> users;
+}

@@ -1,0 +1,3928 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AegisTrace Agent Contracts",
+  "schema_version": "1.0.0",
+  "agents": {
+    "orchestrator": {
+      "request": {
+        "$defs": {
+          "AssessmentMode": {
+            "enum": [
+              "code_only",
+              "dynamic_only",
+              "full"
+            ],
+            "title": "AssessmentMode",
+            "type": "string"
+          },
+          "CredentialRef": {
+            "additionalProperties": false,
+            "properties": {
+              "ref": {
+                "pattern": "^cred_[a-z0-9_]+$",
+                "title": "Ref",
+                "type": "string"
+              },
+              "role": {
+                "title": "Role",
+                "type": "string"
+              }
+            },
+            "required": [
+              "ref",
+              "role"
+            ],
+            "title": "CredentialRef",
+            "type": "object"
+          },
+          "OrchestratorInput": {
+            "additionalProperties": false,
+            "properties": {
+              "project": {
+                "$ref": "#/$defs/ProjectInfo"
+              },
+              "target": {
+                "$ref": "#/$defs/TargetInfo"
+              },
+              "repository": {
+                "$ref": "#/$defs/RepositoryRef"
+              },
+              "scope_manifest_id": {
+                "pattern": "^scm_[0-9a-f]{8,}$",
+                "title": "Scope Manifest Id",
+                "type": "string"
+              },
+              "assessment_mode": {
+                "$ref": "#/$defs/AssessmentMode"
+              },
+              "credential_refs": {
+                "items": {
+                  "$ref": "#/$defs/CredentialRef"
+                },
+                "minItems": 2,
+                "title": "Credential Refs",
+                "type": "array"
+              },
+              "requested_operations": {
+                "items": {
+                  "enum": [
+                    "code_analysis",
+                    "recon",
+                    "dynamic_testing",
+                    "remediation"
+                  ],
+                  "type": "string"
+                },
+                "title": "Requested Operations",
+                "type": "array"
+              }
+            },
+            "required": [
+              "project",
+              "target",
+              "repository",
+              "scope_manifest_id",
+              "assessment_mode",
+              "credential_refs",
+              "requested_operations"
+            ],
+            "title": "OrchestratorInput",
+            "type": "object"
+          },
+          "ProjectInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "language": {
+                "const": "python",
+                "title": "Language",
+                "type": "string"
+              },
+              "framework_hint": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Framework Hint"
+              }
+            },
+            "required": [
+              "name",
+              "language"
+            ],
+            "title": "ProjectInfo",
+            "type": "object"
+          },
+          "RepositoryRef": {
+            "additionalProperties": false,
+            "properties": {
+              "source_type": {
+                "enum": [
+                  "github",
+                  "zip"
+                ],
+                "title": "Source Type",
+                "type": "string"
+              },
+              "url": {
+                "title": "Url",
+                "type": "string"
+              },
+              "ref": {
+                "title": "Ref",
+                "type": "string"
+              }
+            },
+            "required": [
+              "source_type",
+              "url",
+              "ref"
+            ],
+            "title": "RepositoryRef",
+            "type": "object"
+          },
+          "TargetInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "base_url": {
+                "title": "Base Url",
+                "type": "string"
+              },
+              "environment": {
+                "enum": [
+                  "sandbox",
+                  "staging_approved"
+                ],
+                "title": "Environment",
+                "type": "string"
+              }
+            },
+            "required": [
+              "base_url",
+              "environment"
+            ],
+            "title": "TargetInfo",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "agent": {
+            "const": "orchestrator",
+            "default": "orchestrator",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/$defs/OrchestratorInput"
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "input"
+        ],
+        "title": "OrchestratorRequest",
+        "type": "object"
+      },
+      "response": {
+        "$defs": {
+          "AgentName": {
+            "enum": [
+              "orchestrator",
+              "code_intelligence",
+              "recon",
+              "vulnerability_research",
+              "dynamic_testing",
+              "verification",
+              "remediation"
+            ],
+            "title": "AgentName",
+            "type": "string"
+          },
+          "ErrorInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Stable machine-readable error code, e.g. SCOPE_VIOLATION",
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Details"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "title": "ErrorInfo",
+            "type": "object"
+          },
+          "Metrics": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_ms": {
+                "minimum": 0,
+                "title": "Duration Ms",
+                "type": "integer"
+              },
+              "llm_calls": {
+                "minimum": 0,
+                "title": "Llm Calls",
+                "type": "integer"
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "duration_ms",
+              "llm_calls",
+              "input_tokens",
+              "output_tokens"
+            ],
+            "title": "Metrics",
+            "type": "object"
+          },
+          "OrchestratorOutput": {
+            "additionalProperties": false,
+            "properties": {
+              "scope_validation": {
+                "$ref": "#/$defs/ScopeValidation"
+              },
+              "stages": {
+                "items": {
+                  "$ref": "#/$defs/Stage"
+                },
+                "title": "Stages",
+                "type": "array"
+              },
+              "task_assignments": {
+                "items": {
+                  "$ref": "#/$defs/TaskAssignment"
+                },
+                "title": "Task Assignments",
+                "type": "array"
+              },
+              "workflow_status": {
+                "enum": [
+                  "planned",
+                  "running",
+                  "blocked",
+                  "completed",
+                  "failed"
+                ],
+                "title": "Workflow Status",
+                "type": "string"
+              }
+            },
+            "required": [
+              "scope_validation",
+              "stages",
+              "task_assignments",
+              "workflow_status"
+            ],
+            "title": "OrchestratorOutput",
+            "type": "object"
+          },
+          "ScopeCheck": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "passed": {
+                "title": "Passed",
+                "type": "boolean"
+              },
+              "detail": {
+                "title": "Detail",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "passed",
+              "detail"
+            ],
+            "title": "ScopeCheck",
+            "type": "object"
+          },
+          "ScopeValidation": {
+            "additionalProperties": false,
+            "properties": {
+              "valid": {
+                "title": "Valid",
+                "type": "boolean"
+              },
+              "checks": {
+                "items": {
+                  "$ref": "#/$defs/ScopeCheck"
+                },
+                "title": "Checks",
+                "type": "array"
+              }
+            },
+            "required": [
+              "valid",
+              "checks"
+            ],
+            "title": "ScopeValidation",
+            "type": "object"
+          },
+          "Stage": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "agent": {
+                "$ref": "#/$defs/AgentName"
+              },
+              "depends_on": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Depends On",
+                "type": "array"
+              },
+              "parallel_group": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Parallel Group"
+              },
+              "requires_approval": {
+                "default": false,
+                "title": "Requires Approval",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "agent",
+              "depends_on"
+            ],
+            "title": "Stage",
+            "type": "object"
+          },
+          "TaskAssignment": {
+            "additionalProperties": false,
+            "properties": {
+              "task_id": {
+                "pattern": "^tsk_[0-9a-f]{8,}$",
+                "title": "Task Id",
+                "type": "string"
+              },
+              "agent": {
+                "$ref": "#/$defs/AgentName"
+              },
+              "stage": {
+                "title": "Stage",
+                "type": "string"
+              },
+              "depends_on": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Depends On",
+                "type": "array"
+              }
+            },
+            "required": [
+              "task_id",
+              "agent",
+              "stage",
+              "depends_on"
+            ],
+            "title": "TaskAssignment",
+            "type": "object"
+          },
+          "TaskStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "blocked",
+              "needs_input",
+              "cancelled"
+            ],
+            "title": "TaskStatus",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/TaskStatus"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "agent": {
+            "const": "orchestrator",
+            "default": "orchestrator",
+            "title": "Agent",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrchestratorOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "status",
+          "metrics"
+        ],
+        "title": "OrchestratorResponse",
+        "type": "object"
+      }
+    },
+    "code_intelligence": {
+      "request": {
+        "$defs": {
+          "CodeIntelInput": {
+            "additionalProperties": false,
+            "properties": {
+              "repository": {
+                "$ref": "#/$defs/RepoCheckout"
+              },
+              "source_language": {
+                "const": "python",
+                "title": "Source Language",
+                "type": "string"
+              },
+              "framework_hints": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Framework Hints",
+                "type": "array"
+              },
+              "scan_config": {
+                "$ref": "#/$defs/ScanConfig"
+              }
+            },
+            "required": [
+              "repository",
+              "source_language",
+              "framework_hints",
+              "scan_config"
+            ],
+            "title": "CodeIntelInput",
+            "type": "object"
+          },
+          "RepoCheckout": {
+            "additionalProperties": false,
+            "properties": {
+              "path_ref": {
+                "title": "Path Ref",
+                "type": "string"
+              },
+              "commit": {
+                "pattern": "^[0-9a-f]{7,40}$",
+                "title": "Commit",
+                "type": "string"
+              }
+            },
+            "required": [
+              "path_ref",
+              "commit"
+            ],
+            "title": "RepoCheckout",
+            "type": "object"
+          },
+          "ScanConfig": {
+            "additionalProperties": false,
+            "properties": {
+              "max_files": {
+                "exclusiveMinimum": 0,
+                "title": "Max Files",
+                "type": "integer"
+              },
+              "include_globs": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Include Globs",
+                "type": "array"
+              },
+              "enable_semgrep": {
+                "title": "Enable Semgrep",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "max_files",
+              "include_globs",
+              "enable_semgrep"
+            ],
+            "title": "ScanConfig",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "agent": {
+            "const": "code_intelligence",
+            "default": "code_intelligence",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/$defs/CodeIntelInput"
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "input"
+        ],
+        "title": "CodeIntelRequest",
+        "type": "object"
+      },
+      "response": {
+        "$defs": {
+          "CandidateInvariant": {
+            "additionalProperties": false,
+            "properties": {
+              "invariant_id": {
+                "pattern": "^inv_[a-z0-9_]+$",
+                "title": "Invariant Id",
+                "type": "string"
+              },
+              "statement": {
+                "title": "Statement",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "ownership",
+                  "role_restriction",
+                  "state_transition",
+                  "authentication_required"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "applies_to_route_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Applies To Route Ids",
+                "type": "array"
+              },
+              "source": {
+                "enum": [
+                  "code",
+                  "declared_policy"
+                ],
+                "title": "Source",
+                "type": "string"
+              },
+              "confidence": {
+                "maximum": 1,
+                "minimum": 0,
+                "title": "Confidence",
+                "type": "number"
+              }
+            },
+            "required": [
+              "invariant_id",
+              "statement",
+              "kind",
+              "applies_to_route_ids",
+              "source",
+              "confidence"
+            ],
+            "title": "CandidateInvariant",
+            "type": "object"
+          },
+          "CodeIntelOutput": {
+            "additionalProperties": false,
+            "properties": {
+              "repository_structure": {
+                "$ref": "#/$defs/RepoStructure"
+              },
+              "routes": {
+                "items": {
+                  "$ref": "#/$defs/Route"
+                },
+                "title": "Routes",
+                "type": "array"
+              },
+              "auth_mechanisms": {
+                "items": {
+                  "$ref": "#/$defs/SecurityMechanism"
+                },
+                "title": "Auth Mechanisms",
+                "type": "array"
+              },
+              "db_models": {
+                "items": {
+                  "$ref": "#/$defs/DbModel"
+                },
+                "title": "Db Models",
+                "type": "array"
+              },
+              "code_graph_ref": {
+                "title": "Code Graph Ref",
+                "type": "string"
+              },
+              "candidate_invariants": {
+                "items": {
+                  "$ref": "#/$defs/CandidateInvariant"
+                },
+                "title": "Candidate Invariants",
+                "type": "array"
+              }
+            },
+            "required": [
+              "repository_structure",
+              "routes",
+              "auth_mechanisms",
+              "db_models",
+              "code_graph_ref",
+              "candidate_invariants"
+            ],
+            "title": "CodeIntelOutput",
+            "type": "object"
+          },
+          "DbModel": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "table": {
+                "title": "Table",
+                "type": "string"
+              },
+              "owner_field": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Owner Field"
+              },
+              "file": {
+                "title": "File",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "table",
+              "file"
+            ],
+            "title": "DbModel",
+            "type": "object"
+          },
+          "ErrorInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Stable machine-readable error code, e.g. SCOPE_VIOLATION",
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Details"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "title": "ErrorInfo",
+            "type": "object"
+          },
+          "Metrics": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_ms": {
+                "minimum": 0,
+                "title": "Duration Ms",
+                "type": "integer"
+              },
+              "llm_calls": {
+                "minimum": 0,
+                "title": "Llm Calls",
+                "type": "integer"
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "duration_ms",
+              "llm_calls",
+              "input_tokens",
+              "output_tokens"
+            ],
+            "title": "Metrics",
+            "type": "object"
+          },
+          "RepoStructure": {
+            "additionalProperties": false,
+            "properties": {
+              "files_analyzed": {
+                "title": "Files Analyzed",
+                "type": "integer"
+              },
+              "frameworks": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Frameworks",
+                "type": "array"
+              },
+              "entry_points": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Entry Points",
+                "type": "array"
+              }
+            },
+            "required": [
+              "files_analyzed",
+              "frameworks",
+              "entry_points"
+            ],
+            "title": "RepoStructure",
+            "type": "object"
+          },
+          "Route": {
+            "additionalProperties": false,
+            "properties": {
+              "route_id": {
+                "pattern": "^rte_[a-z0-9_]+$",
+                "title": "Route Id",
+                "type": "string"
+              },
+              "method": {
+                "title": "Method",
+                "type": "string"
+              },
+              "path": {
+                "title": "Path",
+                "type": "string"
+              },
+              "handler": {
+                "title": "Handler",
+                "type": "string"
+              },
+              "file": {
+                "title": "File",
+                "type": "string"
+              },
+              "line": {
+                "title": "Line",
+                "type": "integer"
+              },
+              "auth_required": {
+                "title": "Auth Required",
+                "type": "boolean"
+              },
+              "authz_checks": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Authz Checks",
+                "type": "array"
+              }
+            },
+            "required": [
+              "route_id",
+              "method",
+              "path",
+              "handler",
+              "file",
+              "line",
+              "auth_required",
+              "authz_checks"
+            ],
+            "title": "Route",
+            "type": "object"
+          },
+          "SecurityMechanism": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "authentication",
+                  "authorization"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "location": {
+                "title": "Location",
+                "type": "string"
+              },
+              "description": {
+                "title": "Description",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "location",
+              "description"
+            ],
+            "title": "SecurityMechanism",
+            "type": "object"
+          },
+          "TaskStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "blocked",
+              "needs_input",
+              "cancelled"
+            ],
+            "title": "TaskStatus",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/TaskStatus"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "agent": {
+            "const": "code_intelligence",
+            "default": "code_intelligence",
+            "title": "Agent",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CodeIntelOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "status",
+          "metrics"
+        ],
+        "title": "CodeIntelResponse",
+        "type": "object"
+      }
+    },
+    "recon": {
+      "request": {
+        "$defs": {
+          "ReconInput": {
+            "additionalProperties": false,
+            "properties": {
+              "scope": {
+                "$ref": "#/$defs/ScopeSummary"
+              },
+              "api_spec_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Api Spec Ref"
+              },
+              "technology_hints": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Technology Hints",
+                "type": "array"
+              },
+              "research": {
+                "$ref": "#/$defs/ResearchConfig"
+              }
+            },
+            "required": [
+              "scope",
+              "technology_hints",
+              "research"
+            ],
+            "title": "ReconInput",
+            "type": "object"
+          },
+          "ResearchConfig": {
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "title": "Enabled",
+                "type": "boolean"
+              },
+              "max_queries": {
+                "minimum": 0,
+                "title": "Max Queries",
+                "type": "integer"
+              },
+              "search_depth": {
+                "enum": [
+                  "basic",
+                  "advanced"
+                ],
+                "title": "Search Depth",
+                "type": "string"
+              }
+            },
+            "required": [
+              "enabled",
+              "max_queries",
+              "search_depth"
+            ],
+            "title": "ResearchConfig",
+            "type": "object"
+          },
+          "ScopeSummary": {
+            "additionalProperties": false,
+            "properties": {
+              "allowed_hosts": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Allowed Hosts",
+                "type": "array"
+              },
+              "allowed_methods": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Allowed Methods",
+                "type": "array"
+              },
+              "forbidden_paths": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Forbidden Paths",
+                "type": "array"
+              }
+            },
+            "required": [
+              "allowed_hosts",
+              "allowed_methods",
+              "forbidden_paths"
+            ],
+            "title": "ScopeSummary",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "agent": {
+            "const": "recon",
+            "default": "recon",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/$defs/ReconInput"
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "input"
+        ],
+        "title": "ReconRequest",
+        "type": "object"
+      },
+      "response": {
+        "$defs": {
+          "Endpoint": {
+            "additionalProperties": false,
+            "properties": {
+              "endpoint_id": {
+                "pattern": "^ep_[a-z0-9_]+$",
+                "title": "Endpoint Id",
+                "type": "string"
+              },
+              "method": {
+                "title": "Method",
+                "type": "string"
+              },
+              "path": {
+                "title": "Path",
+                "type": "string"
+              },
+              "path_params": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Path Params",
+                "type": "array"
+              },
+              "auth_required": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Auth Required"
+              },
+              "source": {
+                "enum": [
+                  "openapi",
+                  "code_routes",
+                  "crawl"
+                ],
+                "title": "Source",
+                "type": "string"
+              }
+            },
+            "required": [
+              "endpoint_id",
+              "method",
+              "path",
+              "path_params",
+              "source"
+            ],
+            "title": "Endpoint",
+            "type": "object"
+          },
+          "ErrorInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Stable machine-readable error code, e.g. SCOPE_VIOLATION",
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Details"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "title": "ErrorInfo",
+            "type": "object"
+          },
+          "IntelRef": {
+            "additionalProperties": false,
+            "properties": {
+              "ref_id": {
+                "title": "Ref Id",
+                "type": "string"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "url": {
+                "title": "Url",
+                "type": "string"
+              },
+              "retrieved_at": {
+                "title": "Retrieved At",
+                "type": "string"
+              },
+              "source_type": {
+                "enum": [
+                  "vendor",
+                  "nvd",
+                  "owasp",
+                  "other"
+                ],
+                "title": "Source Type",
+                "type": "string"
+              },
+              "relevance": {
+                "maximum": 1,
+                "minimum": 0,
+                "title": "Relevance",
+                "type": "number"
+              },
+              "trusted": {
+                "const": false,
+                "default": false,
+                "title": "Trusted",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "ref_id",
+              "title",
+              "url",
+              "retrieved_at",
+              "source_type",
+              "relevance"
+            ],
+            "title": "IntelRef",
+            "type": "object"
+          },
+          "Metrics": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_ms": {
+                "minimum": 0,
+                "title": "Duration Ms",
+                "type": "integer"
+              },
+              "llm_calls": {
+                "minimum": 0,
+                "title": "Llm Calls",
+                "type": "integer"
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "duration_ms",
+              "llm_calls",
+              "input_tokens",
+              "output_tokens"
+            ],
+            "title": "Metrics",
+            "type": "object"
+          },
+          "ReconOutput": {
+            "additionalProperties": false,
+            "properties": {
+              "endpoints": {
+                "items": {
+                  "$ref": "#/$defs/Endpoint"
+                },
+                "title": "Endpoints",
+                "type": "array"
+              },
+              "technologies": {
+                "items": {
+                  "$ref": "#/$defs/Technology"
+                },
+                "title": "Technologies",
+                "type": "array"
+              },
+              "attack_surface_ref": {
+                "title": "Attack Surface Ref",
+                "type": "string"
+              },
+              "intel_refs": {
+                "items": {
+                  "$ref": "#/$defs/IntelRef"
+                },
+                "title": "Intel Refs",
+                "type": "array"
+              }
+            },
+            "required": [
+              "endpoints",
+              "technologies",
+              "attack_surface_ref",
+              "intel_refs"
+            ],
+            "title": "ReconOutput",
+            "type": "object"
+          },
+          "TaskStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "blocked",
+              "needs_input",
+              "cancelled"
+            ],
+            "title": "TaskStatus",
+            "type": "string"
+          },
+          "Technology": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "version": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Version"
+              },
+              "confidence": {
+                "maximum": 1,
+                "minimum": 0,
+                "title": "Confidence",
+                "type": "number"
+              },
+              "evidence": {
+                "title": "Evidence",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "confidence",
+              "evidence"
+            ],
+            "title": "Technology",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/TaskStatus"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "agent": {
+            "const": "recon",
+            "default": "recon",
+            "title": "Agent",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ReconOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "status",
+          "metrics"
+        ],
+        "title": "ReconResponse",
+        "type": "object"
+      }
+    },
+    "vulnerability_research": {
+      "request": {
+        "$defs": {
+          "ResearchInput": {
+            "additionalProperties": false,
+            "properties": {
+              "code_intel_ref": {
+                "title": "Code Intel Ref",
+                "type": "string"
+              },
+              "recon_ref": {
+                "title": "Recon Ref",
+                "type": "string"
+              },
+              "invariant_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Invariant Ids",
+                "type": "array"
+              },
+              "skill_hits": {
+                "items": {
+                  "$ref": "#/$defs/SkillHit"
+                },
+                "title": "Skill Hits",
+                "type": "array"
+              }
+            },
+            "required": [
+              "code_intel_ref",
+              "recon_ref",
+              "invariant_ids",
+              "skill_hits"
+            ],
+            "title": "ResearchInput",
+            "type": "object"
+          },
+          "SkillHit": {
+            "additionalProperties": false,
+            "properties": {
+              "skill": {
+                "title": "Skill",
+                "type": "string"
+              },
+              "source_commit": {
+                "title": "Source Commit",
+                "type": "string"
+              },
+              "score": {
+                "title": "Score",
+                "type": "number"
+              }
+            },
+            "required": [
+              "skill",
+              "source_commit",
+              "score"
+            ],
+            "title": "SkillHit",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "agent": {
+            "const": "vulnerability_research",
+            "default": "vulnerability_research",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/$defs/ResearchInput"
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "input"
+        ],
+        "title": "ResearchRequest",
+        "type": "object"
+      },
+      "response": {
+        "$defs": {
+          "ErrorInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Stable machine-readable error code, e.g. SCOPE_VIOLATION",
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Details"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "title": "ErrorInfo",
+            "type": "object"
+          },
+          "Hypothesis": {
+            "additionalProperties": false,
+            "properties": {
+              "hypothesis_id": {
+                "pattern": "^hyp_[a-z0-9_]+$",
+                "title": "Hypothesis Id",
+                "type": "string"
+              },
+              "category": {
+                "$ref": "#/$defs/VulnCategory"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "rationale": {
+                "title": "Rationale",
+                "type": "string"
+              },
+              "endpoint_id": {
+                "title": "Endpoint Id",
+                "type": "string"
+              },
+              "invariant_id": {
+                "title": "Invariant Id",
+                "type": "string"
+              },
+              "priority": {
+                "maximum": 5,
+                "minimum": 1,
+                "title": "Priority",
+                "type": "integer"
+              },
+              "skill_refs": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Skill Refs",
+                "type": "array"
+              }
+            },
+            "required": [
+              "hypothesis_id",
+              "category",
+              "title",
+              "rationale",
+              "endpoint_id",
+              "invariant_id",
+              "priority",
+              "skill_refs"
+            ],
+            "title": "Hypothesis",
+            "type": "object"
+          },
+          "Metrics": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_ms": {
+                "minimum": 0,
+                "title": "Duration Ms",
+                "type": "integer"
+              },
+              "llm_calls": {
+                "minimum": 0,
+                "title": "Llm Calls",
+                "type": "integer"
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "duration_ms",
+              "llm_calls",
+              "input_tokens",
+              "output_tokens"
+            ],
+            "title": "Metrics",
+            "type": "object"
+          },
+          "ResearchOutput": {
+            "additionalProperties": false,
+            "properties": {
+              "hypotheses": {
+                "items": {
+                  "$ref": "#/$defs/Hypothesis"
+                },
+                "title": "Hypotheses",
+                "type": "array"
+              },
+              "test_plans": {
+                "items": {
+                  "$ref": "#/$defs/TestPlan"
+                },
+                "title": "Test Plans",
+                "type": "array"
+              }
+            },
+            "required": [
+              "hypotheses",
+              "test_plans"
+            ],
+            "title": "ResearchOutput",
+            "type": "object"
+          },
+          "StateCheck": {
+            "additionalProperties": false,
+            "properties": {
+              "table": {
+                "title": "Table",
+                "type": "string"
+              },
+              "key": {
+                "additionalProperties": true,
+                "title": "Key",
+                "type": "object"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              }
+            },
+            "required": [
+              "table",
+              "key",
+              "columns"
+            ],
+            "title": "StateCheck",
+            "type": "object"
+          },
+          "TaskStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "blocked",
+              "needs_input",
+              "cancelled"
+            ],
+            "title": "TaskStatus",
+            "type": "string"
+          },
+          "TestPlan": {
+            "additionalProperties": false,
+            "properties": {
+              "test_plan_id": {
+                "pattern": "^tpl_[a-z0-9_]+$",
+                "title": "Test Plan Id",
+                "type": "string"
+              },
+              "hypothesis_id": {
+                "title": "Hypothesis Id",
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "paired_identity",
+                  "single_identity",
+                  "workflow_sequence"
+                ],
+                "title": "Method",
+                "type": "string"
+              },
+              "steps": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Steps",
+                "type": "array"
+              },
+              "identities": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Identities",
+                "type": "array"
+              },
+              "expected_secure_behavior": {
+                "title": "Expected Secure Behavior",
+                "type": "string"
+              },
+              "state_checks": {
+                "items": {
+                  "$ref": "#/$defs/StateCheck"
+                },
+                "title": "State Checks",
+                "type": "array"
+              }
+            },
+            "required": [
+              "test_plan_id",
+              "hypothesis_id",
+              "method",
+              "steps",
+              "identities",
+              "expected_secure_behavior",
+              "state_checks"
+            ],
+            "title": "TestPlan",
+            "type": "object"
+          },
+          "VulnCategory": {
+            "enum": [
+              "broken_access_control",
+              "idor",
+              "authn_authz_flaw",
+              "business_logic"
+            ],
+            "title": "VulnCategory",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/TaskStatus"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "agent": {
+            "const": "vulnerability_research",
+            "default": "vulnerability_research",
+            "title": "Agent",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ResearchOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "status",
+          "metrics"
+        ],
+        "title": "ResearchResponse",
+        "type": "object"
+      }
+    },
+    "dynamic_testing": {
+      "request": {
+        "$defs": {
+          "DynamicInput": {
+            "additionalProperties": false,
+            "properties": {
+              "test_plan": {
+                "$ref": "#/$defs/TestPlan"
+              },
+              "endpoint": {
+                "$ref": "#/$defs/Endpoint"
+              },
+              "identities": {
+                "items": {
+                  "$ref": "#/$defs/Identity"
+                },
+                "title": "Identities",
+                "type": "array"
+              },
+              "sandbox": {
+                "$ref": "#/$defs/SandboxConfig"
+              },
+              "invariant_id": {
+                "title": "Invariant Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "test_plan",
+              "endpoint",
+              "identities",
+              "sandbox",
+              "invariant_id"
+            ],
+            "title": "DynamicInput",
+            "type": "object"
+          },
+          "Endpoint": {
+            "additionalProperties": false,
+            "properties": {
+              "endpoint_id": {
+                "pattern": "^ep_[a-z0-9_]+$",
+                "title": "Endpoint Id",
+                "type": "string"
+              },
+              "method": {
+                "title": "Method",
+                "type": "string"
+              },
+              "path": {
+                "title": "Path",
+                "type": "string"
+              },
+              "path_params": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Path Params",
+                "type": "array"
+              },
+              "auth_required": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Auth Required"
+              },
+              "source": {
+                "enum": [
+                  "openapi",
+                  "code_routes",
+                  "crawl"
+                ],
+                "title": "Source",
+                "type": "string"
+              }
+            },
+            "required": [
+              "endpoint_id",
+              "method",
+              "path",
+              "path_params",
+              "source"
+            ],
+            "title": "Endpoint",
+            "type": "object"
+          },
+          "Identity": {
+            "additionalProperties": false,
+            "properties": {
+              "identity_id": {
+                "title": "Identity Id",
+                "type": "string"
+              },
+              "role": {
+                "title": "Role",
+                "type": "string"
+              },
+              "credential_ref": {
+                "pattern": "^cred_[a-z0-9_]+$",
+                "title": "Credential Ref",
+                "type": "string"
+              },
+              "owns": {
+                "additionalProperties": true,
+                "title": "Owns",
+                "type": "object"
+              }
+            },
+            "required": [
+              "identity_id",
+              "role",
+              "credential_ref",
+              "owns"
+            ],
+            "title": "Identity",
+            "type": "object"
+          },
+          "SandboxConfig": {
+            "additionalProperties": false,
+            "properties": {
+              "sandbox_id": {
+                "pattern": "^sbx_[0-9a-f]{8,}$",
+                "title": "Sandbox Id",
+                "type": "string"
+              },
+              "base_url": {
+                "title": "Base Url",
+                "type": "string"
+              },
+              "snapshot_enabled": {
+                "title": "Snapshot Enabled",
+                "type": "boolean"
+              },
+              "max_requests": {
+                "exclusiveMinimum": 0,
+                "title": "Max Requests",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "sandbox_id",
+              "base_url",
+              "snapshot_enabled",
+              "max_requests"
+            ],
+            "title": "SandboxConfig",
+            "type": "object"
+          },
+          "StateCheck": {
+            "additionalProperties": false,
+            "properties": {
+              "table": {
+                "title": "Table",
+                "type": "string"
+              },
+              "key": {
+                "additionalProperties": true,
+                "title": "Key",
+                "type": "object"
+              },
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Columns",
+                "type": "array"
+              }
+            },
+            "required": [
+              "table",
+              "key",
+              "columns"
+            ],
+            "title": "StateCheck",
+            "type": "object"
+          },
+          "TestPlan": {
+            "additionalProperties": false,
+            "properties": {
+              "test_plan_id": {
+                "pattern": "^tpl_[a-z0-9_]+$",
+                "title": "Test Plan Id",
+                "type": "string"
+              },
+              "hypothesis_id": {
+                "title": "Hypothesis Id",
+                "type": "string"
+              },
+              "method": {
+                "enum": [
+                  "paired_identity",
+                  "single_identity",
+                  "workflow_sequence"
+                ],
+                "title": "Method",
+                "type": "string"
+              },
+              "steps": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Steps",
+                "type": "array"
+              },
+              "identities": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Identities",
+                "type": "array"
+              },
+              "expected_secure_behavior": {
+                "title": "Expected Secure Behavior",
+                "type": "string"
+              },
+              "state_checks": {
+                "items": {
+                  "$ref": "#/$defs/StateCheck"
+                },
+                "title": "State Checks",
+                "type": "array"
+              }
+            },
+            "required": [
+              "test_plan_id",
+              "hypothesis_id",
+              "method",
+              "steps",
+              "identities",
+              "expected_secure_behavior",
+              "state_checks"
+            ],
+            "title": "TestPlan",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "agent": {
+            "const": "dynamic_testing",
+            "default": "dynamic_testing",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/$defs/DynamicInput"
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "input"
+        ],
+        "title": "DynamicRequest",
+        "type": "object"
+      },
+      "response": {
+        "$defs": {
+          "DynamicOutput": {
+            "additionalProperties": false,
+            "properties": {
+              "executed_cases": {
+                "items": {
+                  "$ref": "#/$defs/ExecutedCase"
+                },
+                "title": "Executed Cases",
+                "type": "array"
+              },
+              "identity_comparison": {
+                "title": "Identity Comparison",
+                "type": "string"
+              },
+              "state_diffs": {
+                "items": {
+                  "$ref": "#/$defs/StateDiff"
+                },
+                "title": "State Diffs",
+                "type": "array"
+              },
+              "execution_status": {
+                "enum": [
+                  "completed",
+                  "partial",
+                  "aborted"
+                ],
+                "title": "Execution Status",
+                "type": "string"
+              },
+              "log_ref": {
+                "title": "Log Ref",
+                "type": "string"
+              }
+            },
+            "required": [
+              "executed_cases",
+              "identity_comparison",
+              "state_diffs",
+              "execution_status",
+              "log_ref"
+            ],
+            "title": "DynamicOutput",
+            "type": "object"
+          },
+          "ErrorInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Stable machine-readable error code, e.g. SCOPE_VIOLATION",
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Details"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "title": "ErrorInfo",
+            "type": "object"
+          },
+          "ExecutedCase": {
+            "additionalProperties": false,
+            "properties": {
+              "case_id": {
+                "title": "Case Id",
+                "type": "string"
+              },
+              "identity_id": {
+                "title": "Identity Id",
+                "type": "string"
+              },
+              "exchange": {
+                "$ref": "#/$defs/HttpExchange"
+              }
+            },
+            "required": [
+              "case_id",
+              "identity_id",
+              "exchange"
+            ],
+            "title": "ExecutedCase",
+            "type": "object"
+          },
+          "HttpExchange": {
+            "additionalProperties": false,
+            "properties": {
+              "method": {
+                "title": "Method",
+                "type": "string"
+              },
+              "url": {
+                "title": "Url",
+                "type": "string"
+              },
+              "status_code": {
+                "title": "Status Code",
+                "type": "integer"
+              },
+              "response_excerpt": {
+                "title": "Response Excerpt",
+                "type": "string"
+              },
+              "evidence_id": {
+                "pattern": "^evd_[0-9a-f]{8,}$",
+                "title": "Evidence Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "url",
+              "status_code",
+              "response_excerpt",
+              "evidence_id"
+            ],
+            "title": "HttpExchange",
+            "type": "object"
+          },
+          "Metrics": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_ms": {
+                "minimum": 0,
+                "title": "Duration Ms",
+                "type": "integer"
+              },
+              "llm_calls": {
+                "minimum": 0,
+                "title": "Llm Calls",
+                "type": "integer"
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "duration_ms",
+              "llm_calls",
+              "input_tokens",
+              "output_tokens"
+            ],
+            "title": "Metrics",
+            "type": "object"
+          },
+          "StateDiff": {
+            "additionalProperties": false,
+            "properties": {
+              "table": {
+                "title": "Table",
+                "type": "string"
+              },
+              "key": {
+                "additionalProperties": true,
+                "title": "Key",
+                "type": "object"
+              },
+              "column": {
+                "title": "Column",
+                "type": "string"
+              },
+              "before": {
+                "title": "Before"
+              },
+              "after": {
+                "title": "After"
+              },
+              "snapshot_before_id": {
+                "title": "Snapshot Before Id",
+                "type": "string"
+              },
+              "snapshot_after_id": {
+                "title": "Snapshot After Id",
+                "type": "string"
+              },
+              "evidence_id": {
+                "title": "Evidence Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "key",
+              "column",
+              "before",
+              "after",
+              "snapshot_before_id",
+              "snapshot_after_id",
+              "evidence_id"
+            ],
+            "title": "StateDiff",
+            "type": "object"
+          },
+          "TaskStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "blocked",
+              "needs_input",
+              "cancelled"
+            ],
+            "title": "TaskStatus",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/TaskStatus"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "agent": {
+            "const": "dynamic_testing",
+            "default": "dynamic_testing",
+            "title": "Agent",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DynamicOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "status",
+          "metrics"
+        ],
+        "title": "DynamicResponse",
+        "type": "object"
+      }
+    },
+    "verification": {
+      "request": {
+        "$defs": {
+          "Hypothesis": {
+            "additionalProperties": false,
+            "properties": {
+              "hypothesis_id": {
+                "pattern": "^hyp_[a-z0-9_]+$",
+                "title": "Hypothesis Id",
+                "type": "string"
+              },
+              "category": {
+                "$ref": "#/$defs/VulnCategory"
+              },
+              "title": {
+                "title": "Title",
+                "type": "string"
+              },
+              "rationale": {
+                "title": "Rationale",
+                "type": "string"
+              },
+              "endpoint_id": {
+                "title": "Endpoint Id",
+                "type": "string"
+              },
+              "invariant_id": {
+                "title": "Invariant Id",
+                "type": "string"
+              },
+              "priority": {
+                "maximum": 5,
+                "minimum": 1,
+                "title": "Priority",
+                "type": "integer"
+              },
+              "skill_refs": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Skill Refs",
+                "type": "array"
+              }
+            },
+            "required": [
+              "hypothesis_id",
+              "category",
+              "title",
+              "rationale",
+              "endpoint_id",
+              "invariant_id",
+              "priority",
+              "skill_refs"
+            ],
+            "title": "Hypothesis",
+            "type": "object"
+          },
+          "VerificationInput": {
+            "additionalProperties": false,
+            "properties": {
+              "hypothesis": {
+                "$ref": "#/$defs/Hypothesis"
+              },
+              "dynamic_result_ref": {
+                "title": "Dynamic Result Ref",
+                "type": "string"
+              },
+              "evidence_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Evidence Ids",
+                "type": "array"
+              },
+              "invariant_statement": {
+                "title": "Invariant Statement",
+                "type": "string"
+              },
+              "reproduction_runs_requested": {
+                "maximum": 10,
+                "minimum": 1,
+                "title": "Reproduction Runs Requested",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "hypothesis",
+              "dynamic_result_ref",
+              "evidence_ids",
+              "invariant_statement",
+              "reproduction_runs_requested"
+            ],
+            "title": "VerificationInput",
+            "type": "object"
+          },
+          "VulnCategory": {
+            "enum": [
+              "broken_access_control",
+              "idor",
+              "authn_authz_flaw",
+              "business_logic"
+            ],
+            "title": "VulnCategory",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "agent": {
+            "const": "verification",
+            "default": "verification",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/$defs/VerificationInput"
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "input"
+        ],
+        "title": "VerificationRequest",
+        "type": "object"
+      },
+      "response": {
+        "$defs": {
+          "ErrorInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Stable machine-readable error code, e.g. SCOPE_VIOLATION",
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Details"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "title": "ErrorInfo",
+            "type": "object"
+          },
+          "Metrics": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_ms": {
+                "minimum": 0,
+                "title": "Duration Ms",
+                "type": "integer"
+              },
+              "llm_calls": {
+                "minimum": 0,
+                "title": "Llm Calls",
+                "type": "integer"
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "duration_ms",
+              "llm_calls",
+              "input_tokens",
+              "output_tokens"
+            ],
+            "title": "Metrics",
+            "type": "object"
+          },
+          "Reproducibility": {
+            "additionalProperties": false,
+            "properties": {
+              "runs": {
+                "title": "Runs",
+                "type": "integer"
+              },
+              "reproduced": {
+                "title": "Reproduced",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "runs",
+              "reproduced"
+            ],
+            "title": "Reproducibility",
+            "type": "object"
+          },
+          "Severity": {
+            "additionalProperties": false,
+            "properties": {
+              "level": {
+                "$ref": "#/$defs/SeverityLevel"
+              },
+              "rationale": {
+                "title": "Rationale",
+                "type": "string"
+              },
+              "cvss_vector": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Cvss Vector"
+              }
+            },
+            "required": [
+              "level",
+              "rationale"
+            ],
+            "title": "Severity",
+            "type": "object"
+          },
+          "SeverityLevel": {
+            "enum": [
+              "informational",
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "SeverityLevel",
+            "type": "string"
+          },
+          "TaskStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "blocked",
+              "needs_input",
+              "cancelled"
+            ],
+            "title": "TaskStatus",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "confirmed",
+              "unconfirmed",
+              "rejected"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          },
+          "VerificationOutput": {
+            "additionalProperties": false,
+            "properties": {
+              "finding_id": {
+                "anyOf": [
+                  {
+                    "pattern": "^fnd_[0-9a-f]{8,}$",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Finding Id"
+              },
+              "verdict": {
+                "$ref": "#/$defs/Verdict"
+              },
+              "reproducibility": {
+                "$ref": "#/$defs/Reproducibility"
+              },
+              "confidence": {
+                "maximum": 1,
+                "minimum": 0,
+                "title": "Confidence",
+                "type": "number"
+              },
+              "severity": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Severity"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "invariant_violated": {
+                "title": "Invariant Violated",
+                "type": "boolean"
+              },
+              "supporting_evidence_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Supporting Evidence Ids",
+                "type": "array"
+              },
+              "rejection_reasons": {
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "title": "Rejection Reasons",
+                "type": "array"
+              }
+            },
+            "required": [
+              "verdict",
+              "reproducibility",
+              "confidence",
+              "invariant_violated",
+              "supporting_evidence_ids"
+            ],
+            "title": "VerificationOutput",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/TaskStatus"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "agent": {
+            "const": "verification",
+            "default": "verification",
+            "title": "Agent",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/VerificationOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "status",
+          "metrics"
+        ],
+        "title": "VerificationResponse",
+        "type": "object"
+      }
+    },
+    "remediation": {
+      "request": {
+        "$defs": {
+          "RemediationInput": {
+            "additionalProperties": false,
+            "properties": {
+              "finding_id": {
+                "pattern": "^fnd_[0-9a-f]{8,}$",
+                "title": "Finding Id",
+                "type": "string"
+              },
+              "source_refs": {
+                "items": {
+                  "$ref": "#/$defs/SourceRef"
+                },
+                "title": "Source Refs",
+                "type": "array"
+              },
+              "verification_evidence_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Verification Evidence Ids",
+                "type": "array"
+              },
+              "test_environment": {
+                "$ref": "#/$defs/SandboxConfig"
+              },
+              "original_test_plan_id": {
+                "title": "Original Test Plan Id",
+                "type": "string"
+              },
+              "max_attempts": {
+                "maximum": 3,
+                "minimum": 1,
+                "title": "Max Attempts",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "finding_id",
+              "source_refs",
+              "verification_evidence_ids",
+              "test_environment",
+              "original_test_plan_id",
+              "max_attempts"
+            ],
+            "title": "RemediationInput",
+            "type": "object"
+          },
+          "SandboxConfig": {
+            "additionalProperties": false,
+            "properties": {
+              "sandbox_id": {
+                "pattern": "^sbx_[0-9a-f]{8,}$",
+                "title": "Sandbox Id",
+                "type": "string"
+              },
+              "base_url": {
+                "title": "Base Url",
+                "type": "string"
+              },
+              "snapshot_enabled": {
+                "title": "Snapshot Enabled",
+                "type": "boolean"
+              },
+              "max_requests": {
+                "exclusiveMinimum": 0,
+                "title": "Max Requests",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "sandbox_id",
+              "base_url",
+              "snapshot_enabled",
+              "max_requests"
+            ],
+            "title": "SandboxConfig",
+            "type": "object"
+          },
+          "SourceRef": {
+            "additionalProperties": false,
+            "properties": {
+              "file": {
+                "title": "File",
+                "type": "string"
+              },
+              "start_line": {
+                "title": "Start Line",
+                "type": "integer"
+              },
+              "end_line": {
+                "title": "End Line",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "file",
+              "start_line",
+              "end_line"
+            ],
+            "title": "SourceRef",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "agent": {
+            "const": "remediation",
+            "default": "remediation",
+            "title": "Agent",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/$defs/RemediationInput"
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "input"
+        ],
+        "title": "RemediationRequest",
+        "type": "object"
+      },
+      "response": {
+        "$defs": {
+          "ErrorInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "description": "Stable machine-readable error code, e.g. SCOPE_VIOLATION",
+                "title": "Code",
+                "type": "string"
+              },
+              "message": {
+                "title": "Message",
+                "type": "string"
+              },
+              "retryable": {
+                "title": "Retryable",
+                "type": "boolean"
+              },
+              "details": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Details"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable"
+            ],
+            "title": "ErrorInfo",
+            "type": "object"
+          },
+          "Metrics": {
+            "additionalProperties": false,
+            "properties": {
+              "duration_ms": {
+                "minimum": 0,
+                "title": "Duration Ms",
+                "type": "integer"
+              },
+              "llm_calls": {
+                "minimum": 0,
+                "title": "Llm Calls",
+                "type": "integer"
+              },
+              "input_tokens": {
+                "minimum": 0,
+                "title": "Input Tokens",
+                "type": "integer"
+              },
+              "output_tokens": {
+                "minimum": 0,
+                "title": "Output Tokens",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "duration_ms",
+              "llm_calls",
+              "input_tokens",
+              "output_tokens"
+            ],
+            "title": "Metrics",
+            "type": "object"
+          },
+          "PatchInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "patch_id": {
+                "pattern": "^pat_[0-9a-f]{8,}$",
+                "title": "Patch Id",
+                "type": "string"
+              },
+              "branch": {
+                "title": "Branch",
+                "type": "string"
+              },
+              "diff_ref": {
+                "title": "Diff Ref",
+                "type": "string"
+              },
+              "changed_files": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Changed Files",
+                "type": "array"
+              }
+            },
+            "required": [
+              "patch_id",
+              "branch",
+              "diff_ref",
+              "changed_files"
+            ],
+            "title": "PatchInfo",
+            "type": "object"
+          },
+          "RemediationOutput": {
+            "additionalProperties": false,
+            "properties": {
+              "root_cause": {
+                "$ref": "#/$defs/RootCause"
+              },
+              "patch": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PatchInfo"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "tests": {
+                "$ref": "#/$defs/RemediationTests"
+              },
+              "replay": {
+                "$ref": "#/$defs/ReplayResult"
+              },
+              "remediation_status": {
+                "$ref": "#/$defs/RemediationStatus"
+              },
+              "requires_human_approval": {
+                "const": true,
+                "default": true,
+                "title": "Requires Human Approval",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "root_cause",
+              "tests",
+              "replay",
+              "remediation_status"
+            ],
+            "title": "RemediationOutput",
+            "type": "object"
+          },
+          "RemediationStatus": {
+            "enum": [
+              "patch_ready_for_review",
+              "patch_failed_tests",
+              "patch_not_possible"
+            ],
+            "title": "RemediationStatus",
+            "type": "string"
+          },
+          "RemediationTests": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "$ref": "#/$defs/TestCounts"
+              },
+              "integration": {
+                "$ref": "#/$defs/TestCounts"
+              },
+              "regression": {
+                "$ref": "#/$defs/TestCounts"
+              }
+            },
+            "required": [
+              "unit",
+              "integration",
+              "regression"
+            ],
+            "title": "RemediationTests",
+            "type": "object"
+          },
+          "ReplayResult": {
+            "additionalProperties": false,
+            "properties": {
+              "original_scenario_replayed": {
+                "title": "Original Scenario Replayed",
+                "type": "boolean"
+              },
+              "vulnerability_still_reproducible": {
+                "title": "Vulnerability Still Reproducible",
+                "type": "boolean"
+              },
+              "evidence_id": {
+                "title": "Evidence Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "original_scenario_replayed",
+              "vulnerability_still_reproducible",
+              "evidence_id"
+            ],
+            "title": "ReplayResult",
+            "type": "object"
+          },
+          "RootCause": {
+            "additionalProperties": false,
+            "properties": {
+              "summary": {
+                "title": "Summary",
+                "type": "string"
+              },
+              "files": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Files",
+                "type": "array"
+              }
+            },
+            "required": [
+              "summary",
+              "files"
+            ],
+            "title": "RootCause",
+            "type": "object"
+          },
+          "TaskStatus": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "blocked",
+              "needs_input",
+              "cancelled"
+            ],
+            "title": "TaskStatus",
+            "type": "string"
+          },
+          "TestCounts": {
+            "additionalProperties": false,
+            "properties": {
+              "total": {
+                "title": "Total",
+                "type": "integer"
+              },
+              "passed": {
+                "title": "Passed",
+                "type": "integer"
+              },
+              "failed": {
+                "title": "Failed",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "total",
+              "passed",
+              "failed"
+            ],
+            "title": "TestCounts",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "pattern": "^\\d+\\.\\d+\\.\\d+$",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "correlation_id": {
+            "pattern": "^cor_[0-9a-f]{8,}$",
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "project_id": {
+            "pattern": "^prj_[0-9a-f]{8,}$",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "pattern": "^eng_[0-9a-f]{8,}$",
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "scan_id": {
+            "pattern": "^scn_[0-9a-f]{8,}$",
+            "title": "Scan Id",
+            "type": "string"
+          },
+          "task_id": {
+            "pattern": "^tsk_[0-9a-f]{8,}$",
+            "title": "Task Id",
+            "type": "string"
+          },
+          "agent_run_id": {
+            "pattern": "^run_[0-9a-f]{8,}$",
+            "title": "Agent Run Id",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO 8601 UTC",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "title": "Created At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/$defs/TaskStatus"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ErrorInfo"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "metrics": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "agent": {
+            "const": "remediation",
+            "default": "remediation",
+            "title": "Agent",
+            "type": "string"
+          },
+          "output": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RemediationOutput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "schema_version",
+          "correlation_id",
+          "project_id",
+          "engagement_id",
+          "scan_id",
+          "task_id",
+          "agent_run_id",
+          "created_at",
+          "status",
+          "metrics"
+        ],
+        "title": "RemediationResponse",
+        "type": "object"
+      }
+    }
+  }
+}

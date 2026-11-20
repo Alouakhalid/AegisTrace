@@ -1,0 +1,7 @@
+Category,True_Positives,False_Positives,False_Negatives,True_Negatives,Precision,Recall,F1_Score,Accuracy
+Hypothesis_Derivation,7,0,0,5,100.00%,100.00%,100.00%,100.00%
+Category_Classification,7,0,0,5,100.00%,100.00%,100.00%,100.00%
+BugHunter_Skill_Routing,7,0,0,3,100.00%,100.00%,100.00%,100.00%
+Test_Plan_Synthesis,7,0,0,5,100.00%,100.00%,100.00%,100.00%
+Security_Twin_State_Checks,7,0,0,5,100.00%,100.00%,100.00%,100.00%
+OVERALL_TOTAL,35,0,0,23,100.00%,100.00%,100.00%,100.00%

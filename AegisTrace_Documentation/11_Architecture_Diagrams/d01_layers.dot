@@ -1,0 +1,11 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5]; node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.18,0.10"]; edge [fontname="DejaVu Sans", fontsize=9, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=TB; labelloc=t; label="Figure 1 - AegisTrace Seven-Layer Architecture"; fontsize=15; fontcolor="#0B1F3A";
+node [width=7.2, fontsize=12];
+L1 [label="Layer 1 - User Interface\nNext.js - React - TypeScript - React Flow", fillcolor="#0B1F3A", fontcolor="white"];
+L2 [label="Layer 2 - Orchestration\nFastAPI - CrewAI - approval checkpoints - retries", fillcolor="#123A63", fontcolor="white"];
+L3 [label="Layer 3 - AI Intelligence\n7 official agents - Groq LLM provider", fillcolor="#0E5A82", fontcolor="white"];
+L4 [label="Layer 4 - Security Intelligence Engine\nCode Parser - Code Graph - Invariants - Paired Identity - State-Diff - Verification", fillcolor="#0E7490", fontcolor="white"];
+L5 [label="Layer 5 - Skills & Tools\nSkill Loader/Router - LangChain tools - Semgrep - Schemathesis - HTTPX - Tavily", fillcolor="#22A6C4", fontcolor="white"];
+L6 [label="Layer 6 - Execution & Sandbox\nDocker - egress deny-by-default - DB snapshots - resource limits - audit log", fillcolor="#7DD3E8"];
+L7 [label="Layer 7 - Data & Memory\nPostgreSQL - pgvector - immutable evidence - memory items", fillcolor="#BDEBF5"];
+L1->L2->L3->L4->L5->L6->L7 [dir=both];
+}

@@ -1,0 +1,7 @@
+Category,True_Positives,False_Positives,False_Negatives,True_Negatives,Precision,Recall,F1_Score,Accuracy
+Route_Extraction,12,0,0,0,100.00%,100.00%,100.00%,100.00%
+Auth_Guard_Detection,3,0,0,9,100.00%,100.00%,100.00%,100.00%
+ORM_Model_Discovery,7,0,0,0,100.00%,100.00%,100.00%,100.00%
+Owner_Field_Mapping,4,0,0,3,100.00%,100.00%,100.00%,100.00%
+Candidate_Invariants,4,0,1,0,100.00%,80.00%,88.89%,80.00%
+OVERALL_TOTAL,30,0,1,12,100.00%,96.77%,98.36%,97.67%

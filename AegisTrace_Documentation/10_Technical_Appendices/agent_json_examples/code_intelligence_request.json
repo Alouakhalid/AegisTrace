@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "correlation_id": "cor_0192f230",
+  "project_id": "prj_0192f1a0",
+  "engagement_id": "eng_0192f1b4",
+  "scan_id": "scn_0192f1c9",
+  "task_id": "tsk_0192f302",
+  "agent_run_id": "run_0192f402",
+  "created_at": "2026-11-17T09:30:10Z",
+  "agent": "code_intelligence",
+  "input": {
+    "repository": {
+      "path_ref": "workspace://scn_0192f1c9/repo",
+      "commit": "a1b2c3d4e5f6"
+    },
+    "source_language": "python",
+    "framework_hints": [
+      "fastapi",
+      "sqlalchemy"
+    ],
+    "scan_config": {
+      "max_files": 2000,
+      "include_globs": [
+        "app/**/*.py"
+      ],
+      "enable_semgrep": false
+    }
+  }
+}

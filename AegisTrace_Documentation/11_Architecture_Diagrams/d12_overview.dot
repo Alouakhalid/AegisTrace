@@ -1,0 +1,26 @@
+digraph O { graph [bgcolor=white, fontname="DejaVu Sans", pad=0.3, nodesep=0.3, ranksep=0.6, rankdir=TB, labelloc=t, fontsize=17, fontcolor="#0B1F3A", label="Figure 12 - ERD Overview: Relationships Between Table Groups"]; node [fontname="DejaVu Sans", fontsize=14, shape=box, style="rounded,filled", penwidth=1.2, color="#0B1F3A"]; edge [color="#0E7490", arrowsize=0.7, penwidth=1.1]; node [fontsize=15, margin="0.25,0.15"];
+  "Access & scope" [label="Access & scope\n(6 tables)", fillcolor="#0B1F3A", fontcolor="white"];
+  "Agent execution" [label="Agent execution\n(3 tables)", fillcolor="#123A63", fontcolor="white"];
+  "Code intelligence" [label="Code intelligence\n(5 tables)", fillcolor="#0E7490", fontcolor="white"];
+  "Research & testing" [label="Research & testing\n(4 tables)", fillcolor="#22A6C4", fontcolor="black"];
+  "Evidence & findings" [label="Evidence & findings\n(3 tables)", fillcolor="#7DD3E8", fontcolor="black"];
+  "Remediation" [label="Remediation\n(4 tables)", fillcolor="#FDE68A", fontcolor="black"];
+  "Skills & memory" [label="Skills & memory\n(4 tables)", fillcolor="#BDEBF5", fontcolor="black"];
+  "Audit" [label="Audit\n(1 tables)", fillcolor="#E5E7EB", fontcolor="black"];
+  "Agent execution" -> "Access & scope";
+  "Audit" -> "Access & scope";
+  "Code intelligence" -> "Access & scope";
+  "Evidence & findings" -> "Access & scope";
+  "Evidence & findings" -> "Agent execution";
+  "Evidence & findings" -> "Code intelligence";
+  "Evidence & findings" -> "Research & testing";
+  "Remediation" -> "Access & scope";
+  "Remediation" -> "Agent execution";
+  "Remediation" -> "Evidence & findings";
+  "Research & testing" -> "Access & scope";
+  "Research & testing" -> "Agent execution";
+  "Research & testing" -> "Code intelligence";
+  "Research & testing" -> "Evidence & findings";
+  "Skills & memory" -> "Access & scope";
+  "Skills & memory" -> "Agent execution";
+}

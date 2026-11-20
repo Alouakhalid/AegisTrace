@@ -1,0 +1,55 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "FinTech Core Banking Service",
+    "description": "Production banking microservice built with Django and Redis",
+    "version": "2.1.0"
+  },
+  "paths": {
+    "/api/v2/accounts/{account_id}/balance": {
+      "get": {
+        "summary": "Account balance",
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v2/transfers": {
+      "post": {
+        "summary": "Transfer funds",
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v2/public/rates": {
+      "get": {
+        "summary": "Exchange rates"
+      }
+    },
+    "/api/v2/users/{user_id}/profile": {
+      "get": {
+        "summary": "User profile",
+        "security": [
+          {
+            "tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/internal/system_metrics": {
+      "get": {
+        "summary": "Internal metrics"
+      }
+    },
+    "/api/v2/debug_command": {
+      "post": {
+        "summary": "Debug exec"
+      }
+    }
+  }
+}

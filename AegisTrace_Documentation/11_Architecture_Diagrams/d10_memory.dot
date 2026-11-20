@@ -1,0 +1,13 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5, labelloc=t, fontsize=16, fontcolor="#0B1F3A"]; node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.16,0.09"]; edge [fontname="DejaVu Sans", fontsize=10, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=LR; label="Figure 10 - Memory Architecture";
+node [width=3.0]; nodesep=0.2;
+W [label="Working memory\ncurrent task context, temp results\n(process memory; never persisted)", fillcolor="#BDEBF5"];
+P [label="Project memory\nrepo structure, routes, invariants", fillcolor="#7DD3E8"];
+E [label="Engagement memory\nscope, identities, findings, evidence", fillcolor="#22A6C4"];
+K [label="Knowledge memory\nskill metadata, patterns, strategies", fillcolor="#0E7490", fontcolor=white];
+R [label="Remediation memory\npatches, root causes, outcomes", fillcolor="#123A63", fontcolor=white];
+PG [label="PostgreSQL\n(relational tables = system of record)", shape=cylinder, fillcolor="#0B1F3A", fontcolor=white];
+V [label="pgvector\n(embeddings in memory_items, skill_metadata)", shape=cylinder, fillcolor="#0B1F3A", fontcolor=white];
+O [label="Object store\n(evidence content, diffs, logs, immutable by hash)", shape=cylinder, fillcolor="#E5E7EB"];
+{rank=same; W; P; E; K; R} {rank=same; PG; V; O}
+W->P [style=dashed, label="promote validated facts"]; P->PG; E->PG; K->PG; R->PG; K->V; R->V; P->V [style=dashed]; E->O [label="evidence content"]; R->O [label="diffs"];
+}

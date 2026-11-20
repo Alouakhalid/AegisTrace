@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "correlation_id": "cor_0192f230",
+  "project_id": "prj_0192f1a0",
+  "engagement_id": "eng_0192f1b4",
+  "scan_id": "scn_0192f1c9",
+  "task_id": "tsk_0192f303",
+  "agent_run_id": "run_0192f403",
+  "created_at": "2026-11-17T09:30:10Z",
+  "agent": "recon",
+  "input": {
+    "scope": {
+      "allowed_hosts": [
+        "shoplite-app"
+      ],
+      "allowed_methods": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "forbidden_paths": [
+        "/admin/danger/*"
+      ]
+    },
+    "api_spec_ref": "workspace://scn_0192f1c9/openapi.json",
+    "technology_hints": [
+      "fastapi",
+      "postgresql"
+    ],
+    "research": {
+      "enabled": true,
+      "max_queries": 3,
+      "search_depth": "basic"
+    }
+  }
+}

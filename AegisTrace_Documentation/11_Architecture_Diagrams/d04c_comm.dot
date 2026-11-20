@@ -1,0 +1,9 @@
+digraph G { graph [bgcolor=white, fontname="DejaVu Sans", pad=0.3, labelloc=t, fontsize=16, fontcolor="#0B1F3A", label="Figure 4b - Agent Communication (hub and spoke)", nodesep=0.4, ranksep=0.7];
+node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4]; edge [fontname="DejaVu Sans", fontsize=10, color="#0E7490", penwidth=1.3, dir=both, arrowsize=0.7];
+O [label="Orchestrator\n(only router)", fillcolor="#0B1F3A", fontcolor=white, shape=box, width=2.6];
+DB [label="agent_messages + agent_tasks\n(PostgreSQL, validated JSON)", shape=cylinder, fillcolor="#7DD3E8"];
+CI [label="Code Intelligence"]; RC [label="Recon"]; VR [label="Vulnerability Research"]; DT [label="Dynamic Testing"]; VF [label="Verification"]; RM [label="Remediation"];
+O->DB [label="persist every\nrequest/response"];
+O->CI; O->RC; O->VR; O->DT; O->VF; O->RM;
+{rank=same; CI; RC; VR} {rank=same; DT; VF; RM}
+}

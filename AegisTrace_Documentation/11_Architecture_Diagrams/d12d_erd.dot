@@ -1,0 +1,13 @@
+digraph Ed { graph [bgcolor=white, fontname="DejaVu Sans", pad=0.3, nodesep=0.3, ranksep=0.6, rankdir=TB, labelloc=t, fontsize=17, fontcolor="#0B1F3A", label="Figure 12d - ERD: Skills, Memory and Audit"]; node [fontname="DejaVu Sans", fontsize=14, shape=box, style="rounded,filled", penwidth=1.2, color="#0B1F3A"]; edge [color="#0E7490", arrowsize=0.7, penwidth=1.1];
+subgraph cluster_2 { label="Skills & memory"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  skills [fillcolor="#BDEBF5", fontcolor="black"];
+  skill_metadata [fillcolor="#BDEBF5", fontcolor="black"];
+  skill_usage_logs [fillcolor="#BDEBF5", fontcolor="black"];
+  memory_items [fillcolor="#BDEBF5", fontcolor="black"];
+}
+subgraph cluster_3 { label="Audit"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  audit_logs [fillcolor="#E5E7EB", fontcolor="black"];
+}
+  skill_metadata -> skills;
+  skill_usage_logs -> skills;
+}

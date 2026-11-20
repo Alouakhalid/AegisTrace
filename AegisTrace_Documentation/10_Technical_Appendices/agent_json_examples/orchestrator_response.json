@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0.0",
+  "correlation_id": "cor_0192f230",
+  "project_id": "prj_0192f1a0",
+  "engagement_id": "eng_0192f1b4",
+  "scan_id": "scn_0192f1c9",
+  "task_id": "tsk_0192f301",
+  "agent_run_id": "run_0192f401",
+  "created_at": "2026-11-17T09:30:04Z",
+  "agent": "orchestrator",
+  "status": "succeeded",
+  "warnings": [],
+  "error": null,
+  "metrics": {
+    "duration_ms": 3900,
+    "llm_calls": 1,
+    "input_tokens": 2100,
+    "output_tokens": 640
+  },
+  "output": {
+    "scope_validation": {
+      "valid": true,
+      "checks": [
+        {
+          "name": "manifest_well_formed",
+          "passed": true,
+          "detail": "scm_0192f1b9 parsed, 1 allowed host"
+        },
+        {
+          "name": "host_in_scope",
+          "passed": true,
+          "detail": "shoplite-app matches allowed_hosts"
+        },
+        {
+          "name": "no_third_party_wildcards",
+          "passed": true,
+          "detail": "no wildcard entries"
+        },
+        {
+          "name": "environment_not_production",
+          "passed": true,
+          "detail": "environment=sandbox"
+        },
+        {
+          "name": "authorization_attested",
+          "passed": true,
+          "detail": "attested by user usr_0192f19e at 2026-11-17T09:12:00Z"
+        }
+      ]
+    },
+    "stages": [
+      {
+        "name": "code_analysis",
+        "agent": "code_intelligence",
+        "depends_on": [],
+        "parallel_group": "g1"
+      },
+      {
+        "name": "recon",
+        "agent": "recon",
+        "depends_on": [],
+        "parallel_group": "g1"
+      },
+      {
+        "name": "research",
+        "agent": "vulnerability_research",
+        "depends_on": [
+          "code_analysis",
+          "recon"
+        ]
+      },
+      {
+        "name": "dynamic_testing",
+        "agent": "dynamic_testing",
+        "depends_on": [
+          "research"
+        ]
+      },
+      {
+        "name": "verification",
+        "agent": "verification",
+        "depends_on": [
+          "dynamic_testing"
+        ]
+      },
+      {
+        "name": "remediation",
+        "agent": "remediation",
+        "depends_on": [
+          "verification"
+        ],
+        "requires_approval": true
+      }
+    ],
+    "task_assignments": [
+      {
+        "task_id": "tsk_0192f302",
+        "agent": "code_intelligence",
+        "stage": "code_analysis",
+        "depends_on": []
+      },
+      {
+        "task_id": "tsk_0192f303",
+        "agent": "recon",
+        "stage": "recon",
+        "depends_on": []
+      },
+      {
+        "task_id": "tsk_0192f304",
+        "agent": "vulnerability_research",
+        "stage": "research",
+        "depends_on": [
+          "tsk_0192f302",
+          "tsk_0192f303"
+        ]
+      },
+      {
+        "task_id": "tsk_0192f305",
+        "agent": "dynamic_testing",
+        "stage": "dynamic_testing",
+        "depends_on": [
+          "tsk_0192f304"
+        ]
+      },
+      {
+        "task_id": "tsk_0192f306",
+        "agent": "verification",
+        "stage": "verification",
+        "depends_on": [
+          "tsk_0192f305"
+        ]
+      },
+      {
+        "task_id": "tsk_0192f307",
+        "agent": "remediation",
+        "stage": "remediation",
+        "depends_on": [
+          "tsk_0192f306"
+        ]
+      }
+    ],
+    "workflow_status": "planned"
+  }
+}

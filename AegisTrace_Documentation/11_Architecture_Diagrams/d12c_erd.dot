@@ -1,0 +1,19 @@
+digraph Ec { graph [bgcolor=white, fontname="DejaVu Sans", pad=0.3, nodesep=0.3, ranksep=0.6, rankdir=TB, labelloc=t, fontsize=17, fontcolor="#0B1F3A", label="Figure 12c - ERD: Evidence, Findings and Remediation"]; node [fontname="DejaVu Sans", fontsize=14, shape=box, style="rounded,filled", penwidth=1.2, color="#0B1F3A"]; edge [color="#0E7490", arrowsize=0.7, penwidth=1.1];
+subgraph cluster_0 { label="Evidence & findings"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  evidence [fillcolor="#7DD3E8", fontcolor="black"];
+  findings [fillcolor="#7DD3E8", fontcolor="black"];
+  finding_evidence [fillcolor="#7DD3E8", fontcolor="black"];
+}
+subgraph cluster_1 { label="Remediation"; fontsize=13; fontcolor="#0B1F3A"; style="rounded"; color="#9FB3C8";
+  patches [fillcolor="#FDE68A", fontcolor="black"];
+  patch_tests [fillcolor="#FDE68A", fontcolor="black"];
+  approvals [fillcolor="#FDE68A", fontcolor="black"];
+  reports [fillcolor="#FDE68A", fontcolor="black"];
+}
+  approvals -> patches;
+  finding_evidence -> evidence;
+  finding_evidence -> findings;
+  patch_tests -> evidence;
+  patch_tests -> patches;
+  patches -> findings;
+}

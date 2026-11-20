@@ -1,0 +1,7 @@
+Category,True_Positives,False_Positives,False_Negatives,True_Negatives,Precision,Recall,F1_Score,Accuracy
+Endpoint_Extraction,11,0,0,0,100.00%,100.00%,100.00%,100.00%
+Scope_Gate_Enforcement,11,0,0,5,100.00%,100.00%,100.00%,100.00%
+Auth_Scheme_Detection,8,0,0,3,100.00%,100.00%,100.00%,100.00%
+Tech_Fingerprinting,6,0,0,6,100.00%,100.00%,100.00%,100.00%
+External_Intel_Tavily,0,0,3,0,0.00%,0.00%,0.00%,0.00%
+OVERALL_TOTAL,36,0,3,14,100.00%,92.31%,96.00%,94.34%

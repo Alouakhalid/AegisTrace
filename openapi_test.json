@@ -1,0 +1,58 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ShopLite E-Commerce Platform",
+    "description": "High-performance store API built with FastAPI framework and PostgreSQL",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://shoplite-app:8000"
+    }
+  ],
+  "paths": {
+    "/api/v1/orders/{order_id}": {
+      "get": {
+        "summary": "Retrieve order by ID",
+        "operationId": "getOrder",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "summary": "Update order shipping details",
+        "operationId": "updateOrder",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders": {
+      "post": {
+        "summary": "Create new purchase order",
+        "operationId": "createOrder",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Authenticate user and issue JWT",
+        "operationId": "login"
+      }
+    },
+    "/admin/danger/wipe_database": {
+      "delete": {
+        "summary": "Destructive system action",
+        "operationId": "wipeDatabase"
+      }
+    }
+  }
+}

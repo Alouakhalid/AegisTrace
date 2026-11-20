@@ -1,0 +1,18 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5]; node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.18,0.10"]; edge [fontname="DejaVu Sans", fontsize=9, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=TB; labelloc=t; label="Figure 2 - Seven Official Agents and Data Hand-offs"; fontsize=15; fontcolor="#0B1F3A";
+O [label="1. Orchestrator\nscope - plan - state", fillcolor="#0B1F3A", fontcolor="white"];
+C [label="2. Code Intelligence\nRepository Security Map"];
+R [label="3. Recon\nAttack Surface Map"];
+V [label="4. Vulnerability Research\nhypotheses + test plans"];
+D [label="5. Dynamic Testing\nevidence + state diffs"];
+F [label="6. Verification\nConfirmed / Unconfirmed / Rejected"];
+M [label="7. Remediation\npatch + replay + regression"];
+H [label="Human Approval\n(mandatory gate)", shape=octagon, fillcolor="#FDE68A", color="#92400E"];
+RP [label="Report Service\n(deterministic module,\nnot an agent)", shape=component, fillcolor="#E5E7EB"];
+O->C [label="task"]; O->R [label="task (parallel)"];
+C->V [label="map + invariants"]; R->V [label="surface"];
+V->D [label="approved plan"]; D->F [label="evidence"];
+F->M [label="confirmed finding"]; M->H [label="patch + results"]; H->RP [label="decision"];
+F->D [label="re-test", style=dashed, constraint=false];
+V->C [label="ctx request", style=dashed, constraint=false];
+M->C [label="clarify", style=dashed, constraint=false];
+}

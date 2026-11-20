@@ -1,0 +1,11 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5, labelloc=t, fontsize=16, fontcolor="#0B1F3A"]; node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.16,0.09"]; edge [fontname="DejaVu Sans", fontsize=10, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=TB; label="Figure A2 - Failure and Retry Flow";
+s [label="Agent run ends with error", shape=oval, fillcolor="#0B1F3A", fontcolor=white];
+k [label="Error kind?", shape=diamond, fillcolor="#FDE68A", color="#92400E"];
+v [label="Schema validation failure"]; t [label="Transient (timeout, 429, 5xx)"]; sc [label="ScopeViolation / auth to sandbox failed"]; ot [label="Other (bug, missing input)"];
+v2 [label="One repair attempt:\nreturn validation error to the agent"]; t2 [label="Retry with exponential backoff + jitter\nmax 3 attempts"];
+bl [label="Mark task blocked\naudit-log, halt workflow", fillcolor="#FECACA", color="#991B1B"];
+fl [label="Mark task failed\nrecord error object", fillcolor="#FECACA", color="#991B1B"];
+d [label="Succeeded?", shape=diamond, fillcolor="#FDE68A", color="#92400E"]; ok [label="Continue workflow", fillcolor="#BBF7D0", color="#166534"];
+dep [label="Dependent tasks marked blocked\nOrchestrator reports partial result"];
+s->k; k->v; k->t; k->sc; k->ot; v->v2; t->t2; sc->bl; ot->fl; v2->d; t2->d; d->ok [label="yes"]; d->fl [label="no"]; fl->dep; bl->dep;
+}

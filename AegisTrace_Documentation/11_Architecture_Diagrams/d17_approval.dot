@@ -1,0 +1,14 @@
+digraph G { graph [bgcolor="white", fontname="DejaVu Sans", pad=0.3, nodesep=0.35, ranksep=0.5, labelloc=t, fontsize=16, fontcolor="#0B1F3A"]; node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", fillcolor="#EAF6FB", color="#0B1F3A", penwidth=1.4, margin="0.16,0.09"]; edge [fontname="DejaVu Sans", fontsize=10, color="#0E7490", penwidth=1.3, arrowsize=0.8]; rankdir=TB; label="Figure 17 - AI Remediation and Human Approval Flow";
+a [label="Confirmed finding (Verification)", fillcolor="#0B1F3A", fontcolor=white];
+b [label="Root cause analysis"]; c [label="Patch on isolated branch\n(never the main branch)"];
+d [label="Run unit + integration + regression"]; e [label="Replay original exploit scenario"];
+f [label="All green and exploit no longer reproduces?", shape=diamond, fillcolor="#FDE68A", color="#92400E"];
+g [label="Attempts < 3?", shape=diamond, fillcolor="#FDE68A", color="#92400E"];
+x [label="patch_failed_tests / patch_not_possible\nreport to human", fillcolor="#FECACA", color="#991B1B"];
+h [label="Approval request with diff, test results,\nreplay evidence", shape=octagon, fillcolor="#FDE68A", color="#92400E"];
+i [label="Reviewer decision", shape=diamond, fillcolor="#FDE68A", color="#92400E"];
+m [label="Approved: a HUMAN merges.\nNo automatic merge or deploy", fillcolor="#BBF7D0", color="#166534"];
+r [label="Rejected: finding stays open", fillcolor="#E5E7EB"];
+a->b->c->d->e->f; f->h [label="yes"]; f->g [label="no"]; g->b [label="yes: next attempt"]; g->x [label="no"];
+h->i; i->m [label="approve"]; i->r [label="reject"]; i->b [label="changes requested", style=dashed];
+}

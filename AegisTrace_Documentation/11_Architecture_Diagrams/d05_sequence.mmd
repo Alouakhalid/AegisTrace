@@ -1,0 +1,38 @@
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EAF6FB','primaryBorderColor':'#0B1F3A','lineColor':'#0E7490','actorBkg':'#0B1F3A','actorTextColor':'#ffffff','signalColor':'#0E7490','noteBkgColor':'#FDE68A','noteTextColor':'#16212E','fontSize':'15px'}}}%%
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant O as Orchestrator
+  participant CI as Code Intelligence
+  participant RC as Recon
+  participant VR as Vuln Research
+  participant DT as Dynamic Testing
+  participant VF as Verification
+  participant RM as Remediation
+  participant H as Human Reviewer
+  U->>O: assessment request (scope, repo, credential refs)
+  O->>O: validate scope manifest
+  par parallel after scope validation
+    O->>CI: task: analyze repository
+    O->>RC: task: discover authorized surface
+  end
+  CI-->>O: Repository Security Map + candidate invariants
+  RC-->>O: Attack Surface Map + intel refs
+  O->>VR: maps + invariants + skill hits
+  VR-->>O: hypotheses + test plans
+  O->>DT: approved test plan + identities + sandbox
+  DT-->>O: HTTP evidence + state diffs
+  O->>VF: hypothesis + evidence refs
+  alt confirmed
+    VF-->>O: finding (verdict, severity, confidence)
+    O->>RM: confirmed finding + code refs
+    RM-->>O: patch + replay + regression results
+    O->>H: approval request (patch preview)
+    H-->>O: approve / reject / request changes
+  else unconfirmed (retries left)
+    VF-->>O: needs more evidence
+    O->>DT: re-test with variants
+  else rejected
+    VF-->>O: rejected with reasons
+  end
+  O-->>U: final report (deterministic service)
