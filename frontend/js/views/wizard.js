@@ -25,7 +25,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
         
         <!-- Page Header -->
         <div class="page-header" style="text-align: center; flex-direction: column; align-items: center; margin-bottom: 28px;">
-          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(121, 59, 255, 0.12); border: 1px solid rgba(121, 59, 255, 0.3); border-radius: 999px; margin-bottom: 12px;">
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 999px; margin-bottom: 12px;">
             <span style="font-size: 11px; font-weight: 700; color: #793BFF; text-transform: uppercase; letter-spacing: 1.2px;">Repository-to-Security Intelligence Engine</span>
           </div>
           <h1 class="page-title" style="font-size: 2.2rem; margin-bottom: 8px;">Repository Security Assessment</h1>
@@ -35,7 +35,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
         </div>
 
         <!-- Repository Input Card -->
-        <div class="card card-central-glow" style="padding: 32px; border: 1px solid var(--border-accent); background: rgba(13, 16, 34, 0.9); border-radius: var(--radius-xl); margin-bottom: 24px;">
+        <div class="card card-central-glow" style="padding: 32px; border: 1px solid var(--border-accent); background: rgba(8, 8, 13, 0.9); border-radius: var(--radius-xl); margin-bottom: 24px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <label style="font-weight: 700; color: #fff; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;">
               <span>🐙</span> GitHub Repository URL <span style="color: var(--cyan-accent);">*</span>
@@ -46,7 +46,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
           <div style="display: flex; gap: 12px; align-items: center;">
             <input type="text" class="form-control" id="repo-url-input" value="${initialUrl}" 
                    placeholder="https://github.com/owner/repository" 
-                   style="flex: 1; font-size: 1rem; padding: 14px 16px; font-family: var(--font-mono); background: rgba(0,0,0,0.5); border-color: rgba(66, 107, 255, 0.4);">
+                   style="flex: 1; font-size: 1rem; padding: 14px 16px; font-family: var(--font-mono); background: rgba(0,0,0,0.5); border-color: rgba(109, 75, 240, 0.4);">
             <button class="btn btn-primary" id="btn-analyze-repo" style="padding: 14px 28px; font-size: 0.95rem; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 8px;">
               ${isAnalyzing ? `<span class="spinner" style="width: 16px; height: 16px; border-width: 2px;"></span> Analyzing...` : `<span>⚡</span> Analyze Repository`}
             </button>
@@ -55,13 +55,13 @@ export async function renderWizard(container, navigate, state, api, toast) {
           <!-- Quick Presets -->
           <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px;">
             <span style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;">Quick Targets:</span>
-            <button class="repo-preset-btn" data-url="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" style="background: rgba(121,59,255,0.15); border: 1px solid rgba(121,59,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
+            <button class="repo-preset-btn" data-url="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" style="background: rgba(139, 92, 246,0.15); border: 1px solid rgba(139, 92, 246,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
               🧠 Neurovain-Data-Analysis-AI
             </button>
-            <button class="repo-preset-btn" data-url="https://github.com/Alouakhalid/chess_RL" style="background: rgba(66,107,255,0.15); border: 1px solid rgba(66,107,255,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
+            <button class="repo-preset-btn" data-url="https://github.com/Alouakhalid/chess_RL" style="background: rgba(109, 75, 240,0.15); border: 1px solid rgba(109, 75, 240,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
               ♟️ chess_RL
             </button>
-            <button class="repo-preset-btn" data-url="https://github.com/ebraheembinessa-E-vias/community-reels-engine" style="background: rgba(36,200,245,0.15); border: 1px solid rgba(36,200,245,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
+            <button class="repo-preset-btn" data-url="https://github.com/ebraheembinessa-E-vias/community-reels-engine" style="background: rgba(196, 181, 253,0.15); border: 1px solid rgba(196, 181, 253,0.35); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.76rem; cursor: pointer;">
               🎬 community-reels-engine
             </button>
           </div>
@@ -88,7 +88,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
   function renderIntelligenceArea() {
     if (isAnalyzing) {
       return `
-        <div class="card" style="padding: 48px; text-align: center; background: rgba(13, 16, 34, 0.7); border: 1px dashed var(--border-accent); border-radius: var(--radius-xl);">
+        <div class="card" style="padding: 48px; text-align: center; background: rgba(8, 8, 13, 0.7); border: 1px dashed var(--border-accent); border-radius: var(--radius-xl);">
           <div class="spinner" style="width: 44px; height: 44px; margin: 0 auto 20px auto; border-color: var(--cyan-accent); border-top-color: transparent;"></div>
           <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 8px;">Understanding Repository Architecture</h3>
           <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 500px; margin: 0 auto;" id="analysis-step-text">
@@ -113,7 +113,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
     const r = analysisReport;
     return `
       <!-- REPOSITORY INTELLIGENCE REPORT -->
-      <div class="card" style="padding: 28px; border: 1px solid var(--border-accent); background: rgba(15, 18, 38, 0.95); border-radius: var(--radius-xl); margin-bottom: 24px;">
+      <div class="card" style="padding: 28px; border: 1px solid var(--border-accent); background: rgba(21, 19, 31, 0.95); border-radius: var(--radius-xl); margin-bottom: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
           <div>
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -160,7 +160,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
         </div>
 
         <!-- Architecture Summary Banner -->
-        <div style="background: rgba(121, 59, 255, 0.08); border-left: 3px solid var(--primary); padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+        <div style="background: rgba(139, 92, 246, 0.08); border-left: 3px solid var(--primary); padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
           <strong>Architecture Map:</strong> ${r.architecture_summary}
         </div>
 
@@ -172,7 +172,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               ${r.potential_risk_areas.map(ra => `
-                <div style="background: rgba(255, 181, 71, 0.06); border: 1px solid rgba(255, 181, 71, 0.25); border-radius: var(--radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: var(--radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
                   <div>
                     <strong style="color: #fff; font-size: 0.86rem;">${ra.title}</strong>
                     <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">${ra.description}</div>
@@ -188,7 +188,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
       </div>
 
       <!-- ASSESSMENT SCOPE SELECTION (Section 4) -->
-      <div class="card" style="padding: 32px; border: 1px solid var(--border-gold); background: rgba(13, 16, 34, 0.95); border-radius: var(--radius-xl); margin-bottom: 28px;">
+      <div class="card" style="padding: 32px; border: 1px solid var(--border-gold); background: rgba(8, 8, 13, 0.95); border-radius: var(--radius-xl); margin-bottom: 28px;">
         <h3 style="font-size: 1.25rem; color: #fff; font-weight: 800; margin-bottom: 6px;">Choose Assessment Scope</h3>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
           Select how you want AegisTrace and the seven official agents to investigate this repository.
@@ -197,7 +197,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
         <!-- Two Main Options Grid -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
           <!-- Option A: Full -->
-          <div class="card" id="scope-option-full" style="cursor: pointer; padding: 22px; border: 2px solid ${assessmentMode === "full" ? "var(--cyan-accent)" : "var(--border-subtle)"}; background: ${assessmentMode === "full" ? "rgba(36, 200, 245, 0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg); transition: all 0.2s ease;">
+          <div class="card" id="scope-option-full" style="cursor: pointer; padding: 22px; border: 2px solid ${assessmentMode === "full" ? "var(--cyan-accent)" : "var(--border-subtle)"}; background: ${assessmentMode === "full" ? "rgba(196, 181, 253, 0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg); transition: all 0.2s ease;">
             <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 8px;">
               <span style="color: var(--cyan-accent); font-size: 1.2rem;">⚡</span> OPTION A — Full Security Assessment
             </div>
@@ -210,7 +210,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
           </div>
 
           <!-- Option B: Custom -->
-          <div class="card" id="scope-option-custom" style="cursor: pointer; padding: 22px; border: 2px solid ${assessmentMode === "custom" ? "var(--primary)" : "var(--border-subtle)"}; background: ${assessmentMode === "custom" ? "rgba(121, 59, 255, 0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg); transition: all 0.2s ease;">
+          <div class="card" id="scope-option-custom" style="cursor: pointer; padding: 22px; border: 2px solid ${assessmentMode === "custom" ? "var(--primary)" : "var(--border-subtle)"}; background: ${assessmentMode === "custom" ? "rgba(139, 92, 246, 0.08)" : "rgba(255,255,255,0.02)"}; border-radius: var(--radius-lg); transition: all 0.2s ease;">
             <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #fff; font-size: 1.05rem; margin-bottom: 8px;">
               <span style="color: var(--primary); font-size: 1.2rem;">🎯</span> OPTION B — Custom Security Assessment
             </div>
@@ -231,7 +231,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             ${availableCategories.map(cat => `
-              <label class="card" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; cursor: pointer; border: 1px solid ${selectedCategories.includes(cat.id) ? "rgba(121, 59, 255, 0.45)" : "rgba(255,255,255,0.06)"}; background: ${selectedCategories.includes(cat.id) ? "rgba(121, 59, 255, 0.08)" : "rgba(0,0,0,0.2)"}; border-radius: var(--radius-md);">
+              <label class="card" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px; cursor: pointer; border: 1px solid ${selectedCategories.includes(cat.id) ? "rgba(139, 92, 246, 0.45)" : "rgba(255,255,255,0.06)"}; background: ${selectedCategories.includes(cat.id) ? "rgba(139, 92, 246, 0.08)" : "rgba(0,0,0,0.2)"}; border-radius: var(--radius-md);">
                 <input type="checkbox" class="scope-cat-checkbox" value="${cat.id}" ${selectedCategories.includes(cat.id) ? "checked" : ""} style="margin-top: 3px; accent-color: #793BFF;">
                 <div>
                   <div style="font-weight: 600; color: #fff; font-size: 0.82rem;">${cat.icon} ${cat.name}</div>
@@ -260,7 +260,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
             Scope: <strong style="color: #fff;">${assessmentMode.toUpperCase()}</strong> &bull; 
             Selected: <strong style="color: var(--cyan-accent);">${assessmentMode === "full" ? "All Vectors" : selectedCategories.length + " Categories"}</strong>
           </div>
-          <button class="btn btn-primary btn-lg" id="btn-launch-assessment" style="padding: 14px 38px; font-size: 1rem; font-weight: 700; box-shadow: 0 0 25px rgba(121, 59, 255, 0.45); display: flex; align-items: center; gap: 10px;">
+          <button class="btn btn-primary btn-lg" id="btn-launch-assessment" style="padding: 14px 38px; font-size: 1rem; font-weight: 700; box-shadow: 0 0 25px rgba(139, 92, 246, 0.45); display: flex; align-items: center; gap: 10px;">
             <span>🚀</span> Launch Security Assessment
           </button>
         </div>

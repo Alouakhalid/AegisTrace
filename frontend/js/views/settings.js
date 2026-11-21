@@ -90,7 +90,7 @@ export function renderSettings(container, navigate, state, api, toast) {
             </div>
 
             <!-- Live Test Form -->
-            <div style="background: rgba(0, 240, 255, 0.02); border: 1px solid rgba(0, 240, 255, 0.15); border-radius: var(--radius-md); padding: 14px;">
+            <div style="background: rgba(196, 181, 253, 0.02); border: 1px solid rgba(196, 181, 253, 0.15); border-radius: var(--radius-md); padding: 14px;">
               <div style="font-weight: 700; color: #fff; font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                 <span>⚡ Live Tavily Threat Query</span>
                 <span class="badge badge-cyan" style="font-size: 0.65rem;">Real-Time Search</span>

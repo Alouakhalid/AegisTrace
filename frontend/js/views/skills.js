@@ -127,18 +127,18 @@ export async function renderSkills(container, navigate, state, api, showModal) {
         title: `Sandbox Simulation — ${sk.name}`,
         bodyHtml: `
           <div style="display: flex; flex-direction: column; gap: 14px;">
-            <div style="background: rgba(167, 139, 113, 0.08); border: 1px solid var(--border-gold); padding: 14px; border-radius: var(--radius-md);">
+            <div style="background: rgba(216, 219, 230, 0.08); border: 1px solid var(--border-gold); padding: 14px; border-radius: var(--radius-md);">
               <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700;">Simulated Skill Pack</div>
               <div style="color: #fff; font-size: 0.95rem; font-weight: 700; margin-top: 4px;">${sk.name} (${sk.id})</div>
               <div style="font-size: 0.8rem; color: var(--cyan-accent); margin-top: 4px;">${sk.description}</div>
             </div>
 
-            <div style="background: #050505; border: 1px solid var(--border-subtle); padding: 14px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.76rem; color: #d1d5db; line-height: 1.5;">
+            <div style="background: #0a0a12; border: 1px solid var(--border-subtle); padding: 14px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.76rem; color: #cfd0e8; line-height: 1.5;">
               <div style="color: var(--cyan-accent); font-weight: 700;">// Dispatching knowledge pack to DynamicTestingAgent...</div>
-              <div style="color: #38efbd;">[OK] Sandbox environment initialized (Isolation: sbx_sim_01)</div>
-              <div style="color: #38efbd;">[OK] Synthetic dual-tenant identities generated (token_a, token_b)</div>
+              <div style="color: #5eeab0;">[OK] Sandbox environment initialized (Isolation: sbx_sim_01)</div>
+              <div style="color: #5eeab0;">[OK] Synthetic dual-tenant identities generated (token_a, token_b)</div>
               <div style="color: var(--cyan-accent);">[RUN] Probing invariant rules against target parameter models...</div>
-              <div style="color: #38efbd;">[SUCCESS] Skill ready for deployment in autonomous assessments.</div>
+              <div style="color: #5eeab0;">[SUCCESS] Skill ready for deployment in autonomous assessments.</div>
             </div>
           </div>
         `,

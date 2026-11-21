@@ -38,9 +38,9 @@ function formatAgentDetail(rec) {
 }
 
 function agentStatusMeta(status) {
-  if (status === "completed") return { badge: "badge-success", border: "rgba(32, 214, 160, 0.35)", label: "done", dot: "var(--success)", tone: "done" };
+  if (status === "completed") return { badge: "badge-success", border: "rgba(16, 185, 129, 0.35)", label: "done", dot: "var(--success)", tone: "done" };
   if (status === "running") return { badge: "badge-cyan", border: "var(--border-gold)", label: "running", dot: "var(--cyan-accent)", tone: "running" };
-  if (status === "failed") return { badge: "badge-critical", border: "rgba(255, 85, 120, 0.45)", label: "failed", dot: "var(--critical)", tone: "failed" };
+  if (status === "failed") return { badge: "badge-critical", border: "rgba(244, 63, 94, 0.45)", label: "failed", dot: "var(--critical)", tone: "failed" };
   if (status === "blocked") return { badge: "badge-medium", border: "var(--border-gold)", label: "blocked", dot: "var(--warning)", tone: "blocked" };
   return { badge: "badge-outline", border: "var(--border-subtle)", label: "queued", dot: "var(--text-muted)", tone: "idle" };
 }
@@ -48,7 +48,7 @@ function agentStatusMeta(status) {
 function agentCard(ag, idx) {
   const meta = agentStatusMeta(ag.status);
   return `
-    <div class="card ws-agent-card ws-agent-${meta.tone}" data-stage="${ag.stage}" style="padding: 14px; background: rgba(10, 10, 10, 0.6); border: 1px solid ${meta.border}; border-radius: var(--radius-md);">
+    <div class="card ws-agent-card ws-agent-${meta.tone}" data-stage="${ag.stage}" style="padding: 14px; background: rgba(8, 8, 13, 0.6); border: 1px solid ${meta.border}; border-radius: var(--radius-md);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
         <span style="font-size: 9px; font-weight: 700; color: var(--cyan-accent); display: flex; align-items: center; gap: 5px;">
           <span class="ws-agent-dot" style="width: 6px; height: 6px; border-radius: 50%; background: ${meta.dot};"></span>

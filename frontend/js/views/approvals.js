@@ -23,7 +23,7 @@ export async function renderApprovals(container, navigate, state, api, showModal
       </div>
 
       <!-- Server-Enforced Cryptographic Gate Banner -->
-      <div class="card card-glass" style="margin-bottom: 24px; padding: 20px 24px; border-left: 3px solid var(--cyan-accent); box-shadow: 0 0 30px rgba(167, 139, 113, 0.1);">
+      <div class="card card-glass" style="margin-bottom: 24px; padding: 20px 24px; border-left: 3px solid var(--cyan-accent); box-shadow: 0 0 30px rgba(216, 219, 230, 0.1);">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
           <div>
             <div style="font-size: 0.95rem; font-weight: 700; color: #fff;">
@@ -45,7 +45,7 @@ export async function renderApprovals(container, navigate, state, api, showModal
             <div style="font-size: 0.85rem; color: var(--cyan-accent);">All remediation patches have been reviewed or none are pending cryptographic verification.</div>
           </div>
         ` : approvals.map(apr => `
-          <div class="card" style="border: 1px solid ${apr.status === 'approved' ? 'rgba(32, 214, 160, 0.4)' : (apr.status === 'rejected' ? 'rgba(220, 38, 38, 0.4)' : 'var(--border-gold)')};">
+          <div class="card" style="border: 1px solid ${apr.status === 'approved' ? 'rgba(16, 185, 129, 0.4)' : (apr.status === 'rejected' ? 'rgba(244, 63, 94, 0.4)' : 'var(--border-gold)')};">
             <div class="card-header">
               <div>
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
@@ -94,8 +94,8 @@ export async function renderApprovals(container, navigate, state, api, showModal
             </div>
 
             <!-- Unified Diff Snippet -->
-            <div class="diff-container" style="background: #050505; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); max-height: 220px; overflow-y: auto;">
-              <pre style="padding: 14px; color: #d1d5db; line-height: 1.5; font-size: 0.8rem; margin: 0; font-family: monospace;">${apr.unified_diff}</pre>
+            <div class="diff-container" style="background: #0a0a12; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); max-height: 220px; overflow-y: auto;">
+              <pre style="padding: 14px; color: #cfd0e8; line-height: 1.5; font-size: 0.8rem; margin: 0; font-family: monospace;">${apr.unified_diff}</pre>
             </div>
           </div>
         `).join("")}

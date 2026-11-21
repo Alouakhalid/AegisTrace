@@ -1,4 +1,3 @@
-import { renderLanding } from "./views/landing.js";
 import { renderAuth } from "./views/auth.js";
 import { renderDashboard } from "./views/dashboard.js";
 import { renderProjects } from "./views/projects.js";
@@ -154,14 +153,9 @@ export async function navigate(route) {
   window.location.hash = `#${route}`;
 
   // Mode body classes for fullscreen views
-  if (route === "landing") {
-    document.body.classList.add("landing-mode");
-    document.body.classList.remove("auth-mode");
-  } else if (route === "auth") {
+  if (route === "auth") {
     document.body.classList.add("auth-mode");
-    document.body.classList.remove("landing-mode");
   } else {
-    document.body.classList.remove("landing-mode");
     document.body.classList.remove("auth-mode");
   }
 
@@ -178,7 +172,6 @@ export async function navigate(route) {
   const breadcrumb = document.getElementById("breadcrumb-current");
   if (breadcrumb) {
     const titles = {
-      landing: "Hero Overview",
       auth: "Authentication",
       dashboard: "Executive Overview",
       projects: "Projects Management",
@@ -207,7 +200,6 @@ export async function navigate(route) {
   try {
     let p;
     switch (route) {
-      case "landing": p = renderLanding(viewRoot, navigate, state, api); break;
       case "auth": p = renderAuth(viewRoot, navigate, state, api, toast); break;
       case "dashboard": p = renderDashboard(viewRoot, navigate, state, api); break;
       case "projects": p = renderProjects(viewRoot, navigate, state, api, showModal, toast); break;
@@ -257,7 +249,6 @@ export const ROUTES = [
   { id: "benchmarks", title: "Benchmarks", group: "Platform", desc: "Accuracy and recall matrix" },
   { id: "settings", title: "Settings", group: "Platform", desc: "Vaults and integrations" },
   { id: "supporting", title: "Supporting Screens", group: "Platform", desc: "Notifications, audit, system" },
-  { id: "landing", title: "Landing Hero", group: "Platform", desc: "Public product surface" },
   { id: "auth", title: "Authentication", group: "Platform", desc: "Sign in surface" }
 ];
 
@@ -303,7 +294,6 @@ function buildPaletteItems(query) {
   }));
   const actionItems = [
     { kind: "Action", label: "New assessment", meta: "⌘N", hint: "Start the 7-agent pipeline", run: () => navigate("wizard") },
-    { kind: "Action", label: "Landing page", meta: "Marketing", hint: "Open the public product surface", run: () => navigate("landing") },
     { kind: "Action", label: "Live pipeline", meta: "Workspace", hint: "Watch agents execute", run: () => navigate("workspace") },
     { kind: "Action", label: "Audit trail", meta: "Immutable", hint: "Evidence and operator actions", run: () => navigate("supporting") }
   ];
@@ -420,8 +410,15 @@ window.addEventListener("DOMContentLoaded", () => {
   // Sidebar nav
   document.querySelectorAll(".nav-item").forEach(item => {
     item.addEventListener("click", (e) => {
+      // Items without a route (the link to the public site) keep their
+      // normal browser behaviour - the SPA must not swallow them.
+      const route = e.currentTarget.getAttribute("data-route");
+      if (!route) {
+        closeDrawer();
+        return;
+      }
       e.preventDefault();
-      navigate(e.currentTarget.getAttribute("data-route"));
+      navigate(route);
       closeDrawer();
     });
   });
@@ -444,9 +441,6 @@ window.addEventListener("DOMContentLoaded", () => {
   initCommandPalette();
 
   // Landing toggle
-  document.getElementById("btn-toggle-landing")?.addEventListener("click", () => {
-    navigate(state.currentRoute === "landing" ? "dashboard" : "landing");
-  });
 
   document.getElementById("btn-new-assessment")?.addEventListener("click", () => navigate("wizard"));
 
@@ -456,13 +450,11 @@ window.addEventListener("DOMContentLoaded", () => {
     if (route && route !== state.currentRoute) navigate(route);
   });
 
-  // First visit lands on the product page; deep links keep working.
+  // The public marketing site owns the site root, so the console always opens
+  // on the operator dashboard. Deep links keep working; the retired
+  // "#landing" route falls back to the dashboard instead of a blank view.
   const hashRoute = window.location.hash.replace("#", "");
-  const seenLanding = (() => {
-    try { return sessionStorage.getItem("aegis.visited") === "1"; } catch (e) { return false; }
-  })();
-  const initialRoute = hashRoute || (seenLanding ? "dashboard" : "landing");
-  try { sessionStorage.setItem("aegis.visited", "1"); } catch (e) { /* private mode */ }
+  const initialRoute = hashRoute && hashRoute !== "landing" ? hashRoute : "dashboard";
   navigate(initialRoute);
 
   // Projects dropdown (non-blocking)

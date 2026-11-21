@@ -83,10 +83,10 @@ export async function renderCodeIntel(container, navigate, state, api) {
           <span class="badge badge-cyan">AST Flow Verified</span>
         </div>
         
-        <div style="background: #050505; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 36px 28px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow-x: auto;">
+        <div style="background: #0a0a12; border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); padding: 36px 28px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow-x: auto;">
           ${intelData.graph.nodes.map((node, i) => `
             <div style="display: flex; align-items: center;">
-              <div style="background: rgba(16, 15, 14, 0.9); border: 1px solid ${node.type === 'security' ? 'var(--cyan-accent)' : (node.type === 'logic' ? 'var(--critical)' : 'var(--border-subtle)')}; padding: 18px 22px; border-radius: var(--radius-md); text-align: center; min-width: 160px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
+              <div style="background: rgba(12, 11, 20, 0.9); border: 1px solid ${node.type === 'security' ? 'var(--cyan-accent)' : (node.type === 'logic' ? 'var(--critical)' : 'var(--border-subtle)')}; padding: 18px 22px; border-radius: var(--radius-md); text-align: center; min-width: 160px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
                 <div style="font-size: 8.5px; color: var(--cyan-accent); text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 4px;">${node.type}</div>
                 <div style="font-size: 0.88rem; font-weight: 700; color: #fff;">${node.label}</div>
               </div>

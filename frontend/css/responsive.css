@@ -8,6 +8,7 @@
 /* ---------- Shared shells ---------- */
 .svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
+/* The brand emblem — the chrome-and-violet shield from the logo. */
 .brand-mark {
   width: 34px;
   height: 34px;
@@ -15,12 +16,16 @@
   display: grid;
   place-items: center;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--primary), var(--electric-blue));
-  color: #fff;
-  font-family: var(--font-mono);
-  font-weight: 800;
-  font-size: 0.9rem;
-  box-shadow: 0 0 16px rgba(121, 59, 255, 0.4);
+  background: radial-gradient(circle at 30% 20%, rgba(139, 92, 246, 0.28), rgba(8, 8, 13, 0.9) 70%);
+  border: 1px solid var(--border-accent);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.28);
+  overflow: hidden;
+}
+
+.brand-mark img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 
 .brand-text { display: flex; flex-direction: column; min-width: 0; }
@@ -93,7 +98,7 @@
 .drawer-scrim {
   position: fixed;
   inset: 0;
-  background: rgba(4, 5, 14, 0.72);
+  background: rgba(8, 8, 13, 0.72);
   backdrop-filter: blur(3px);
   z-index: 99;
   opacity: 0;
@@ -135,7 +140,6 @@ body.drawer-open .drawer-scrim { opacity: 1; pointer-events: auto; }
 
   .project-select-wrapper { display: none; }
 
-  body.landing-mode #main-sidebar,
   body.auth-mode #main-sidebar { transform: translateX(-104%); }
 
   /* content grids collapse */

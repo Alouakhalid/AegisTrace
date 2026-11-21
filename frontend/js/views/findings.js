@@ -197,16 +197,16 @@ export async function renderFindings(container, navigate, state, api, showModal)
         title: `Forensic Quick Evidence — ${fId}`,
         bodyHtml: `
           <div>
-            <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
               <div>
-                <strong style="color: #f87171; font-size: 0.95rem;">${evd.db_mutation_trapped ? "Cryptographic state mutation trapped" : "Replay recorded"}</strong>
+                <strong style="color: #fda4af; font-size: 0.95rem;">${evd.db_mutation_trapped ? "Cryptographic state mutation trapped" : "Replay recorded"}</strong>
                 <div style="font-size: 0.78rem; color: var(--cyan-accent); margin-top: 2px;">${evd.http_method || ""} ${evd.http_status ?? ""} as ${evd.identity_used || "recorded identity"}.</div>
               </div>
               <span class="badge ${evd.reproduction_successes && evd.reproduction_successes === evd.reproduction_attempts ? 'badge-success' : 'badge-outline'}">${evd.reproduction_attempts ? `${evd.reproduction_successes}/${evd.reproduction_attempts} replays` : "no replay data"}</span>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-              <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--radius-md); border-left: 3px solid #f87171;">
+              <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: var(--radius-md); border-left: 3px solid #fda4af;">
                 <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Attacker Identity Used</div>
                 <div style="color: #fff; font-weight: 700; font-size: 0.85rem; margin-top: 4px;">${evd.identity_used}</div>
               </div>
@@ -216,7 +216,7 @@ export async function renderFindings(container, navigate, state, api, showModal)
               </div>
             </div>
 
-            <div style="background: #050505; border: 1px solid var(--border-gold); border-radius: var(--radius-sm); padding: 12px; font-family: monospace; font-size: 0.76rem;">
+            <div style="background: #0a0a12; border: 1px solid var(--border-gold); border-radius: var(--radius-sm); padding: 12px; font-family: monospace; font-size: 0.76rem;">
               <div style="color: var(--cyan-accent); margin-bottom: 4px;">// SHA-256 Snapshot Proof</div>
               <div style="color: #fff; word-break: break-all;">${evd.sha256_snapshot_hash}</div>
             </div>

@@ -41,7 +41,7 @@ export async function renderSupporting(container, navigate, state, api, toast) {
         <div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px;">
           <!-- Profile Card -->
           <div class="card card-glass" style="text-align: center; padding: 28px 20px;">
-            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan-accent), var(--primary)); color: #0a0a0a; font-weight: 800; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; box-shadow: 0 0 30px rgba(167, 139, 113, 0.4);">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--cyan-accent), var(--primary)); color: #08080d; font-weight: 800; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);">
               AL
             </div>
             <h3 style="font-size: 1.25rem; font-weight: 700; color: #fff; font-family: 'Inter', serif; font-style: italic;">
@@ -202,7 +202,7 @@ export async function renderSupporting(container, navigate, state, api, toast) {
             <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
               Deterministic Sandbox Execution Trapped
             </h3>
-            <div style="background: #050505; border: 1px solid var(--border-subtle); padding: 12px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.74rem; color: #f87171; line-height: 1.5; margin-bottom: 16px;">
+            <div style="background: #0a0a12; border: 1px solid var(--border-subtle); padding: 12px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.74rem; color: #fda4af; line-height: 1.5; margin-bottom: 16px;">
               ExecutionSandboxJailError: Target process exceeded memory limit of 1024MB during AST symbol resolution.<br>
               &gt; Safe fallback initiated: sandbox isolated and rolled back.
             </div>

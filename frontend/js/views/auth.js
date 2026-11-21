@@ -5,13 +5,15 @@ export function renderAuth(container, navigate, state, api, toast) {
     container.innerHTML = `
       <div style="min-height: calc(100vh - 180px); display: flex; align-items: center; justify-content: center; position: relative;">
         <!-- Background Neural Glow -->
-        <div style="position: absolute; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(167,139,113,0.12) 0%, transparent 70%); filter: blur(50px); pointer-events: none;"></div>
+        <div style="position: absolute; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%); filter: blur(50px); pointer-events: none;"></div>
 
-        <div class="card card-central-glow" style="width: 100%; max-width: 460px; border-radius: var(--radius-xl); padding: 44px 36px; border: 1px solid var(--border-gold); background: rgba(15, 14, 12, 0.85); position: relative; z-index: 2;">
+        <div class="card card-central-glow" style="width: 100%; max-width: 460px; border-radius: var(--radius-xl); padding: 44px 36px; border: 1px solid var(--border-gold); background: rgba(12, 11, 20, 0.85); position: relative; z-index: 2;">
           <!-- Card Header -->
           <div style="text-align: center; margin-bottom: 32px;">
-            <div style="font-family: var(--font-serif); font-style: italic; font-size: 1.8rem; font-weight: 700; color: #FFFFFF; margin-bottom: 6px;">
-              Aegis<span style="color: var(--cyan-accent);">Trace</span>
+            <img src="/static/assets/favicon.svg" alt="AegisTrace" width="56" height="56"
+                 style="margin: 0 auto 16px; display: block; filter: drop-shadow(0 0 18px rgba(139, 92, 246, 0.55));">
+            <div style="font-family: var(--font-sans); font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; background: var(--grad-wordmark); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 6px;">
+              AegisTrace
             </div>
             <div style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--cyan-accent);">
               SOVEREIGN SECURITY CONSOLE
