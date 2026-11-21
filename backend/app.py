@@ -1535,10 +1535,11 @@ async def get_settings():
     }
 
 frontend_dir = os.path.join(workspace_root, 'frontend')
+site_dir = os.path.join(workspace_root, 'site')
 
 
-def _frontend_asset_version() -> str:
-    """Short fingerprint of the SPA assets.
+def _asset_version(root_dir: str) -> str:
+    """Short fingerprint of a directory's web assets.
 
     Browsers cache ES modules aggressively (module map + HTTP cache), so a
     deploy that changes app.js can otherwise keep running the old graph against
@@ -1546,7 +1547,7 @@ def _frontend_asset_version() -> str:
     module graph whenever any asset changes.
     """
     digest = hashlib.sha256()
-    for root, _dirs, files in os.walk(frontend_dir):
+    for root, _dirs, files in os.walk(root_dir):
         for name in sorted(files):
             if not name.endswith(('.js', '.css', '.html')):
                 continue
@@ -1559,6 +1560,20 @@ def _frontend_asset_version() -> str:
             except OSError:
                 continue
     return digest.hexdigest()[:12]
+
+
+def _frontend_asset_version() -> str:
+    """Fingerprint of the console SPA assets."""
+    return _asset_version(frontend_dir)
+
+
+def _site_asset_version() -> str:
+    """Fingerprint of the public marketing site's own assets.
+
+    The site ships its own stylesheet and bundle, so a change there must bust
+    the browser cache independently of the console fingerprint.
+    """
+    return _asset_version(site_dir)
 
 
 if os.path.exists(frontend_dir):
@@ -1575,3 +1590,24 @@ if os.path.exists(frontend_dir):
         except OSError:
             return FileResponse(idx_path)
         return HTMLResponse(markup.replace('__ASSET_V__', _frontend_asset_version()))
+
+
+if os.path.exists(site_dir):
+    # The public marketing site lives beside the console and shares the same
+    # process, so the live scanner on the page talks to the real API.
+    app.mount('/site/assets', StaticFiles(directory=os.path.join(site_dir, 'assets')), name='site-assets')
+    app.mount('/site/css', StaticFiles(directory=os.path.join(site_dir, 'css')), name='site-css')
+    app.mount('/site/js', StaticFiles(directory=os.path.join(site_dir, 'js')), name='site-js')
+
+    @app.get('/site')
+    @app.get('/site/')
+    async def serve_site():
+        idx_path = os.path.join(site_dir, 'index.html')
+        if not os.path.exists(idx_path):
+            raise HTTPException(status_code=404, detail='Marketing site not found')
+        try:
+            with open(idx_path, 'r', encoding='utf-8') as handle:
+                markup = handle.read()
+        except OSError:
+            return FileResponse(idx_path)
+        return HTMLResponse(markup.replace('__ASSET_V__', _site_asset_version()))

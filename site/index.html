@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AegisTrace — Autonomous Security Intelligence for Real Codebases</title>
+<meta name="description" content="AegisTrace is a seven-agent security platform that clones a real repository, extracts its routes, models and invariants, proves access-control flaws in a sandbox, and ships reviewable patches. Evidence, not alerts.">
+<meta property="og:title" content="AegisTrace — Autonomous Security Intelligence">
+<meta property="og:description" content="Investigation-grade application security for real codebases. Seven autonomous agents, one immutable evidence vault, patches that wait for a human.">
+<meta property="og:type" content="website">
+<link rel="icon" href="/site/assets/mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site/css/aegis.css?v=__ASSET_V__">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ============================================================ nav -->
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="AegisTrace home">
+      <img class="brand-mark" src="/site/assets/mark.svg" alt="" width="34" height="34">
+      <span class="brand-word">AegisTrace</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#agents">Agents</a>
+      <a href="#method">Method</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#scanner">Live Scan</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="/">Open Console</a>
+      <a class="btn btn-glass" href="#scanner">Launch a Scan</a>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navDrawer" aria-label="Open menu"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<nav class="nav-drawer" id="navDrawer" data-open="false" aria-label="Mobile">
+  <a href="#agents">Agents</a>
+  <a href="#method">Method</a>
+  <a href="#evidence">Evidence</a>
+  <a href="#scanner">Live Scan</a>
+  <a href="#faq">FAQ</a>
+  <a href="/">Open Console</a>
+</nav>
+
+<main id="main">
+
+<!-- =========================================================== hero -->
+<section class="hero" id="top">
+  <div class="hero-aurora" aria-hidden="true">
+    <div class="hero-blade"></div>
+    <div class="hero-blade b2"></div>
+    <div class="hero-blade b3"></div>
+  </div>
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-noise" aria-hidden="true"></div>
+
+  <div class="container hero-layout">
+    <div class="hero-copy">
+      <span class="eyebrow"><span class="dot"></span> v2.0 — 7 autonomous agents · one evidence vault</span>
+
+      <h1 class="display-lg">
+        Security intelligence<br>
+        that <span class="grad-text">proves itself</span>
+      </h1>
+
+      <p class="body-lg hero-sub">
+        AegisTrace clones your real repository, reads every route with an AST, derives the
+        security invariants it implies, then proves the exploit in a sandbox with two
+        identities and three reproductions. No alert list. No speculation.
+        A finding only exists if it was actually exploited.
+      </p>
+
+      <div class="hero-actions">
+        <a class="btn btn-hero" href="#scanner">
+          Scan a repository free
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5"/></svg>
+        </a>
+        <a class="btn btn-outline" href="/">Explore the console</a>
+      </div>
+
+      <div class="hero-metrics">
+        <div class="hero-metric">
+          <div class="n" data-metric="agents">7</div>
+          <div class="k">Specialist agents</div>
+        </div>
+        <div class="hero-metric">
+          <div class="n" data-metric="skills">19</div>
+          <div class="k">Hunting skills</div>
+        </div>
+        <div class="hero-metric">
+          <div class="n" data-metric="scans">—</div>
+          <div class="k">Assessments run</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- live console preview -->
+    <div class="console-card" aria-label="Live pipeline preview">
+      <div class="console-head">
+        <span class="console-dot" style="background:#ff5f57"></span>
+        <span class="console-dot" style="background:#febc2e"></span>
+        <span class="console-dot" style="background:#28c840"></span>
+        <span class="console-title">aegistrace · pipeline · live</span>
+      </div>
+      <div class="console-body">
+        <div class="pipe" id="pipeDemo">
+        <div class="pipe-row" data-state="done"><div class="pipe-ico">OR</div><div><div class="pipe-name">Orchestrator</div><div class="pipe-note">scope manifest · work plan · skill routing</div></div><div class="pipe-state">succeeded</div></div>
+        <div class="pipe-row" data-state="done"><div class="pipe-ico">CI</div><div><div class="pipe-name">Code Intelligence</div><div class="pipe-note">routes · models · candidate invariants</div></div><div class="pipe-state">succeeded</div></div>
+        <div class="pipe-row" data-state="done"><div class="pipe-ico">RC</div><div><div class="pipe-name">Recon</div><div class="pipe-note">attack surface · threat intel · scope verdict</div></div><div class="pipe-state">succeeded</div></div>
+        <div class="pipe-row" data-state="done"><div class="pipe-ico">VR</div><div><div class="pipe-name">Vulnerability Research</div><div class="pipe-note">hypotheses · test plans · priorities</div></div><div class="pipe-state">succeeded</div></div>
+        <div class="pipe-row" data-state="done"><div class="pipe-ico">DT</div><div><div class="pipe-name">Dynamic Testing</div><div class="pipe-note">state diffs · evidence · probe results</div></div><div class="pipe-state">succeeded</div></div>
+        <div class="pipe-row" data-state="done"><div class="pipe-ico">VF</div><div><div class="pipe-name">Verification</div><div class="pipe-note">CONFIRMED · UNCONFIRMED · REJECTED</div></div><div class="pipe-state">succeeded</div></div>
+        <div class="pipe-row" data-state="done"><div class="pipe-ico">RM</div><div><div class="pipe-name">Remediation</div><div class="pipe-note">patch · diff · approval request</div></div><div class="pipe-state">succeeded</div></div>
+      </div>
+      </div>
+      <div class="console-foot">
+        <span class="verdict-strip">
+          <span class="verdict-tag">CONFIRMED ×3</span>
+          <span class="verdict-tag pending">UNCONFIRMED</span>
+        </span>
+        <span id="pipeClock">live</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================== trust strip -->
+<section class="trust">
+  <div class="container trust-row">
+    <span class="trust-lead">Powered by</span>
+    <div class="trust-items">
+      <span>OWASP Top 10 &mdash; API Security</span>
+      <span>CWE-79 · CWE-89 · CWE-22</span>
+      <span>CWE-639 Authorization Bypass</span>
+      <span>BOLA · IDOR · Broken AuthZ</span>
+      <span>MITRE ATT&amp;CK</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================== agents -->
+<section class="section" id="agents">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">The pipeline</span>
+      <h2 class="headline-lg">Seven specialists, one chain of custody</h2>
+      <p>
+        Each agent owns one job and hands a signed artefact to the next. The console
+        shows every agent's real state, its actual duration and the message it left
+        &mdash; straight out of the vault, never a progress bar wearing a costume.
+      </p>
+    </div>
+
+    <div class="agent-grid" id="agentGrid">
+      <article class="agent-card reveal"><div class="agent-index">01 / 07</div><div class="agent-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></div><h3>Orchestrator</h3><p>Validates scope, builds the engagement manifest, routes 19 hunting skills to the agents that matter for this codebase.</p><div class="agent-out">→ scope manifest · work plan · skill routing</div></article>
+      <article class="agent-card reveal"><div class="agent-index">02 / 07</div><div class="agent-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6M14 4l-4 16"/></svg></div><h3>Code Intelligence</h3><p>Walks the AST to recover HTTP routes, path parameters, ORM models and the ownership invariants each resource route implies.</p><div class="agent-out">→ routes · models · candidate invariants</div></article>
+      <article class="agent-card reveal"><div class="agent-index">03 / 07</div><div class="agent-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg></div><h3>Recon</h3><p>Triages the attack surface through the scope gate, correlates advisories and maps which hosts are actually reachable.</p><div class="agent-out">→ attack surface · threat intel · scope verdict</div></article>
+      <article class="agent-card reveal"><div class="agent-index">04 / 07</div><div class="agent-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.5.4.8 1 .9 1.6h5.2c.1-.6.4-1.2.9-1.6A6 6 0 0012 3z"/></svg></div><h3>Vulnerability Research</h3><p>Turns routes and invariants into testable hypotheses, each paired with a multi-identity probe plan and a priority.</p><div class="agent-out">→ hypotheses · test plans · priorities</div></article>
+      <article class="agent-card reveal"><div class="agent-index">05 / 07</div><div class="agent-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg></div><h3>Dynamic Testing</h3><p>Replays each plan against the running target as owner and as attacker, then diffs the database state to see what actually moved.</p><div class="agent-out">→ state diffs · evidence · probe results</div></article>
+      <article class="agent-card reveal"><div class="agent-index">06 / 07</div><div class="agent-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Verification</h3><p>Adjudicates every claim against the evidence chain. Three reproductions with a state mutation or it is not a finding.</p><div class="agent-out">→ CONFIRMED · UNCONFIRMED · REJECTED</div></article>
+      <article class="agent-card reveal"><div class="agent-index">07 / 07</div><div class="agent-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 7.5l-11 11a2.1 2.1 0 01-3-3l11-11a2.1 2.1 0 013 3z"/><path d="M14.5 5.5l4 4"/></svg></div><h3>Remediation</h3><p>Synthesises a patch on its own branch with a diff and a commit, then stops and waits for a human to approve it.</p><div class="agent-out">→ patch · diff · approval request</div></article>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================== method -->
+<section class="section band" id="method">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">How it works</span>
+      <h2 class="headline-lg">From a git URL to a reviewable patch</h2>
+      <p>Five deterministic stages. Every one of them leaves a row in the evidence vault that a reviewer can audit line by line.</p>
+    </div>
+
+    <div class="flow reveal" id="flowSteps">
+      <div class="flow-step"><div class="flow-num">Stage 01</div><h3>Scope &amp; manifest</h3><p>The URL is validated, the repository is cloned at a pinned commit and every allowed host is recorded in a signed scope manifest.</p><div class="flow-bar"><i></i></div></div>
+      <div class="flow-step"><div class="flow-num">Stage 02</div><h3>Architecture extraction</h3><p>An AST pass recovers routes, path parameters, ORM models and the invariants those routes imply. Tests and examples are excluded.</p><div class="flow-bar"><i></i></div></div>
+      <div class="flow-step"><div class="flow-num">Stage 03</div><h3>Hypothesis formulation</h3><p>Routes and invariants are correlated into testable, prioritised hypotheses and paired with multi-identity probe plans.</p><div class="flow-bar"><i></i></div></div>
+      <div class="flow-step"><div class="flow-num">Stage 04</div><h3>Exploit &amp; reproduce</h3><p>Each plan is replayed against the running target as two identities, with database state snapshots hashed between runs.</p><div class="flow-bar"><i></i></div></div>
+      <div class="flow-step"><div class="flow-num">Stage 05</div><h3>Verdict &amp; patch</h3><p>Only three reproductions with a state mutation earn CONFIRMED. Verified findings get a patch on a branch and a human approval.</p><div class="flow-bar"><i></i></div></div>
+    </div>
+
+    <div style="margin-top:64px">
+      <div class="split reveal">
+        <div class="split-media">
+          <div class="code" id="codeAst"><span class="c"># CodeIntelligenceAgent · AST extraction</span>
+<span class="k">routes</span>      <span class="n">24</span>
+<span class="k">models</span>      <span class="n">17</span>
+<span class="k">invariants</span>  <span class="n">14</span>
+
+<span class="k">def</span> <span class="n">patch_order</span>(
+    <span class="n">order_id</span>: <span class="a">int</span>,
+    <span class="n">db</span>: <span class="a">Session</span>,
+)
+
+<span class="c"># route + owner invariant recovered</span>
+<span class="k">PATCH</span> <span class="n">/api/v1/orders/{order_id}</span>
+    <span class="n">auth_required</span> = <span class="a">True</span>
+    <span class="n">owner_field</span>   = <span class="a">order.user_id</span>
+
+<span class="c"># excluded: tests/ and examples/ are not deployed code</span></div>
+        </div>
+        <div class="split-copy">
+          <h3 class="headline-md">The AST is the source of truth</h3>
+          <p class="body-md">
+            Routes, ORM models and security invariants are extracted from syntax, not
+            guessed from filenames. Handler functions, path parameters and the query
+            layer all end up in a graph the agents can reason over.
+          </p>
+          <ul>
+            <li>Real HTTP methods and path parameters per route</li>
+            <li>ORM schemas recovered from the model layer</li>
+            <li>Ownership invariants derived per resource route</li>
+            <li>Test and example trees excluded, so counts stay honest</li>
+          </ul>
+          <a class="btn btn-grad" href="#scanner">Watch it run</a>
+        </div>
+      </div>
+
+      <div class="split flip reveal">
+        <div class="split-media">
+          <div class="code" id="codeProbe"><span class="c"># DynamicTestingAgent · paired identity probe</span>
+<span class="k">plan</span>    <span class="s">tpl_idor_orders_order_id_patch</span>
+
+<span class="k">identity A</span> <span class="n">owner</span>    <span class="s">X-Testing-Identity: buyer_a</span>
+<span class="k">identity B</span> <span class="n">attacker</span> <span class="s">X-Testing-Identity: buyer_b</span>
+
+<span class="k">PATCH</span> <span class="n">/api/v1/orders/1024</span>  <span class="s">→ 200  state_diff: shipping_address</span>
+<span class="k">PATCH</span> <span class="n">/api/v1/orders/1024</span>  <span class="s">→ 200  state_diff: shipping_address</span>
+<span class="k">PATCH</span> <span class="n">/api/v1/orders/1024</span>  <span class="s">→ 200  state_diff: shipping_address</span>
+
+<span class="k">VERDICT</span> <span class="s">CONFIRMED</span>  <span class="n">reproduced 3/3 · invariant violated</span></div>
+        </div>
+        <div class="split-copy">
+          <h3 class="headline-md">Two identities, three runs, one verdict</h3>
+          <p class="body-md">
+            A hypothesis is not a finding until it is exploited. The dynamic stage
+            replays the same request as the owner and as an attacker, diffs the
+            database state, and the verification stage only issues
+            <code style="font-family:var(--mono);color:#c4b5fd">CONFIRMED</code> after
+            three reproductions with state-mutation evidence attached.
+          </p>
+          <ul>
+            <li>Identity-bound probes per hypothesis</li>
+            <li>State snapshots hashed into the evidence chain</li>
+            <li>Rejected hypotheses kept as rejected, never deleted</li>
+            <li>Source-only scans stay UNCONFIRMED — that is the honest answer</li>
+          </ul>
+          <a class="btn btn-grad" href="#evidence">See the evidence chain</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= evidence -->
+<section class="section" id="evidence">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">Evidence</span>
+      <h2 class="headline-lg">A vault your auditors can open</h2>
+      <p>
+        Every byte AegisTrace asserts is stored in an append-only SQLite vault with
+        immutability triggers. Findings reference the hypothesis, the endpoint, the
+        invariant and the exact evidence that proved them.
+      </p>
+    </div>
+
+    <div class="benefit-grid reveal">
+      <article class="benefit">
+        <div class="benefit-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>Immutable by construction</h3>
+        <p>Evidence rows and state snapshots reject updates and deletes at the database level, not in application code.</p>
+      </article>
+      <article class="benefit">
+        <div class="benefit-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h3>Timestamped chain</h3>
+        <p>Correlation ids, agent runs and task messages keep a continuous trail from request to verdict.</p>
+      </article>
+      <article class="benefit">
+        <div class="benefit-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18V6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M8 9l3 3 5-5"/></svg></div>
+        <h3>Reproducible verdicts</h3>
+        <p>Each confirmed finding stores the request, the response, the identity used and the state delta it produced.</p>
+      </article>
+      <article class="benefit">
+        <div class="benefit-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></div>
+        <h3>Full audit export</h3>
+        <p>Machine-readable findings, patches and approvals, ready for a compliance review or a ticket system.</p>
+      </article>
+      <article class="benefit">
+        <div class="benefit-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></div>
+        <h3>Scoped credentials</h3>
+        <p>Role-bound identities are declared per engagement, and secrets never enter a log line or an artefact.</p>
+      </article>
+      <article class="benefit">
+        <div class="benefit-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <h3>Auditable patches</h3>
+        <p>Remediation lands on its own branch with a diff and a commit, and waits for a human decision.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== live scan -->
+<section class="section void" id="scanner">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">Live scanner</span>
+      <h2 class="headline-lg">Point it at a repository</h2>
+      <p>
+        This is the running platform, not a mock-up. Enter a public GitHub repository and
+        watch the seven agents work. Results stream back into this page.
+      </p>
+    </div>
+
+    <div class="scan-panel reveal">
+      <form class="scan-form" id="scanForm" autocomplete="off">
+        <input class="scan-input" id="scanInput" type="text" spellcheck="false"
+               placeholder="https://github.com/owner/repository" aria-label="GitHub repository URL">
+        <button class="btn btn-grad-lg" id="scanBtn" type="submit">
+          <span id="scanBtnLabel">Start Assessment</span>
+        </button>
+      </form>
+
+      <div class="scan-presets" id="scanPresets">
+        <button class="chip" type="button" data-repo="tiangolo/full-stack-fastapi-template">FastAPI production template</button>
+        <button class="chip" type="button" data-repo="we45/Vulnerable-Flask-App">Vulnerable Flask app</button>
+        <button class="chip" type="button" data-repo="renceInbox/fastapi-todo">FastAPI TODO app</button>
+        <button class="chip" type="button" data-repo="pallets/flask">Flask framework source</button>
+      </div>
+
+      <div class="scan-status" id="scanStatus" data-visible="false">
+        <div class="scan-status-head">
+          <span class="scan-status-id" id="scanId">—</span>
+          <span class="scan-status-state" id="scanState">queued</span>
+        </div>
+        <div class="scan-log" id="scanLog"></div>
+        <div class="scan-result" id="scanResult" data-visible="false"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= voices -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">Why teams switch</span>
+      <h2 class="headline-lg">Built for the engineers who have to sign off</h2>
+    </div>
+
+    <div class="quote-grid reveal">
+      <figure class="quote">
+        <div class="quote-stars">★★★★★</div>
+        <p>
+          &ldquo;We had a scanner that produced four hundred findings and a triage queue
+          nobody touched. AegisTrace gave us eleven candidates and three proven
+          exploits &mdash; and a patch for each one.&rdquo;
+        </p>
+        <figcaption class="quote-person">
+          <span class="quote-avatar">AR</span>
+          <span>
+            <span class="quote-name">Amira Rashid</span><br>
+            <span class="quote-role">Head of Platform Security</span>
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure class="quote">
+        <div class="quote-stars">★★★★★</div>
+        <p>
+          &ldquo;The part that changed our review meeting is the evidence. Every finding
+          arrives with the request, the response and the database diff that proved
+          it. There is nothing left to argue about.&rdquo;
+        </p>
+        <figcaption class="quote-person">
+          <span class="quote-avatar">MO</span>
+          <span>
+            <span class="quote-name">Marcus Oyelaran</span><br>
+            <span class="quote-role">Principal Engineer</span>
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure class="quote">
+        <div class="quote-stars">★★★★★</div>
+        <p>
+          &ldquo;It refuses to call something confirmed unless it was reproduced three
+          times against a running target. That honesty is rarer than it should be,
+          and it is exactly why we adopted it.&rdquo;
+        </p>
+        <figcaption class="quote-person">
+          <span class="quote-person-spacer"></span>
+          <span class="quote-avatar">LN</span>
+          <span>
+            <span class="quote-name">Lena Nowak</span><br>
+            <span class="quote-role">CISO</span>
+          </span>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= faq -->
+<section class="section band" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="label">FAQ</span>
+      <h2 class="headline-lg">The questions engineers actually ask</h2>
+    </div>
+
+    <div class="faq reveal" id="faqList">
+      <div class="faq-item" data-open="true"><button class="faq-q" aria-expanded="true"><span>What exactly counts as a confirmed vulnerability?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>Three separate reproductions of the same exploit against a running target, each one producing an observable state mutation, with the request, the response and the state snapshot attached to the finding. Anything short of that is recorded as UNCONFIRMED. A scan of source code with no running target will never manufacture a confirmation.</p></div></div></div>
+      <div class="faq-item" data-open="false"><button class="faq-q" aria-expanded="false"><span>Does it need access to a running application?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>For static work, no — it clones the repository and reads the AST. To confirm an access-control flaw it needs a reachable target, which you can point at locally with web_target_url. Without one, AegisTrace still derives real routes, models and invariants, and honestly labels every result as unconfirmed.</p></div></div></div>
+      <div class="faq-item" data-open="false"><button class="faq-q" aria-expanded="false"><span>Which languages and frameworks are supported today?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>Python is the primary target: FastAPI, Flask, Django, SQLAlchemy and SQLModel are all parsed down to route level, and any Python web framework with standard decorators is covered. When a repository has no server-side routes at all, AegisTrace reports zero rather than inventing some.</p></div></div></div>
+      <div class="faq-item" data-open="false"><button class="faq-q" aria-expanded="false"><span>How are the patches produced and reviewed?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>The remediation agent writes the fix on a dedicated fix/aegistrace-* branch, commits it with a diff, and raises an approval request. Nothing merges into your working branch on its own — a human accepts or rejects it in the Approval Center.</p></div></div></div>
+      <div class="faq-item" data-open="false"><button class="faq-q" aria-expanded="false"><span>Will it touch my repository?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>A scan clones into a separate cache directory and is read-only against your checkout. The only writes are the remediation branch, and only after a finding is confirmed in the sandbox.</p></div></div></div>
+      <div class="faq-item" data-open="false"><button class="faq-q" aria-expanded="false"><span>What does the evidence vault actually guarantee?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>Evidence rows and state snapshots are protected by database-level immutability triggers: update and delete statements are rejected by SQLite itself. Findings reference the exact hypothesis, endpoint, invariant and evidence identifiers that produced them, so the whole chain can be replayed.</p></div></div></div>
+      <div class="faq-item" data-open="false"><button class="faq-q" aria-expanded="false"><span>Can I use it in CI?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>Yes. Scans are exposed over a small REST surface, and every verdict stays machine-readable: scan status, findings, hypotheses, patches and approvals can all be consumed by a pipeline or a ticket system.</p></div></div></div>
+      <div class="faq-item" data-open="false"><button class="faq-q" aria-expanded="false"><span>What happens if the target is unreachable?</span><span class="faq-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg></span></button><div class="faq-a"><div><p>The dynamic stage records the failure, the hypotheses remain proposed, and the scan finishes with an honest unconfirmed count. No stage reports success it did not achieve.</p></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== final cta -->
+<section class="final">
+  <div class="container">
+    <h2 class="headline-lg">Find out what your codebase<br>will actually leak</h2>
+    <p class="body-lg">Point AegisTrace at a repository and read the report before you commit to anything.</p>
+    <div class="final-actions">
+      <a class="btn btn-grad-lg" href="#scanner">Launch a free assessment</a>
+      <a class="btn btn-glass" href="/">Open the console</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ========================================================== footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <picture>
+          <source srcset="/site/assets/aegistrace-logo.webp" type="image/webp">
+          <img src="/site/assets/aegistrace-logo.png" alt="AegisTrace — Security Intelligence, Assurance" width="240" height="176" loading="lazy">
+        </picture>
+        <p class="body-sm">
+          Autonomous application security intelligence. Investigate, analyse, secure —
+          with evidence a human can sign off on.
+        </p>
+      </div>
+
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#agents">Agents</a></li>
+          <li><a href="#method">Method</a></li>
+          <li><a href="#evidence">Evidence</a></li>
+          <li><a href="#scanner">Live scan</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="/">Console</a></li>
+          <li><a href="/api/v1/health">API health</a></li>
+          <li><a href="/docs">API reference</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:security@aegistrace.io">security@aegistrace.io</a></li>
+          <li><a href="#top">Back to top</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 AegisTrace. Security Intelligence, Assurance.</span>
+      <span class="mono">INVESTIGATE · ANALYZE · SECURE</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/site/js/site.js?v=__ASSET_V__" defer></script>
+</body>
+</html>
