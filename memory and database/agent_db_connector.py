@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import re
 import uuid
 import hashlib
 from typing import Dict, Any, List, Optional, Tuple
@@ -173,14 +174,27 @@ class AgentDatabaseConnector:
 
         warnings = out.get("warnings", [])
 
-        rep_url = "https://github.com/shoplite/shoplite"
+        # The repository row was hardcoded to a fictional "shoplite/shoplite"
+        # URL with a fake commit sha, so every assessment in the vault pointed
+        # at the same imaginary repository. Use the real target when the
+        # request carries one.
+        repo_meta = request.get("input", {}).get("repository", {}) or {}
+        commit_sha = str(repo_meta.get("commit") or "") or None
+        rep_url = str(repo_meta.get("url") or "") or ""
+        if not rep_url:
+            scan_row = self.db.conn.execute(
+                "SELECT json_extract(config, '$.github_url') FROM scans WHERE id = ?;", (scan_id,)
+            ).fetchone()
+            rep_url = (scan_row[0] if scan_row and scan_row[0] else "") or "local://workspace"
+        if commit_sha and not re.match(r'^[0-9a-f]{7,40}$', commit_sha):
+            commit_sha = None
         ex_repo = self.db.conn.execute("SELECT id FROM repositories WHERE project_id = ? AND url = ?;", (project_id, rep_url)).fetchone()
         if ex_repo:
             rep_id = ex_repo[0]
         else:
             rep_id = f"rep_{uuid.uuid4().hex[:10]}"
             try:
-                self.db.create_repository(rep_id, project_id, "github", rep_url)
+                self.db.create_repository(rep_id, project_id, "github" if rep_url.startswith("http") else "local", rep_url)
             except Exception:
                 pass
 
@@ -194,7 +208,7 @@ class AgentDatabaseConnector:
                     ran_id=ran_id,
                     scan_id=scan_id,
                     repository_id=rep_id,
-                    commit_sha="a1b2c3d4e5f6",
+                    commit_sha=commit_sha or "unknown",
                     files_analyzed=files_analyzed,
                     frameworks=frameworks,
                     entry_points=entry_points,
@@ -224,9 +238,19 @@ class AgentDatabaseConnector:
                     pass
 
         candidate_invs = out.get("candidate_invariants") or out.get("candidate_security_invariants") or []
+        # security_invariants.id is a global primary key, so an unscoped id
+        # from a previous scan made this scan's invariants invisible: the
+        # guard skipped the insert and the code-intelligence endpoint, which
+        # reads them through the analysis id, returned none.
+        scan_token = re.sub(r'[^a-z0-9]+', '', str(scan_id)[4:].lower())[:10] or 'scan'
         for inv in candidate_invs:
             if isinstance(inv, dict):
-                inv_id = inv.get("invariant_id") or inv.get("id") or f"inv_{uuid.uuid4().hex[:10]}"
+                raw_inv_id = inv.get("invariant_id") or inv.get("id") or f"inv_{uuid.uuid4().hex[:10]}"
+                tail = re.sub(r'[^a-z0-9_]+', '_', str(raw_inv_id).lower()).strip('_')
+                if tail.startswith('inv_'):
+                    tail = tail[4:]
+                inv_id = f"inv_{scan_token}_{tail}"[:64]
+                inv["invariant_id"] = inv_id
                 statement = inv.get("statement", "Access restriction invariant")
                 kind = inv.get("kind", "ownership")
                 conf = float(inv.get("confidence", 0.9))
@@ -253,7 +277,7 @@ class AgentDatabaseConnector:
                 key="code_intelligence_summary",
                 content=ast_summary,
                 content_sha256=ast_hash,
-                commit_sha="a1b2c3d4e5f6",
+                commit_sha=commit_sha or "unknown",
                 metadata={"frameworks": frameworks}
             )
             self.mem_mgr.store_project_memory(p_mem)
