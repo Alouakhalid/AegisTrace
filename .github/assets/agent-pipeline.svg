@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1150 480" width="100%" height="auto" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="darkCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18152b" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0d0b17" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <linearGradient id="agent01Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+
+    <linearGradient id="agent02Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+
+    <linearGradient id="agent03Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <linearGradient id="agent04Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#db2777"/>
+    </linearGradient>
+
+    <linearGradient id="agent05Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+
+    <linearGradient id="agent06Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <linearGradient id="agent07Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <style>
+      @keyframes flow {
+        to { stroke-dashoffset: -40; }
+      }
+      @keyframes pulseNode {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+      }
+      .flow-path {
+        stroke-dasharray: 6 6;
+        animation: flow 1.5s linear infinite;
+      }
+      .font-sans {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+      }
+      .font-mono {
+        font-family: 'JetBrains Mono', Consolas, monospace;
+      }
+    </style>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1150" height="480" rx="16" fill="#0a0814" stroke="#252038" stroke-width="1.5"/>
+
+  <!-- Connecting Pipes / Paths -->
+  <!-- 01 Orchestrator -> 02 CodeIntel & 03 Recon -->
+  <path d="M 270 95 L 340 95 C 370 95 370 175 400 175 L 430 175" fill="none" stroke="#382d5c" stroke-width="2.5"/>
+  <path d="M 270 95 L 340 95 C 370 95 370 175 400 175 L 430 175" fill="none" stroke="#a855f7" stroke-width="2" class="flow-path" opacity="0.8"/>
+
+  <path d="M 270 95 L 340 95 C 370 95 370 295 400 295 L 430 295" fill="none" stroke="#382d5c" stroke-width="2.5"/>
+  <path d="M 270 95 L 340 95 C 370 95 370 295 400 295 L 430 295" fill="none" stroke="#06b6d4" stroke-width="2" class="flow-path" opacity="0.8"/>
+
+  <!-- 02 CodeIntel + 03 Recon -> 04 VulnResearch -->
+  <path d="M 650 175 L 685 175 C 710 175 710 235 735 235 L 760 235" fill="none" stroke="#382d5c" stroke-width="2.5"/>
+  <path d="M 650 175 L 685 175 C 710 175 710 235 735 235 L 760 235" fill="none" stroke="#6366f1" stroke-width="2" class="flow-path" opacity="0.8"/>
+
+  <path d="M 650 295 L 685 295 C 710 295 710 235 735 235 L 760 235" fill="none" stroke="#382d5c" stroke-width="2.5"/>
+  <path d="M 650 295 L 685 295 C 710 295 710 235 735 235 L 760 235" fill="none" stroke="#ec4899" stroke-width="2" class="flow-path" opacity="0.8"/>
+
+  <!-- 04 VulnResearch -> 05 DynamicTesting -->
+  <path d="M 870 290 L 870 330 C 870 360 830 380 780 380 L 650 380" fill="none" stroke="#382d5c" stroke-width="2.5"/>
+  <path d="M 870 290 L 870 330 C 870 360 830 380 780 380 L 650 380" fill="none" stroke="#f43f5e" stroke-width="2" class="flow-path" opacity="0.8"/>
+
+  <!-- 05 DynamicTesting -> 06 Verification -->
+  <path d="M 430 395 L 350 395" fill="none" stroke="#382d5c" stroke-width="2.5"/>
+  <path d="M 430 395 L 350 395" fill="none" stroke="#f59e0b" stroke-width="2" class="flow-path" opacity="0.8"/>
+
+  <!-- 06 Verification -> 07 Remediation -->
+  <path d="M 130 395 L 50 395" fill="none" stroke="#382d5c" stroke-width="2.5"/>
+  <path d="M 130 395 L 50 395" fill="none" stroke="#10b981" stroke-width="2" class="flow-path" opacity="0.8"/>
+
+  <!-- === AGENT CARDS === -->
+
+  <!-- CARD 01: OrchestratorAgent -->
+  <g transform="translate(50, 45)">
+    <rect width="220" height="100" rx="10" fill="url(#darkCard)" stroke="#7c3aed" stroke-width="1.8" filter="url(#glow)"/>
+    <rect x="0" y="0" width="220" height="6" rx="3" fill="url(#agent01Grad)"/>
+    <circle cx="24" cy="28" r="10" fill="#7c3aed" fill-opacity="0.3"/>
+    <text x="24" y="32" fill="#c084fc" font-size="12" font-weight="800" text-anchor="middle" class="font-mono">01</text>
+    <text x="42" y="30" fill="#ffffff" font-size="13" font-weight="700" class="font-sans">OrchestratorAgent</text>
+    <text x="42" y="45" fill="#a855f7" font-size="10" font-weight="600" class="font-mono">ScopeGate &amp; Mission DAG</text>
+    <text x="16" y="68" fill="#94a3b8" font-size="10" class="font-sans">• Real-time WebSocket scheduler</text>
+    <text x="16" y="84" fill="#94a3b8" font-size="10" class="font-sans">• Non-destructive scope enforcement</text>
+  </g>
+
+  <!-- CARD 02: CodeIntelligenceAgent -->
+  <g transform="translate(430, 125)">
+    <rect width="220" height="100" rx="10" fill="url(#darkCard)" stroke="#4f46e5" stroke-width="1.8" filter="url(#glow)"/>
+    <rect x="0" y="0" width="220" height="6" rx="3" fill="url(#agent02Grad)"/>
+    <circle cx="24" cy="28" r="10" fill="#4f46e5" fill-opacity="0.3"/>
+    <text x="24" y="32" fill="#818cf8" font-size="12" font-weight="800" text-anchor="middle" class="font-mono">02</text>
+    <text x="42" y="30" fill="#ffffff" font-size="13" font-weight="700" class="font-sans">CodeIntelligenceAgent</text>
+    <text x="42" y="45" fill="#818cf8" font-size="10" font-weight="600" class="font-mono">AST Invariant Parser</text>
+    <text x="16" y="68" fill="#94a3b8" font-size="10" class="font-sans">• Semgrep &amp; Python AST trees</text>
+    <text x="16" y="84" fill="#94a3b8" font-size="10" class="font-sans">• Access invariant derivation</text>
+  </g>
+
+  <!-- CARD 03: ReconAgent -->
+  <g transform="translate(430, 245)">
+    <rect width="220" height="100" rx="10" fill="url(#darkCard)" stroke="#0284c7" stroke-width="1.8" filter="url(#glow)"/>
+    <rect x="0" y="0" width="220" height="6" rx="3" fill="url(#agent03Grad)"/>
+    <circle cx="24" cy="28" r="10" fill="#0284c7" fill-opacity="0.3"/>
+    <text x="24" y="32" fill="#38bdf8" font-size="12" font-weight="800" text-anchor="middle" class="font-mono">03</text>
+    <text x="42" y="30" fill="#ffffff" font-size="13" font-weight="700" class="font-sans">ReconAgent</text>
+    <text x="42" y="45" fill="#38bdf8" font-size="10" font-weight="600" class="font-mono">Surface Navigator</text>
+    <text x="16" y="68" fill="#94a3b8" font-size="10" class="font-sans">• OpenAPI 3.0 route triage</text>
+    <text x="16" y="84" fill="#94a3b8" font-size="10" class="font-sans">• Mutating HTTP verb mapping</text>
+  </g>
+
+  <!-- CARD 04: VulnResearchAgent -->
+  <g transform="translate(760, 185)">
+    <rect width="220" height="105" rx="10" fill="url(#darkCard)" stroke="#db2777" stroke-width="1.8" filter="url(#glow)"/>
+    <rect x="0" y="0" width="220" height="6" rx="3" fill="url(#agent04Grad)"/>
+    <circle cx="24" cy="28" r="10" fill="#db2777" fill-opacity="0.3"/>
+    <text x="24" y="32" fill="#f472b6" font-size="12" font-weight="800" text-anchor="middle" class="font-mono">04</text>
+    <text x="42" y="30" fill="#ffffff" font-size="13" font-weight="700" class="font-sans">VulnResearchAgent</text>
+    <text x="42" y="45" fill="#f472b6" font-size="10" font-weight="600" class="font-mono">BugHunter Skills Router</text>
+    <text x="16" y="68" fill="#94a3b8" font-size="10" class="font-sans">• Modular offensive skill packs</text>
+    <text x="16" y="84" fill="#94a3b8" font-size="10" class="font-sans">• BOLA, Mass Assign &amp; SSRF hypothesis</text>
+  </g>
+
+  <!-- CARD 05: DynamicTestingAgent -->
+  <g transform="translate(430, 355)">
+    <rect width="220" height="105" rx="10" fill="url(#darkCard)" stroke="#e11d48" stroke-width="2" filter="url(#glow)"/>
+    <rect x="0" y="0" width="220" height="6" rx="3" fill="url(#agent05Grad)"/>
+    <circle cx="24" cy="28" r="10" fill="#e11d48" fill-opacity="0.3"/>
+    <text x="24" y="32" fill="#fb7185" font-size="12" font-weight="800" text-anchor="middle" class="font-mono">05</text>
+    <text x="42" y="30" fill="#ffffff" font-size="13" font-weight="700" class="font-sans">DynamicTestingAgent</text>
+    <text x="42" y="45" fill="#fb7185" font-size="10" font-weight="600" class="font-mono">State Mutation Trapper</text>
+    <text x="16" y="68" fill="#fecdd3" font-size="10" font-weight="600" class="font-sans">★ SHA-256 State Diff Snapshots</text>
+    <text x="16" y="84" fill="#94a3b8" font-size="10" class="font-sans">• Multi-tenant HTTP probing</text>
+  </g>
+
+  <!-- CARD 06: VerificationAgent -->
+  <g transform="translate(130, 355)">
+    <rect width="220" height="105" rx="10" fill="url(#darkCard)" stroke="#d97706" stroke-width="1.8" filter="url(#glow)"/>
+    <rect x="0" y="0" width="220" height="6" rx="3" fill="url(#agent06Grad)"/>
+    <circle cx="24" cy="28" r="10" fill="#d97706" fill-opacity="0.3"/>
+    <text x="24" y="32" fill="#fbbf24" font-size="12" font-weight="800" text-anchor="middle" class="font-mono">06</text>
+    <text x="42" y="30" fill="#ffffff" font-size="13" font-weight="700" class="font-sans">VerificationAgent</text>
+    <text x="42" y="45" fill="#fbbf24" font-size="10" font-weight="600" class="font-mono">Dual-Phase Arbitrator</text>
+    <text x="16" y="68" fill="#fde68a" font-size="10" font-weight="600" class="font-sans">★ 3x Sandbox Replay (0% Hallucination)</text>
+    <text x="16" y="84" fill="#94a3b8" font-size="10" class="font-sans">• Strict CVSS v3.1 calculation</text>
+  </g>
+
+  <!-- Final Stage: RemediationAgent -->
+  <g transform="translate(1005, 185)">
+    <rect width="125" height="105" rx="10" fill="url(#darkCard)" stroke="#059669" stroke-width="2" filter="url(#glow)"/>
+    <rect x="0" y="0" width="125" height="6" rx="3" fill="url(#agent07Grad)"/>
+    <circle cx="22" cy="28" r="10" fill="#059669" fill-opacity="0.3"/>
+    <text x="22" y="32" fill="#34d399" font-size="12" font-weight="800" text-anchor="middle" class="font-mono">07</text>
+    <text x="40" y="30" fill="#ffffff" font-size="12" font-weight="700" class="font-sans">Remediation</text>
+    <text x="12" y="50" fill="#34d399" font-size="10" font-weight="700" class="font-mono">AST Synthesizer</text>
+    <text x="12" y="70" fill="#a7f3d0" font-size="9" class="font-sans">• Pytest 10/10 PASS</text>
+    <text x="12" y="85" fill="#a7f3d0" font-size="9" class="font-sans">• Exploit Closed (403)</text>
+  </g>
+
+  <!-- Connect 04 to 07 line -->
+  <path d="M 980 235 L 1005 235" fill="none" stroke="#10b981" stroke-width="2.5" class="flow-path"/>
+</svg>

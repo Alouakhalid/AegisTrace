@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 320" width="100%" height="auto" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="trapBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e0b1c"/>
+      <stop offset="100%" stop-color="#07050f"/>
+    </linearGradient>
+
+    <linearGradient id="codeBox" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#161326"/>
+      <stop offset="100%" stop-color="#110e1e"/>
+    </linearGradient>
+
+    <linearGradient id="dangerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+
+    <linearGradient id="safeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <style>
+      @keyframes pulseAlert {
+        0%, 100% { opacity: 0.9; }
+        50% { opacity: 0.4; }
+      }
+      .alert-glow {
+        animation: pulseAlert 2s ease-in-out infinite;
+      }
+      .font-sans {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .font-mono {
+        font-family: 'JetBrains Mono', Consolas, monospace;
+      }
+    </style>
+  </defs>
+
+  <rect width="1100" height="320" rx="14" fill="url(#trapBg)" stroke="#2e2547" stroke-width="1.5"/>
+
+  <!-- Header Banner -->
+  <rect x="0" y="0" width="1100" height="44" rx="14" fill="#16122b"/>
+  <rect x="0" y="32" width="1100" height="12" fill="#16122b"/>
+  <circle cx="24" cy="22" r="5" fill="#ef4444"/>
+  <circle cx="40" cy="22" r="5" fill="#f59e0b"/>
+  <circle cx="56" cy="22" r="5" fill="#10b981"/>
+  <text x="80" y="26" fill="#c084fc" font-size="12" font-weight="700" class="font-mono">FORENSIC STATE MUTATION TRAPPER // SHA-256 CRYPTOGRAPHIC INTEGRITY VERIFICATION</text>
+
+  <!-- Left: Pre-Exploit Snapshot -->
+  <g transform="translate(30, 65)">
+    <rect width="310" height="225" rx="10" fill="url(#codeBox)" stroke="#382d56" stroke-width="1.2"/>
+    <rect x="0" y="0" width="310" height="28" rx="10" fill="#1a1630"/>
+    <rect x="0" y="18" width="310" height="10" fill="#1a1630"/>
+    <text x="14" y="19" fill="#38bdf8" font-size="11" font-weight="700" class="font-mono">PHASE 1: PRE-PROBE SNAPSHOT</text>
+
+    <text x="16" y="55" fill="#64748b" font-size="11" class="font-mono">// Baseline Database State</text>
+    <text x="16" y="78" fill="#94a3b8" font-size="11" class="font-mono">Target: <tspan fill="#f1f5f9">/orders/942</tspan></text>
+    <text x="16" y="98" fill="#94a3b8" font-size="11" class="font-mono">Legitimate Owner: <tspan fill="#10b981">usr_alice_84</tspan></text>
+    <text x="16" y="118" fill="#94a3b8" font-size="11" class="font-mono">Status: <tspan fill="#cbd5e1">"PENDING_PAYMENT"</tspan></text>
+    <text x="16" y="138" fill="#94a3b8" font-size="11" class="font-mono">Discount Applied: <tspan fill="#cbd5e1">0.00</tspan></text>
+
+    <!-- Hash Pill -->
+    <rect x="12" y="165" width="286" height="36" rx="6" fill="#100d1e" stroke="#251f38" stroke-width="1"/>
+    <text x="20" y="182" fill="#64748b" font-size="9" class="font-mono">STATE_DIGEST_T0 (SHA-256):</text>
+    <text x="20" y="194" fill="#38bdf8" font-size="10" font-weight="600" class="font-mono">e3b0c44298fc1c149afbf4c8996fb924</text>
+  </g>
+
+  <!-- Center Arrow + Action Payload -->
+  <g transform="translate(365, 95)">
+    <rect width="370" height="165" rx="10" fill="#1c1328" stroke="#e11d48" stroke-width="1.5"/>
+    <text x="16" y="26" fill="#fb7185" font-size="12" font-weight="800" class="font-mono">MUTATION PROBE INJECTION</text>
+    <text x="16" y="46" fill="#cbd5e1" font-size="11" class="font-sans">Attacker Persona: <tspan fill="#f43f5e" font-weight="700">usr_attacker_99 (Tenant B)</tspan></text>
+    
+    <rect x="14" y="58" width="342" height="55" rx="6" fill="#100918"/>
+    <text x="24" y="78" fill="#e2e8f0" font-size="11" class="font-mono">PATCH /api/v1/orders/942</text>
+    <text x="24" y="96" fill="#fb7185" font-size="11" class="font-mono">{ &quot;owner_id&quot;: &quot;usr_attacker_99&quot; }</text>
+
+    <rect x="14" y="122" width="342" height="30" rx="6" fill="#2f1422" stroke="#f43f5e" stroke-width="1"/>
+    <circle cx="28" cy="137" r="4.5" fill="#f43f5e" class="alert-glow"/>
+    <text x="42" y="141" fill="#fecdd3" font-size="11" font-weight="700" class="font-sans">CROSS-TENANT INVARIANT VIOLATION</text>
+  </g>
+
+  <!-- Right: Post-Exploit Snapshot (TRAPPED) -->
+  <g transform="translate(760, 65)">
+    <rect width="310" height="225" rx="10" fill="url(#codeBox)" stroke="#e11d48" stroke-width="1.5"/>
+    <rect x="0" y="0" width="310" height="28" rx="10" fill="#2d111d"/>
+    <rect x="0" y="18" width="310" height="10" fill="#2d111d"/>
+    <text x="14" y="19" fill="#fb7185" font-size="11" font-weight="700" class="font-mono">PHASE 2: MUTATION TRAPPED (DIFF)</text>
+
+    <text x="16" y="55" fill="#64748b" font-size="11" class="font-mono">// Delta Detected in Real DB</text>
+    <text x="16" y="78" fill="#94a3b8" font-size="11" class="font-mono">Target: <tspan fill="#f1f5f9">/orders/942</tspan></text>
+    <text x="16" y="98" fill="#f43f5e" font-size="11" font-weight="700" class="font-mono">- owner_id: usr_alice_84</text>
+    <text x="16" y="118" fill="#34d399" font-size="11" font-weight="700" class="font-mono">+ owner_id: usr_attacker_99 [MUTATED]</text>
+    <text x="16" y="138" fill="#f59e0b" font-size="11" class="font-mono">Impact: BOLA/IDOR State Hijack</text>
+
+    <!-- Hash Divergence Pill -->
+    <rect x="12" y="165" width="286" height="36" rx="6" fill="#240d17" stroke="#e11d48" stroke-width="1"/>
+    <text x="20" y="182" fill="#fb7185" font-size="9" class="font-mono">STATE_DIGEST_T1 (DIVERGED HASH):</text>
+    <text x="20" y="194" fill="#f43f5e" font-size="10" font-weight="700" class="font-mono">7f83b1657ff1fc53b92dc18148a1d65d</text>
+  </g>
+</svg>
