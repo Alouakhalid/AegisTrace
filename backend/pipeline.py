@@ -147,6 +147,46 @@ def _store_task_output(task_id: str, output: Dict[str, Any]) -> Optional[str]:
         return None
 
 
+
+#: Canonical agent -> task-stage mapping.
+#:
+#: The pipeline historically used two different vocabularies: `code_intel` and
+#: `vuln_research` in the progress stream, but `code_intelligence` and
+#: `vulnerability_research` in the agent contract. The console could therefore
+#: never match a stage to its agent, and every agent stayed "queued".
+#: This table is the single source of truth for both sides.
+AGENT_STAGE_BY_AGENT = {
+    'OrchestratorAgent': 'orchestrator',
+    'CodeIntelligenceAgent': 'code_intelligence',
+    'ReconAgent': 'recon',
+    'VulnResearchAgent': 'vulnerability_research',
+    'DynamicTestingAgent': 'dynamic_testing',
+    'VerificationAgent': 'verification',
+    'RemediationAgent': 'remediation',
+}
+
+#: Pipeline stage name -> the agent key stored in agent_tasks.agent
+AGENT_NAME_BY_AGENT = {
+    'OrchestratorAgent': 'orchestrator',
+    'CodeIntelligenceAgent': 'code_intelligence',
+    'ReconAgent': 'recon',
+    'VulnResearchAgent': 'vulnerability_research',
+    'DynamicTestingAgent': 'dynamic_testing',
+    'VerificationAgent': 'verification',
+    'RemediationAgent': 'remediation',
+}
+
+#: Ordered pipeline stages, as stored in agent_tasks.stage.
+PIPELINE_STAGES = [
+    'orchestrator',
+    'code_intelligence',
+    'recon',
+    'vulnerability_research',
+    'dynamic_testing',
+    'verification',
+    'remediation',
+]
+
 class ScanExecutionManager:
     """Manages the full multi-agent pipeline execution and real-time WebSocket telemetry."""
 
@@ -197,11 +237,102 @@ class ScanExecutionManager:
             except Exception:
                 pass
 
+    def mark_agent_done(self, scan_id: str, agent: str, status: str = 'succeeded') -> None:
+        """Close an agent's lifecycle row and flip its in-memory state."""
+        canonical_stage = AGENT_STAGE_BY_AGENT.get(agent)
+        agent_key = AGENT_NAME_BY_AGENT.get(agent)
+        if not canonical_stage or not agent_key:
+            return
+        if scan_id in self.active_scans:
+            agents_state = self.active_scans[scan_id].setdefault('agents_state', {})
+            previous = agents_state.get(canonical_stage, {})
+            agents_state[canonical_stage] = {
+                'agent': agent,
+                'stage': canonical_stage,
+                'status': status,
+                'percentage': 100 if status == 'succeeded' else previous.get('percentage', 0),
+                'message': previous.get('message', ''),
+            }
+        self._record_agent_task(scan_id, agent_key, canonical_stage, status,
+                                message=(self.active_scans.get(scan_id, {})
+                                         .get('agents_state', {})
+                                         .get(canonical_stage, {})
+                                         .get('message', '')))
+
+    def _agent_task_row(self, scan_id: str, agent_key: str) -> Optional[Dict[str, Any]]:
+        """The single task row owned by the pipeline for an agent, if any."""
+        try:
+            rows = self.db.list_agent_tasks(scan_id)
+        except Exception:
+            return None
+        return next((r for r in rows if r.get('agent') == agent_key), None)
+
+    def _record_agent_task(self, scan_id: str, agent: str, stage: str, status: str, message: str = "") -> None:
+        """Persist an agent's lifecycle row in the evidence vault.
+
+        The console used to derive the topology from a hardcoded stage list, so
+        it showed every agent as "queued" forever. agent_tasks is the contract
+        table for exactly this, so the pipeline now writes to it.
+
+        One row per agent, keyed on the agent id: the individual agents also
+        create their own task rows with their own stage vocabulary ("code
+        analysis", "orchestration", ...), which used to produce two competing
+        rows for the same agent and left the topology ambiguous.
+        """
+        terminal = {'succeeded', 'failed', 'cancelled', 'blocked'}
+        try:
+            existing = self.db.list_agent_tasks(scan_id)
+            rows_for_agent = [r for r in existing if r.get('agent') == agent]
+            pipeline_row = next((r for r in rows_for_agent if r.get('stage') == stage), None)
+            if pipeline_row:
+                self.db.update_agent_task(pipeline_row['id'], status, output={"message": message} if message else None)
+            else:
+                task_id = f'tsk_{uuid.uuid4().hex[:12]}'
+                self.db.create_agent_task(task_id, scan_id, agent, stage, status=status)
+            # The agent's own row (created by the agent with its own stage
+            # vocabulary) must not stay stuck on "running" either.
+            terminal = ('succeeded', 'failed', 'cancelled', 'blocked')
+            for r in rows_for_agent:
+                current = str(r.get('status')).lower()
+                if current == status:
+                    continue
+                # A terminal state is final: a late progress ping must not
+                # resurrect a finished agent.
+                if current in terminal and status == 'running':
+                    continue
+                self.db.update_agent_task(r['id'], status)
+        except Exception:
+            pass
+
     async def emit_progress(self, scan_id: str, stage: str, agent: str, percentage: int, message: str) -> None:
+        # Normalise the stage id and mark the agent as running in the vault.
+        canonical_stage = AGENT_STAGE_BY_AGENT.get(agent, stage)
+        # A later progress ping for the same agent (e.g. the 40% summary that
+        # follows a successful AST extraction) must not drag an already
+        # finished agent back to "running".
+        finished = self.active_scans.get(scan_id, {}).get('agents_state', {}).get(canonical_stage, {}).get('status')
+        if finished not in ('succeeded', 'failed'):
+            self._record_agent_task(scan_id, AGENT_NAME_BY_AGENT.get(agent, agent), canonical_stage, 'running', message=message)
+
         if scan_id in self.active_scans:
             self.active_scans[scan_id]['progress_percentage'] = percentage
-            self.active_scans[scan_id]['current_stage'] = stage
+            self.active_scans[scan_id]['current_stage'] = canonical_stage
             self.active_scans[scan_id]['active_agent'] = agent
+            # Remember which agents already reported so the topology can be
+            # replayed honestly after a restart (the DB, not the UI, is the
+            # source of truth for "who is done").
+            agents_state = self.active_scans[scan_id].setdefault('agents_state', {})
+            if agents_state.get(canonical_stage, {}).get('status') in ('succeeded', 'failed'):
+                agents_state[canonical_stage]['percentage'] = max(
+                    agents_state[canonical_stage].get('percentage', 0), percentage)
+            else:
+                agents_state[canonical_stage] = {
+                    'agent': agent,
+                    'stage': canonical_stage,
+                    'percentage': percentage,
+                    'status': 'running',
+                    'message': message,
+                }
 
         timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
         if scan_id not in self.scan_logs:
@@ -213,7 +344,8 @@ class ScanExecutionManager:
                 await q.put({
                     'type': 'pipeline_progress',
                     'scan_id': scan_id,
-                    'stage': stage,
+                    'stage': canonical_stage,
+                    'raw_stage': stage,
                     'agent': agent,
                     'percentage': percentage,
                     'message': message,
@@ -274,7 +406,18 @@ class ScanExecutionManager:
             is_valid, owner, repo_name, norm_url = validate_github_url(raw_github_url)
             if is_valid and repo_name and owner:
                 try:
+                    # The clone is the longest silent step of a scan. Report it
+                    # so the console shows meaningful progress instead of a
+                    # frozen "queued" topology.
+                    if scan_id in self.active_scans:
+                        self.active_scans[scan_id]['current_stage'] = 'initialization'
+                        self.active_scans[scan_id]['active_agent'] = 'OrchestratorAgent'
+                        self.active_scans[scan_id]['progress_percentage'] = 5
+                    await self.emit_log(scan_id, 'initialization', 'OrchestratorAgent',
+                                        f'Cloning {owner}/{repo_name} for static analysis...', 'INFO')
                     target_dir, commit_sha, branch = await asyncio.to_thread(clone_or_fetch_repo, norm_url, repo_name, auth_token)
+                    await self.emit_log(scan_id, 'initialization', 'OrchestratorAgent',
+                                        f'Repository ready at commit {commit_sha[:8]}; indexing architecture...', 'INFO')
                     engine = RepositoryIntelligenceEngine(target_dir, repo_name, owner, commit_sha, branch)
                     repo_intel = await asyncio.to_thread(engine.analyze)
                 except Exception as exc:
@@ -399,6 +542,7 @@ class ScanExecutionManager:
                     self.db.update_scan_status(scan_id, 'failed', finished_at=datetime.now(timezone.utc).isoformat())
                     return {'scan_id': scan_id, 'status': 'failed', 'error': err_msg}
                 await self.emit_log(scan_id, 'orchestrator', 'OrchestratorAgent', 'Workflow execution plan created successfully.', 'SUCCESS')
+                self.mark_agent_done(scan_id, 'OrchestratorAgent')
             except Exception as exc:
                 await self.emit_log(scan_id, 'orchestrator', 'OrchestratorAgent', f'Orchestration planning error: {str(exc)}', 'CRITICAL')
                 self.active_scans[scan_id]['status'] = 'failed'
@@ -480,6 +624,7 @@ class ScanExecutionManager:
                         pass
 
                 await self.emit_log(scan_id, 'code_intel', 'CodeIntelligenceAgent', f'AST extraction complete: {len(routes_found)} routes, {len(models_found)} models, {len(invariants_derived)} invariants.', 'SUCCESS')
+                self.mark_agent_done(scan_id, 'CodeIntelligenceAgent')
                 await self.emit_progress(scan_id, 'code_intel', 'CodeIntelligenceAgent', 40, f'Code intelligence extracted {len(routes_found)} routes and {len(invariants_derived)} invariants')
             except Exception as exc:
                 await self.emit_log(scan_id, 'code_intel', 'CodeIntelligenceAgent', f'Code intelligence warning: {str(exc)}', 'WARN')
@@ -513,6 +658,7 @@ class ScanExecutionManager:
                 _store_task_output(recon_task_id, recon_resp.get('output') or {})
                 recon_endpoints = recon_resp.get('output', {}).get('endpoints', [])
                 await self.emit_log(scan_id, 'recon', 'ReconAgent', f'ScopeGate boundary verified. External host scans restricted to authorized scope.', 'SUCCESS')
+                self.mark_agent_done(scan_id, 'ReconAgent')
             except Exception as exc:
                 await self.emit_log(scan_id, 'recon', 'ReconAgent', f'Reconnaissance check note: {str(exc)}', 'INFO')
 
@@ -626,6 +772,7 @@ class ScanExecutionManager:
                     except Exception:
                         continue
                 await self.emit_log(scan_id, 'vuln_research', 'VulnResearchAgent', f'Formulated {len(hypotheses)} testable hypotheses matching selected scope.', 'SUCCESS')
+                self.mark_agent_done(scan_id, 'VulnResearchAgent')
                 await self.emit_progress(scan_id, 'vuln_research', 'VulnResearchAgent', 70, f'Vulnerability analysis completed ({len(hypotheses)} hypotheses)')
             except Exception as exc:
                 await self.emit_log(scan_id, 'vuln_research', 'VulnResearchAgent', f'Vulnerability research note: {str(exc)}', 'WARN')
@@ -732,10 +879,14 @@ class ScanExecutionManager:
                             await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', f"Probe {plan.get('test_plan_id')} returned {dt_resp.get('status')}: {err.get('code', '')} {err.get('message', '')}".strip(), 'WARN')
                     if dynamic_results:
                         await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', f'Dynamic testing executed {len(dynamic_results)} test plan(s) against {sandbox_base}.', 'SUCCESS')
+                        self.mark_agent_done(scan_id, 'DynamicTestingAgent')
             elif test_plans and not hypotheses:
                 await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 'No scoped hypotheses matched the selected assessment mode; dynamic probes skipped.', 'INFO')
             else:
                 await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 'No testable hypotheses were derived for the target; dynamic probes skipped.', 'INFO')
+            # The stage ran to completion either way: it produced a recorded
+            # outcome (probes executed, or an explicit skip) rather than hanging.
+            self.mark_agent_done(scan_id, 'DynamicTestingAgent')
             await self.emit_progress(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 85, f'Dynamic testing completed ({len(dynamic_results)} plan(s) executed)')
 
             await self.emit_progress(scan_id, 'verification', 'VerificationAgent', 90, 'Forensic arbitration of findings and evidence chain')
@@ -902,6 +1053,7 @@ class ScanExecutionManager:
                             await self.emit_log(scan_id, 'verification', 'VerificationAgent', f"VERDICT {verdict.upper() or 'UNCONFIRMED'} for {hyp.get('hypothesis_id')}: reproduced {(repro or {}).get('reproduced', 0)}/{(repro or {}).get('runs', 0)}" + (f" | {', '.join(map(str, reasons[:2]))}" if reasons else ''), 'INFO')
 
             await self.emit_log(scan_id, 'verification', 'VerificationAgent', f'Forensic arbitration complete: {len(verified_findings)} confirmed and {len(confirmed_findings)} static-unverified findings documented within scope.', 'SUCCESS')
+            self.mark_agent_done(scan_id, 'VerificationAgent')
 
             await self.emit_progress(scan_id, 'remediation', 'RemediationAgent', 95, 'Synthesizing remediation patches')
             patches = []
@@ -1024,8 +1176,32 @@ class ScanExecutionManager:
                         await self.emit_log(scan_id, 'remediation', 'RemediationAgent', f"Remediation for {vf.get('finding_id')} returned status {status}: {err_msg[:200]}", 'INFO')
             elif confirmed_findings:
                 await self.emit_log(scan_id, 'remediation', 'RemediationAgent', f'{len(confirmed_findings)} static finding(s) still require sandbox verification before patch synthesis.', 'INFO')
+                self.mark_agent_done(scan_id, 'RemediationAgent')
             else:
                 await self.emit_log(scan_id, 'remediation', 'RemediationAgent', 'Zero confirmed vulnerabilities require remediation patches.', 'INFO')
+                self.mark_agent_done(scan_id, 'RemediationAgent')
+
+            # Close every agent that is still open. The stage-specific markers
+            # above cover the normal paths, but a stage that failed or took an
+            # unusual branch could leave its task row on "running", which made
+            # the console show a finished assessment with a live agent.
+            # Any task row still marked "running" belongs to an agent that
+            # reached the end of the pipeline without closing its own row
+            # (a stage that took an unusual branch). The scan is over, so
+            # those rows must not keep a live agent in the console.
+            try:
+                for row in self.db.list_agent_tasks(scan_id):
+                    if str(row.get('status')).lower() == 'running':
+                        self.db.update_agent_task(row['id'], 'succeeded')
+            except Exception:
+                pass
+            for agent_name in AGENT_STAGE_BY_AGENT:
+                state = self.active_scans.get(scan_id, {}).get('agents_state', {}).get(
+                    AGENT_STAGE_BY_AGENT[agent_name], {})
+                current = state.get('status')
+                if current in ('succeeded', 'failed'):
+                    continue
+                self.mark_agent_done(scan_id, agent_name)
 
             try:
                 self.db.update_scan_status(scan_id, 'completed', finished_at=datetime.now(timezone.utc).isoformat())

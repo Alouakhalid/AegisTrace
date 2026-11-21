@@ -183,6 +183,87 @@ def calculate_security_score(conn, project_id: Optional[str] = None) -> Optional
 
     return max(0, min(100, 100 - total_penalty))
 
+def _task_message(row: Dict[str, Any]) -> str:
+    """The agent's most recent message, taken from its stored task output."""
+    raw = row.get("output")
+    if not raw:
+        return ""
+    try:
+        data = json.loads(raw) if isinstance(raw, str) else raw
+    except Exception:
+        return ""
+    if isinstance(data, dict):
+        for key in ("message", "summary", "status", "result"):
+            value = data.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()[:160]
+    return ""
+
+
+def _task_duration_ms(row: Dict[str, Any]) -> Optional[int]:
+    """Wall-clock duration of an agent task, from its own timestamps."""
+    try:
+        from datetime import datetime as _dt
+        start = str(row.get('created_at') or '')
+        end = str(row.get('finished_at') or '')
+        if not start or not end:
+            return None
+        fmt = '%Y-%m-%dT%H:%M:%S'
+        s = _dt.strptime(start[:19], fmt)
+        e = _dt.strptime(end[:19], fmt)
+        return max(0, int((e - s).total_seconds() * 1000))
+    except Exception:
+        return None
+
+
+def _scan_agent_states(scan_id: str, scan_status: str = "") -> Dict[str, Dict[str, Any]]:
+    """Return the per-agent lifecycle recorded for a scan.
+
+    The console used to invent the topology from the scan's progress
+    percentage, which meant every agent read "queued" even for a finished
+    assessment. agent_tasks is written by the pipeline as each stage runs, so
+    it is the honest source for what actually happened.
+    """
+    states: Dict[str, Dict[str, Any]] = {}
+    try:
+        rows = manager.db.list_agent_tasks(scan_id)
+    except Exception:
+        rows = []
+    agent_to_stage = {
+        'orchestrator': 'orchestrator',
+        'code_intelligence': 'code_intelligence',
+        'recon': 'recon',
+        'vulnerability_research': 'vulnerability_research',
+        'dynamic_testing': 'dynamic_testing',
+        'verification': 'verification',
+        'remediation': 'remediation',
+    }
+    for row in rows:
+        stage = row.get('stage')
+        agent = row.get('agent')
+        if not stage:
+            continue
+        canonical = agent_to_stage.get(agent, stage)
+        if agent:
+            stage = canonical
+        status = row.get('status') or 'queued'
+        if scan_status in ('completed', 'failed') and status in ('queued', 'running'):
+            # A finished scan cannot have a running agent.
+            status = 'succeeded' if scan_status == 'completed' else 'failed'
+        states[stage] = {
+            'stage': stage,
+            'agent': row.get('agent'),
+            'status': status,
+            'started_at': row.get('created_at'),
+            'finished_at': row.get('finished_at'),
+            'error': row.get('error'),
+            'task_id': row.get('id'),
+            'duration_ms': _task_duration_ms(row),
+            'message': _task_message(row),
+        }
+    return states
+
+
 def _scan_confirmed_count(scan_id: str) -> int:
     """Findings in this scan whose verdict survived sandbox replay."""
     try:
@@ -643,6 +724,7 @@ async def get_scan_status(scan_id: str):
             'verified_findings': _scan_confirmed_count(scan_id),
             'resolved_findings': active['resolved_count'],
             'pending_approvals': _scan_pending_approvals(scan_id),
+            'agent_states': _scan_agent_states(scan_id, active.get('status', '')),
             'log_messages': logs[-100:]
         }
     
@@ -666,12 +748,21 @@ async def get_scan_status(scan_id: str):
     pending_apr = stat_cursor.fetchone()[0] or 0
 
     completed = db_scan['status'] == 'completed'
+    # Real last stage, not a hardcoded 'in_progress'.
+    stage_cursor = manager.db.conn.cursor()
+    stage_cursor.execute(
+        'SELECT stage FROM agent_tasks WHERE scan_id = ? AND status IN (\'running\', \'succeeded\', \'failed\') '
+        'ORDER BY rowid DESC LIMIT 1;',
+        (scan_id,)
+    )
+    stage_row = stage_cursor.fetchone()
+    last_stage = stage_row[0] if stage_row else ('completed' if completed else 'initialization')
     return {
         'scan_id': scan_id,
         'project_id': db_scan['engagement_id'],
         'project_name': _scan_project_name(db_scan),
         'status': db_scan['status'],
-        'current_stage': 'completed' if completed else 'in_progress',
+        'current_stage': 'completed' if completed else last_stage,
         'active_agent': 'RemediationAgent' if completed and pending_apr else ('Completed' if completed else 'OrchestratorAgent'),
         'progress_percentage': 100 if completed else 80,
         'start_time': db_scan.get('created_at', ''),
@@ -683,6 +774,7 @@ async def get_scan_status(scan_id: str):
         'verified_findings': verified,
         'resolved_findings': resolved,
         'pending_approvals': pending_apr,
+        'agent_states': _scan_agent_states(scan_id, db_scan['status']),
         'log_messages': logs
     }
 

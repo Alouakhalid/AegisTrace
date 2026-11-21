@@ -2,6 +2,7 @@ import os
 import json
 import sqlite3
 import hashlib
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
 class DatabaseImmutabilityError(Exception):
@@ -184,12 +185,25 @@ class AegisDatabase:
         return res
 
     def update_agent_task(self, tsk_id: str, status: str, output: Optional[Dict[str, Any]] = None, error: Optional[Dict[str, Any]] = None, finished_at: Optional[str] = None) -> None:
+        """Update an agent task row.
+
+        ``output`` and ``error`` are only overwritten when the caller supplies
+        them: passing None means "leave the stored value alone", not "erase it".
+        Passing output={"status": "succeeded"} must not wipe the payload the
+        agent already stored.
+        """
         out_str = json.dumps(output) if output is not None else None
         err_str = json.dumps(error) if error is not None else None
+        finished = finished_at
+        if finished is None and status in ('succeeded', 'failed', 'cancelled', 'blocked'):
+            finished = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         with self.conn:
             self.conn.execute(
-                "UPDATE agent_tasks SET status = ?, output = ?, error = ?, finished_at = ? WHERE id = ?;",
-                (status, out_str, err_str, finished_at, tsk_id)
+                "UPDATE agent_tasks SET status = ?, "
+                "output = COALESCE(?, output), "
+                "error = COALESCE(?, error), "
+                "finished_at = COALESCE(?, finished_at) WHERE id = ?;",
+                (status, out_str, err_str, finished, tsk_id)
             )
 
     def list_agent_tasks(self, scan_id: str) -> List[Dict[str, Any]]:

@@ -1,5 +1,100 @@
 import { drawRadialGauge } from "../charts.js";
 
+/**
+ * Advance the agent topology to the given stage.
+ * Agents before `incoming` are finished, the one at `incoming` is running.
+ */
+function applyTopologyStep(root, order, incoming) {
+  root.querySelectorAll(".ws-agent-card").forEach(card => {
+    const stage = card.getAttribute("data-stage");
+    const idx = order.indexOf(stage);
+    let status = "queued";
+    if (incoming >= 0) {
+      if (idx < incoming) status = "completed";
+      else if (idx === incoming) status = "running";
+    }
+    if (status === "queued") return;
+    const meta = agentStatusMeta(status);
+    const badge = card.querySelector(".ws-agent-status");
+    if (badge) { badge.className = `badge ${meta.badge} ws-agent-status`; badge.textContent = meta.label; }
+    const dot = card.querySelector(".ws-agent-dot");
+    if (dot) dot.style.background = meta.dot;
+    card.className = `card ws-agent-card ws-agent-${meta.tone}`;
+    card.style.border = `1px solid ${meta.border}`;
+  });
+}
+
+function formatAgentDetail(rec) {
+  // The card already shows the stage, so the detail line only adds timing.
+  const parts = [];
+  if (typeof rec.duration_ms === "number" && rec.duration_ms >= 0) {
+    parts.push(rec.duration_ms < 1000 ? `${rec.duration_ms}ms` : `${(rec.duration_ms / 1000).toFixed(1)}s`);
+  } else if (rec.finished_at) {
+    parts.push(`finished ${String(rec.finished_at).slice(11, 19)}`);
+  } else if (rec.started_at) {
+    parts.push(`started ${String(rec.started_at).slice(11, 19)}`);
+  }
+  return parts.join(" · ");
+}
+
+function agentStatusMeta(status) {
+  if (status === "completed") return { badge: "badge-success", border: "rgba(32, 214, 160, 0.35)", label: "done", dot: "var(--success)", tone: "done" };
+  if (status === "running") return { badge: "badge-cyan", border: "var(--border-gold)", label: "running", dot: "var(--cyan-accent)", tone: "running" };
+  if (status === "failed") return { badge: "badge-critical", border: "rgba(255, 85, 120, 0.45)", label: "failed", dot: "var(--critical)", tone: "failed" };
+  if (status === "blocked") return { badge: "badge-medium", border: "var(--border-gold)", label: "blocked", dot: "var(--warning)", tone: "blocked" };
+  return { badge: "badge-outline", border: "var(--border-subtle)", label: "queued", dot: "var(--text-muted)", tone: "idle" };
+}
+
+function agentCard(ag, idx) {
+  const meta = agentStatusMeta(ag.status);
+  return `
+    <div class="card ws-agent-card ws-agent-${meta.tone}" data-stage="${ag.stage}" style="padding: 14px; background: rgba(10, 10, 10, 0.6); border: 1px solid ${meta.border}; border-radius: var(--radius-md);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 9px; font-weight: 700; color: var(--cyan-accent); display: flex; align-items: center; gap: 5px;">
+          <span class="ws-agent-dot" style="width: 6px; height: 6px; border-radius: 50%; background: ${meta.dot};"></span>
+          #0${idx + 1}
+        </span>
+        <span class="badge ${meta.badge} ws-agent-status" style="padding: 2px 6px; font-size: 0.65rem;">${meta.label}</span>
+      </div>
+      <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${ag.name}">
+        ${ag.name.replace("Agent", "")}
+      </div>
+      <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;">${ag.role}</div>
+      <div class="ws-agent-stage" style="font-size: 0.66rem; color: var(--text-muted); font-family: var(--font-mono); display: flex; justify-content: space-between; gap: 6px;">
+        <span>${ag.stage}</span>
+        <span class="ws-agent-time">${ag.detail || ""}</span>
+      </div>
+      ${ag.message ? `<div class="ws-agent-msg">${ag.message}</div>` : ""}
+    </div>`;
+}
+
+/** Update the topology cards in place, without re-rendering the view. */
+function applyAgentStates(root, states, scanStatus) {
+  const aliases = { code_intel: "code_intelligence", vuln_research: "vulnerability_research" };
+  const norm = {};
+  Object.entries(states || {}).forEach(([k, v]) => { norm[aliases[k] || k] = v; });
+  root.querySelectorAll(".ws-agent-card").forEach(card => {
+    const stage = card.getAttribute("data-stage");
+    const rec = norm[stage];
+    if (!rec) return;
+    const status = String(rec.status || "").toLowerCase();
+    const meta = agentStatusMeta(status === "succeeded" ? "completed" : status);
+    const badge = card.querySelector(".ws-agent-status");
+    if (badge) {
+      badge.className = `badge ${meta.badge} ws-agent-status`;
+      badge.style.padding = "2px 6px";
+      badge.style.fontSize = "0.65rem";
+      badge.textContent = meta.label;
+    }
+    const dot = card.querySelector(".ws-agent-dot");
+    if (dot) dot.style.background = meta.dot;
+    card.className = `card ws-agent-card ws-agent-${meta.tone}`;
+    card.style.border = `1px solid ${meta.border}`;
+  });
+  const src = root.querySelector("#ws-topology-source");
+  if (src) src.textContent = "Status read from the evidence vault (agent_tasks).";
+}
+
 export async function renderWorkspace(container, navigate, state, api, toast) {
   let scanId = state.currentScanId;
   if (!scanId) {
@@ -42,9 +137,10 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
     return;
   }
 
-  // Pipeline order is a product constant; per-agent *status* must come from the
-  // scan record. The old version hardcoded "completed" for every agent, which
-  // made a failed scan look like a success.
+  // Pipeline order is a product constant. The per-agent *status* comes from
+  // agent_states, which the pipeline writes to the vault as each stage runs.
+  // Inferring it from the progress percentage (the previous approach) left
+  // every agent stuck on "queued" because the stage ids never matched.
   const PIPELINE = [
     { stage: "orchestrator", name: "OrchestratorAgent", role: "Mission & scope planning" },
     { stage: "code_intelligence", name: "CodeIntelligenceAgent", role: "AST invariants" },
@@ -54,19 +150,48 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
     { stage: "verification", name: "VerificationAgent", role: "3× replay" },
     { stage: "remediation", name: "RemediationAgent", role: "Patch synthesis" }
   ];
-  const stageOrder = ["queued", ...PIPELINE.map(p => p.stage), "completed"];
-  const currentIdx = stageOrder.indexOf(String(scanInfo.current_stage || "").toLowerCase());
+
+  // Older vaults may still use the legacy stage vocabulary.
+  const STAGE_ALIASES = {
+    code_intel: "code_intelligence",
+    vuln_research: "vulnerability_research",
+    vulnerability_research: "vulnerability_research"
+  };
+  const normaliseStage = s => {
+    const key = String(s || "").toLowerCase();
+    return STAGE_ALIASES[key] || key;
+  };
+
   const scanDone = String(scanInfo.status || "").toLowerCase() === "completed";
   const scanFailed = String(scanInfo.status || "").toLowerCase() === "failed";
+  const rawStates = scanInfo.agent_states || {};
+  const states = {};
+  Object.entries(rawStates).forEach(([stage, st]) => { states[normaliseStage(stage)] = st; });
+
+  const currentStage = normaliseStage(scanInfo.current_stage);
+  const currentIdx = PIPELINE.findIndex(p => p.stage === currentStage);
 
   const agents = PIPELINE.map((p, i) => {
-    let status = "queued";
-    if (scanDone) status = "completed";
-    else if (scanFailed) status = currentIdx > i + 1 ? "completed" : "failed";
-    else if (currentIdx > i + 1) status = "completed";
-    else if (currentIdx === i + 1) status = "running";
-    return { ...p, status };
+    const rec = states[p.stage] || {};
+    let status = rec ? String(rec.status || "").toLowerCase() : "";
+    if (!status || status === "queued") {
+      // No row yet: derive from the scan's own state, but only as a fallback.
+      if (scanDone) status = "succeeded";
+      else if (scanFailed) status = currentIdx > i ? "succeeded" : (currentIdx === i ? "failed" : "queued");
+      else if (currentIdx > i) status = "succeeded";
+      else if (currentIdx === i) status = "running";
+      else status = "queued";
+    } else if (scanDone && status === "running") {
+      status = "succeeded";
+    }
+    return {
+      ...p,
+      status: status === "succeeded" ? "completed" : status,
+      detail: formatAgentDetail(rec),
+      message: rec.message || ""
+    };
   });
+  const vaultHasStates = Object.keys(states).length > 0;
 
   container.innerHTML = `
     <div>
@@ -114,23 +239,12 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
           </div>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;" id="ws-agents-grid">
-            ${agents.map((ag, idx) => `
-              <div class="card" style="padding: 14px; background: rgba(10, 10, 10, 0.6); border: 1px solid ${ag.status === 'completed' ? 'rgba(32, 214, 160, 0.3)' : (ag.status === 'failed' ? 'rgba(255, 85, 120, 0.4)' : (ag.status === 'running' ? 'var(--border-gold)' : 'var(--border-subtle)'))}; border-radius: var(--radius-md);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="font-size: 9px; font-weight: 700; color: var(--cyan-accent);">#0${idx + 1}</span>
-                  <span class="badge ${ag.status === 'completed' ? 'badge-success' : (ag.status === 'failed' ? 'badge-critical' : (ag.status === 'running' ? 'badge-cyan' : 'badge-outline'))}" style="padding: 2px 6px; font-size: 0.65rem;">
-                    ${ag.status}
-                  </span>
-                </div>
-                <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${ag.name}">
-                  ${ag.name.replace('Agent', '')}
-                </div>
-                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;">${ag.role}</div>
-                <div style="font-size: 0.66rem; color: var(--text-muted); font-family: var(--font-mono);">
-                  ${ag.stage}
-                </div>
-              </div>
-            `).join("")}
+            ${agents.map((ag, idx) => agentCard(ag, idx)).join("")}
+          </div>
+          <div style="margin-top: 14px; font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span id="ws-topology-source">${vaultHasStates ? "Status read from the evidence vault (agent_tasks)." : "Status derived from the scan's current stage."}</span>
+            <span id="ws-stage-note" style="color: var(--cyan-accent);"></span>
+            <button class="btn btn-outline btn-sm" id="ws-btn-refresh-state" style="padding: 2px 9px; font-size: 0.68rem;">Refresh</button>
           </div>
         </div>
       </div>
@@ -169,6 +283,17 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
   }
 
   document.getElementById("ws-btn-findings")?.addEventListener("click", () => navigate("findings"));
+  document.getElementById("ws-btn-refresh-state")?.addEventListener("click", async () => {
+    try {
+      const fresh = await api.getScanStatus(scanId);
+      if (fresh) {
+        applyAgentStates(container, fresh.agent_states, fresh.status);
+        if (typeof toast === "function") toast("Topology refreshed from the evidence vault", "success");
+      }
+    } catch (e) {
+      if (typeof toast === "function") toast(`Could not refresh: ${e.message}`, "error");
+    }
+  });
   document.getElementById("ws-btn-approvals")?.addEventListener("click", () => navigate("approvals"));
 
   const terminalBody = document.getElementById("ws-terminal-body");
@@ -189,6 +314,21 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
     terminalBody.appendChild(entry);
     terminalBody.scrollTop = terminalBody.scrollHeight;
   }
+
+  // Reflect the pre-agent stage (repository retrieval) so the topology is not
+  // a wall of "queued" while the clone is still running.
+  const stageNote = container.querySelector("#ws-stage-note");
+  const STAGE_NOTES = {
+    queued: "queued — waiting for a worker",
+    initialization: "preparing the target: cloning and indexing the repository",
+    in_progress: "assessment in progress"
+  };
+  const setStageNote = stage => {
+    if (!stageNote) return;
+    const key = String(stage || "").toLowerCase();
+    stageNote.textContent = STAGE_NOTES[key] || (key && !["orchestrator","code_intelligence","recon","vulnerability_research","dynamic_testing","verification","remediation","completed"].includes(key) ? key : "");
+  };
+  setStageNote(scanInfo.current_stage);
 
   container.querySelectorAll(".filter-log-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
@@ -215,20 +355,64 @@ export async function renderWorkspace(container, navigate, state, api, toast) {
         // The socket replays already-formatted lines ("[ts] [LEVEL] [Agent] msg")
         // and also emits compact progress events; normalise both shapes.
         const parsed = raw.match(/^\[([^\]]+)\]\s*\[([A-Z]+)\]\s*\[([^\]]+)\]\s*([\s\S]*)$/);
-        if (data.type === "log") {
+        if (data.type === "log" || data.type === "agent_log") {
+          // The pipeline emits "agent_log" and the WebSocket endpoint replays
+          // stored lines as "log"; both must reach the console.
           if (parsed) appendLog(parsed[1], parsed[2], parsed[3], parsed[4]);
-          else appendLog(data.timestamp || "NOW", data.level || "INFO", data.agent_name || "Agent", raw);
+          else appendLog(data.timestamp || "NOW", data.level || "INFO", data.agent || data.agent_name || "Agent", raw);
+          // An agent_log names the stage that is speaking, so the topology can
+          // advance even if the progress event was missed.
+          if (data.stage && data.stage !== "initialization") {
+            const order = PIPELINE.map(p => p.stage);
+            const incoming = order.indexOf(data.stage);
+            if (incoming >= 0) applyTopologyStep(container, order, incoming);
+          }
         } else if (data.type === "pipeline_progress") {
           if (typeof data.percentage === "number" && gaugeCanvas) {
             drawRadialGauge(gaugeCanvas, data.percentage, 100, "Progress", "#24C8F5");
           }
           const actAg = document.getElementById("ws-active-agent-name");
           if (actAg && data.agent) actAg.innerText = data.agent;
+          if (data.stage) {
+            // Live topology update. When an agent reports progress, every agent
+            // before it in the pipeline has necessarily finished, so the
+            // topology advances one card at a time instead of jumping from
+            // "all queued" straight to "all done".
+            const order = PIPELINE.map(p => p.stage);
+            const incoming = order.indexOf(data.stage);
+            if (incoming >= 0) applyTopologyStep(container, order, incoming);
+          }
           if (raw) appendLog(data.timestamp || "NOW", "INFO", data.agent || "Agent", raw);
         }
       } catch (e) {}
     };
   } catch (err) {}
+
+  // Poll the vault while the scan is unfinished: the WebSocket only reports
+  // the agent that is *currently* running, but the console must also show the
+  // agents that already finished after a reconnect or a page reload.
+  const refreshTimer = setInterval(async () => {
+    const statusBadge = document.getElementById("ws-scan-status-badge");
+    if (statusBadge && /completed|failed/i.test(statusBadge.textContent || "")) {
+      clearInterval(refreshTimer);
+      return;
+    }
+    try {
+      const fresh = await api.getScanStatus(scanId);
+      if (!fresh) return;
+      applyAgentStates(container, fresh.agent_states, fresh.status);
+      if (fresh.agent_states && Object.keys(fresh.agent_states).length) {
+        const src = document.getElementById("ws-topology-source");
+        if (src) src.textContent = "Status read from the evidence vault (agent_tasks).";
+      }
+      if (typeof fresh.progress_percentage === "number" && gaugeCanvas) {
+        drawRadialGauge(gaugeCanvas, fresh.progress_percentage, 100, "Progress", "#24C8F5");
+      }
+      const badge = document.getElementById("ws-scan-status-badge");
+      if (badge && fresh.status) badge.textContent = String(fresh.status).toUpperCase();
+      if (typeof setStageNote === "function") setStageNote(fresh.current_stage);
+    } catch { /* keep the last known state */ }
+  }, 700);
 
   // Initial HTTP logs
   try {

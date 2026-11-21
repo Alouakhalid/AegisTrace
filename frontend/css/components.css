@@ -1871,3 +1871,28 @@ code, .mono, .badge { overflow-wrap: anywhere; }
   /* Any table that is not wrapped still scrolls instead of overflowing. */
   #view-root .card > .data-table { display: block; overflow-x: auto; white-space: nowrap; }
 }
+
+/* ---- Workspace agent topology ---- */
+.ws-agent-card { transition: border-color var(--transition-fast), background var(--transition-fast); }
+.ws-agent-card.ws-agent-running { background: rgba(36, 200, 245, 0.06); }
+.ws-agent-card.ws-agent-done { background: rgba(32, 214, 160, 0.05); }
+.ws-agent-card.ws-agent-idle { opacity: 0.62; }
+.ws-agent-time { color: var(--text-muted); font-size: 0.64rem; }
+.ws-agent-dot { display: inline-block; }
+.ws-agent-running .ws-agent-dot { animation: wsAgentPulse 1.6s ease-in-out infinite; }
+@keyframes wsAgentPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ws-agent-running .ws-agent-dot { animation: none; }
+}
+
+.ws-agent-msg {
+  margin-top: 8px;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  border-top: 1px dashed var(--border-subtle);
+  padding-top: 7px;
+}
