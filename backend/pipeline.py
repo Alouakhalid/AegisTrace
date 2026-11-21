@@ -40,8 +40,8 @@ def load_recon():
     return run_recon
 
 def load_vuln_research():
-    from agents.vulnerability_research_agent.vuln_research_agent import run_vuln_research
-    return run_vuln_research
+    from agents.vulnerability_research_agent.vuln_research_agent import run_vulnerability_research
+    return run_vulnerability_research
 
 def load_dynamic_testing():
     from agents.dynamic_testing_agent.dynamic_testing_agent import DynamicTestingAgent
@@ -54,6 +54,20 @@ def load_verification():
 def load_remediation():
     from agents.remediation_agent.remediation_agent import RemediationAgent
     return RemediationAgent
+
+def _map_hypothesis_category(category: str) -> str:
+    """Map free-form risk-area categories to the CHECK-constrained hypothesis
+    categories allowed by the schema (idor | broken_access_control |
+    authn_authz_flaw | business_logic). The full original category remains
+    visible in the finding title and description."""
+    c = str(category or '').lower()
+    if 'idor' in c or 'access' in c:
+        return 'idor'
+    if 'auth' in c:
+        return 'authn_authz_flaw'
+    if 'logic' in c or 'state' in c:
+        return 'business_logic'
+    return 'broken_access_control'
 
 class ScanExecutionManager:
     """Manages the full multi-agent pipeline execution and real-time WebSocket telemetry."""
@@ -484,7 +498,7 @@ class ScanExecutionManager:
                             h.get('title', 'Authorization Hypothesis'),
                             h.get('description', ''),
                             h.get('severity_rank', 1),
-                            'approved',
+                            'proposed',
                             routed_skill_names[:3]
                         )
                     except Exception:
@@ -497,10 +511,7 @@ class ScanExecutionManager:
             await self.emit_progress(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 75, 'Conducting dynamic behavioral validation')
             confirmed_findings = []
             if hypotheses and os.environ.get('AEGIS_SANDBOX_DB'):
-                try:
-                    await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 'Sandbox database detected. Initiating state mutation probes...', 'INFO')
-                except Exception as exc:
-                    await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', f'Dynamic probe execution error: {str(exc)}', 'WARN')
+                await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 'Sandbox database detected. Dynamic state-mutation probes require the DynamicTestingAgent runtime (AEGIS_SANDBOX_BASE_URL + sandbox app); executing static-phase validation only.', 'INFO')
             else:
                 await self.emit_log(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 'Sandbox runtime environment not active. Dynamic execution skipped to protect host integrity; preserving static findings.', 'INFO')
             await self.emit_progress(scan_id, 'dynamic_testing', 'DynamicTestingAgent', 85, 'Dynamic testing phase completed')
@@ -530,9 +541,9 @@ class ScanExecutionManager:
                             'category': ra['category'],
                             'severity': ra['severity'],
                             'confidence': 0.92,
-                            'status': 'confirmed' if invariants_derived else 'needs_verification',
-                            'affected_file': repo_intel.get('entry_points', ['app.py'])[0] if repo_intel.get('entry_points') else 'app.py',
-                            'line_number': 17,
+                            'status': 'needs_verification',
+                            'affected_file': ra.get('file'),
+                            'line_number': ra.get('line_number'),
                             'affected_function': 'upload_file' if 'upload' in ra['title'].lower() else 'router_handler',
                             'explanation': ra['description'],
                             'evidence': f"Discovered in commit {commit_sha[:8]} via AST inspection.",
@@ -541,16 +552,41 @@ class ScanExecutionManager:
                         }
                         confirmed_findings.append(finding_obj)
 
+            # Persist static findings honestly: they are UNCONFIRMED until the
+            # VerificationAgent reproduces them in the sandbox (3x replay).
+            allowed_severities = {'informational', 'low', 'medium', 'high', 'critical'}
+            for idx, fo in enumerate(confirmed_findings):
+                try:
+                    if not self.db.get_endpoint('ep_default'):
+                        self.db.insert_endpoint('ep_default', scan_id, 'GET', '/synthetic/resource', [], True, 'code_routes')
+                    if not self.db.get_security_invariant('inv_default'):
+                        self.db.insert_security_invariant('inv_default', project_id, 'Pending invariant correlation', 'ownership', 'code', 0.5)
+                    hyp_id = f"hyp_{scan_id}_static_{idx+1}"
+                    if not self.db.get_vulnerability_hypothesis(hyp_id):
+                        self.db.insert_vulnerability_hypothesis(
+                            hyp_id, scan_id, 'ep_default', 'inv_default',
+                            _map_hypothesis_category(fo.get('category', 'access_control')),
+                            fo.get('title', 'Static risk area'),
+                            fo.get('explanation', ''),
+                            2, 'proposed', routed_skill_names[:3]
+                        )
+                    severity = str(fo.get('severity', 'medium')).lower()
+                    if severity not in allowed_severities:
+                        severity = 'medium'
+                    self.db.insert_finding(
+                        fo['finding_id'], scan_id, hyp_id, 'ep_default', 'inv_default',
+                        'unconfirmed', float(fo.get('confidence', 0.9)), False,
+                        runs=1, reproduced=0, severity=severity, status='open'
+                    )
+                except Exception:
+                    continue
+
             await self.emit_log(scan_id, 'verification', 'VerificationAgent', f'Forensic arbitration complete: {len(confirmed_findings)} findings documented within scope.', 'SUCCESS')
 
             await self.emit_progress(scan_id, 'remediation', 'RemediationAgent', 95, 'Synthesizing remediation patches')
             patches = []
             if confirmed_findings:
-                try:
-                    RemCls = load_remediation()
-                    rem = RemCls(db=self.db)
-                except Exception as exc:
-                    await self.emit_log(scan_id, 'remediation', 'RemediationAgent', f'Patch generation note: {str(exc)}', 'WARN')
+                await self.emit_log(scan_id, 'remediation', 'RemediationAgent', f'{len(confirmed_findings)} finding(s) recorded as needing verification; AST patch synthesis requires sandbox-confirmed findings and a writable Git checkout of the target. Re-run with the RemediationAgent runtime to produce patches.', 'INFO')
             else:
                 await self.emit_log(scan_id, 'remediation', 'RemediationAgent', 'Zero confirmed vulnerabilities require remediation patches.', 'INFO')
 

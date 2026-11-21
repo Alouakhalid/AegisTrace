@@ -236,7 +236,19 @@ class SQLiteDatabaseStore:
         conn.row_factory = sqlite3.Row
         return conn
 
+    def _table_columns(self, table: str) -> List[str]:
+        """Return the whitelisted column names of an existing table, or []."""
+        safe = table.replace('"', '""')
+        try:
+            with self._connect() as conn:
+                rows = conn.execute(f'PRAGMA table_info("{safe}")').fetchall()
+        except sqlite3.DatabaseError:
+            return []
+        return [row[1] for row in rows]
+
     def has_table(self, table: str) -> bool:
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", table or ""):
+            return False
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' AND name = ?;", (table,)
@@ -255,17 +267,21 @@ class SQLiteDatabaseStore:
             return None
         row_id = self._row_id(table, key_dict)
         with self._connect() as conn:
-            row = conn.execute(f"SELECT * FROM {table} WHERE id = ?;", (row_id,)).fetchone()
+            row = conn.execute(f'SELECT * FROM "{table}" WHERE "id" = ?;', (row_id,)).fetchone()
         return dict(row) if row else None
 
     def update_row(self, table: str, key_dict: Dict[str, Any], updates: Dict[str, Any]) -> bool:
         if not self.has_table(table) or not updates:
             return False
+        valid_columns = set(self._table_columns(table))
+        safe_updates = {col: val for col, val in updates.items() if col in valid_columns}
+        if not safe_updates:
+            return False
         row_id = self._row_id(table, key_dict)
-        assignments = ", ".join(f"{col} = ?" for col in updates)
-        values = list(updates.values()) + [row_id]
+        assignments = ", ".join(f'"{col}" = ?' for col in safe_updates)
+        values = list(safe_updates.values()) + [row_id]
         with self._connect() as conn:
-            cur = conn.execute(f"UPDATE {table} SET {assignments} WHERE id = ?;", values)
+            cur = conn.execute(f'UPDATE "{table}" SET {assignments} WHERE "id" = ?;', values)
             conn.commit()
             return cur.rowcount > 0
 

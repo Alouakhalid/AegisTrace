@@ -31,10 +31,13 @@ class ProjectMemoryItem(BaseModel):
 
     @field_validator("content_sha256", mode="before")
     @classmethod
-    def compute_or_verify_sha(cls, v: Optional[str], values: Any) -> str:
+    def compute_or_verify_sha(cls, v: Optional[str], info: Any) -> str:
         if v:
             return v
-        return hashlib.sha256(b"").hexdigest()
+        # Derive the integrity hash from the content supplied in the same model
+        # input instead of silently hashing empty bytes.
+        content = (info.data or {}).get("content", "")
+        return hashlib.sha256(str(content).encode("utf-8")).hexdigest()
 
 class EngagementMemoryItem(BaseModel):
     model_config = ConfigDict(extra="forbid")

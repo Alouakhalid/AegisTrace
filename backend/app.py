@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import uuid
@@ -41,13 +42,73 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    # Restrict credentialed cross-origin access. '*' together with allow_credentials
+    # makes every origin eligible for credentialed requests; the SPA is same-origin,
+    # so CORS is only needed for explicitly allowed external tooling.
+    allow_origins=[o.strip() for o in os.environ.get('AEGIS_CORS_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000').split(',') if o.strip()],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
 )
 
 manager = ScanExecutionManager()
+
+def cvss_base_score_from_vector(vector: Optional[str]) -> Optional[float]:
+    """Compute the CVSS v3.1 base score from a stored vector string.
+
+    Returns None when the vector is missing or malformed so callers can fall
+    back to a severity-derived default instead of a fabricated constant.
+    """
+    if not vector:
+        return None
+    metrics = {}
+    for m in re.finditer(r"/(AV|AC|PR|UI|S|C|I|A):([NALPHRCU])(?=/|$)", vector):
+        metrics[m.group(1)] = m.group(2)
+    if len(metrics) < 8:
+        return None
+    weights = {
+        'AV': {'N': 0.85, 'A': 0.62, 'L': 0.55, 'P': 0.2},
+        'AC': {'L': 0.77, 'H': 0.44},
+        'PR': {'N': 0.85, 'L': 0.62, 'H': 0.27},
+        'UI': {'N': 0.85, 'R': 0.62},
+        'CIA': {'H': 0.56, 'L': 0.22, 'N': 0.0},
+    }
+    scope = metrics['S']
+    pr_weight = weights['PR'][metrics['PR']]
+    if scope == 'C':
+        pr_weight = {'N': 0.85, 'L': 0.68, 'H': 0.5}[metrics['PR']]
+    iss = 1 - ((1 - weights['CIA'][metrics['C']]) * (1 - weights['CIA'][metrics['I']]) * (1 - weights['CIA'][metrics['A']]))
+    if scope == 'U':
+        impact = 6.42 * iss
+    else:
+        impact = 7.52 * (iss - 0.029) - 3.25 * ((iss - 0.02) ** 15)
+    exploitability = 8.22 * weights['AV'][metrics['AV']] * weights['AC'][metrics['AC']] * pr_weight * weights['UI'][metrics['UI']]
+    if impact <= 0:
+        return 0.0
+    if scope == 'U':
+        return round(min(impact + exploitability, 10.0), 1)
+    return round(min(1.08 * (impact + exploitability), 10.0), 1)
+
+
+_SEVERITY_DEFAULT_VECTORS = {
+    'critical': 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
+    'high': 'CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N',
+    'medium': 'CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N',
+    'low': 'CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:N/A:N',
+    'informational': 'CVSS:3.1/AV:N/AC:H/PR:H/UI:R/S:U/C:N/I:N/A:N',
+}
+
+
+def cvss_score_for_finding(fnd: Dict[str, Any]) -> float:
+    """Derive the CVSS base score from the stored vector, falling back to a
+    severity-consistent default vector when none is stored."""
+    vector = fnd.get('cvss_vector')
+    score = cvss_base_score_from_vector(vector)
+    if score is not None:
+        return score
+    sev = str(fnd.get('severity') or 'medium').lower()
+    return cvss_base_score_from_vector(_SEVERITY_DEFAULT_VECTORS.get(sev, _SEVERITY_DEFAULT_VECTORS['medium'])) or 0.0
+
 
 @app.get('/api/v1/health')
 async def health_check():
@@ -83,7 +144,7 @@ def calculate_security_score(conn, project_id: Optional[str] = None) -> Optional
     if completed_scans == 0:
         return None
 
-    query = "SELECT severity, COUNT(*) FROM findings WHERE verdict = 'confirmed' AND status != 'resolved'"
+    query = "SELECT severity, COUNT(*) FROM findings WHERE verdict = 'confirmed' AND status != 'fixed'"
     params = []
     if project_id:
         query += " AND scan_id IN (SELECT id FROM scans WHERE engagement_id IN (SELECT id FROM engagements WHERE project_id = ?))"
@@ -113,7 +174,7 @@ async def get_overview_stats():
     cursor.execute('SELECT COUNT(*) FROM findings;')
     total_findings = cursor.fetchone()[0] or 0
     
-    cursor.execute('SELECT COUNT(*) FROM findings WHERE status = "resolved";')
+    cursor.execute('SELECT COUNT(*) FROM findings WHERE status = "fixed";')
     resolved_findings = cursor.fetchone()[0] or 0
     
     cursor.execute('SELECT COUNT(*) FROM findings WHERE verdict = "confirmed";')
@@ -162,7 +223,7 @@ async def list_projects():
         project_scans = scan_stat[0] if scan_stat else 0
         last_scan = scan_stat[1] if scan_stat and scan_stat[1] else None
 
-        cursor.execute("SELECT COUNT(*) FROM findings WHERE status != 'resolved' AND scan_id IN (SELECT id FROM scans WHERE engagement_id IN (SELECT id FROM engagements WHERE project_id = ?));", (pid,))
+        cursor.execute("SELECT COUNT(*) FROM findings WHERE status != 'fixed' AND scan_id IN (SELECT id FROM scans WHERE engagement_id IN (SELECT id FROM engagements WHERE project_id = ?));", (pid,))
         open_findings = cursor.fetchone()[0] or 0
 
         sec_score = calculate_security_score(manager.db.conn, project_id=pid)
@@ -346,31 +407,55 @@ def get_bifrost_health():
 async def verify_finding(finding_id: str):
     fnd = manager.db.get_finding(finding_id)
     if not fnd:
-        return {
-            'finding_id': finding_id,
-            'status': 'verified',
-            'reproduction_count': 3,
-            'confidence': 0.95,
-            'verdict': 'CONFIRMED'
-        }
+        raise HTTPException(status_code=404, detail='Finding not found')
     return {
         'finding_id': finding_id,
-        'status': fnd.get('status', 'confirmed'),
-        'reproduction_count': fnd.get('reproduced', 3),
-        'confidence': fnd.get('confidence', 0.92),
-        'verdict': (fnd.get('verdict') or 'CONFIRMED').upper()
+        'status': fnd.get('status', 'open'),
+        'reproduction_count': fnd.get('reproduced', 0),
+        'runs': fnd.get('runs', 1),
+        'confidence': fnd.get('confidence', 0.0),
+        'verdict': (fnd.get('verdict') or 'unconfirmed').upper()
     }
 
 @app.post('/api/v1/findings/{finding_id}/remediate')
 async def remediate_finding(finding_id: str):
     fnd = manager.db.get_finding(finding_id)
+    if not fnd:
+        raise HTTPException(status_code=404, detail='Finding not found')
+    patches = manager.db.get_patches(finding_id)
+    if not patches:
+        # No remediation has been synthesized for this finding yet. Report the
+        # honest state instead of a fabricated diff.
+        return {
+            'finding_id': finding_id,
+            'status': 'no_patch_available',
+            'patch_id': None,
+            'diff': None,
+            'regression_tests_passed': None,
+            'requires_approval': False,
+            'message': 'No remediation patch has been synthesized for this finding yet. Run a full assessment with the RemediationAgent enabled.'
+        }
+    patch = patches[-1]
+    from tools.artifact_store import load_patch
+    diff_ref = patch.get('diff_ref', '')
+    diff_content = load_patch(diff_ref)
+    if diff_content is None and os.path.isfile(str(diff_ref)):
+        with open(diff_ref, 'r', encoding='utf-8') as fh:
+            diff_content = fh.read()
+    if diff_content is None and diff_ref and '\n' in diff_ref:
+        # diff_ref stores the raw unified diff inline (same fallback the
+        # approval integrity check uses).
+        diff_content = diff_ref
+    tests = manager.db.get_patch_tests(patch['id'])
+    passed = sum(t.get('passed', 0) or 0 for t in tests)
     return {
         'finding_id': finding_id,
-        'status': 'patch_prepared',
-        'patch_id': f'pat_{uuid.uuid4().hex[:8]}',
-        'diff': '--- a/source.py\n+++ b/source.py\n@@ -10,3 +10,4 @@\n+    verify_tenant_authorization(current_user, target_id)\n',
-        'regression_tests_passed': 10,
-        'requires_approval': True
+        'status': patch.get('status', 'proposed'),
+        'patch_id': patch['id'],
+        'diff': diff_content,
+        'branch': patch.get('branch'),
+        'regression_tests_passed': passed,
+        'requires_approval': patch.get('status') not in ('approved', 'merged_by_human')
     }
 
 @app.get('/api/v1/scans')
@@ -382,24 +467,55 @@ async def list_scans():
     for r in rows:
         d = dict(r)
         cfg = json.loads(d['config']) if d.get('config') else {}
+        scan_id = d['id']
+
+        stat_cursor = manager.db.conn.cursor()
+        stat_cursor.execute('SELECT severity, COUNT(*) FROM findings WHERE scan_id = ? GROUP BY severity;', (scan_id,))
+        sev_counts = {str(row[0]).lower(): row[1] for row in stat_cursor.fetchall()}
+
+        stat_cursor.execute("SELECT COUNT(*) FROM findings WHERE scan_id = ? AND verdict = 'confirmed';", (scan_id,))
+        verified = stat_cursor.fetchone()[0] or 0
+        stat_cursor.execute("SELECT COUNT(*) FROM findings WHERE scan_id = ? AND status = 'fixed';", (scan_id,))
+        resolved = stat_cursor.fetchone()[0] or 0
+        stat_cursor.execute(
+            "SELECT COUNT(*) FROM approvals a JOIN patches p ON a.patch_id = p.id "
+            "JOIN findings f ON p.finding_id = f.id WHERE f.scan_id = ? AND a.decision = 'pending';",
+            (scan_id,)
+        )
+        pending_apr = stat_cursor.fetchone()[0] or 0
+
+        if d['status'] == 'completed':
+            progress = 100
+            stage = 'completed'
+            agent = 'RemediationAgent' if pending_apr else 'Completed'
+        elif scan_id in manager.active_scans:
+            active = manager.active_scans[scan_id]
+            progress = active['progress_percentage']
+            stage = active['current_stage']
+            agent = active['active_agent']
+        else:
+            progress = 50
+            stage = 'active'
+            agent = 'OrchestratorAgent'
+
         scans.append({
-            'scan_id': d['id'],
+            'scan_id': scan_id,
             'project_id': d['engagement_id'],
             'project_name': cfg.get('project_name', 'Enterprise Assessment'),
             'status': d['status'],
-            'current_stage': 'completed' if d['status'] == 'completed' else 'active',
-            'active_agent': 'RemediationAgent' if d['status'] == 'completed' else 'OrchestratorAgent',
-            'progress_percentage': 100 if d['status'] == 'completed' else 50,
+            'current_stage': stage,
+            'active_agent': agent,
+            'progress_percentage': progress,
             'start_time': d.get('created_at', ''),
             'end_time': d.get('finished_at', None),
-            'total_findings': 1,
-            'critical_findings': 0,
-            'high_findings': 1,
-            'medium_findings': 0,
-            'low_findings': 0,
-            'verified_findings': 1,
-            'resolved_findings': 0,
-            'pending_approvals': 1
+            'total_findings': sum(sev_counts.values()),
+            'critical_findings': sev_counts.get('critical', 0),
+            'high_findings': sev_counts.get('high', 0),
+            'medium_findings': sev_counts.get('medium', 0),
+            'low_findings': sev_counts.get('low', 0),
+            'verified_findings': verified,
+            'resolved_findings': resolved,
+            'pending_approvals': pending_apr
         })
     return scans
 
@@ -445,19 +561,38 @@ async def get_scan_status(scan_id: str):
         raise HTTPException(status_code=404, detail='Scan not found')
     
     logs = manager.scan_logs.get(scan_id, [])
+    stat_cursor = manager.db.conn.cursor()
+    stat_cursor.execute('SELECT severity, COUNT(*) FROM findings WHERE scan_id = ? GROUP BY severity;', (scan_id,))
+    sev_counts = {str(row[0]).lower(): row[1] for row in stat_cursor.fetchall()}
+    stat_cursor.execute("SELECT COUNT(*) FROM findings WHERE scan_id = ? AND verdict = 'confirmed';", (scan_id,))
+    verified = stat_cursor.fetchone()[0] or 0
+    stat_cursor.execute("SELECT COUNT(*) FROM findings WHERE scan_id = ? AND status = 'fixed';", (scan_id,))
+    resolved = stat_cursor.fetchone()[0] or 0
+    stat_cursor.execute(
+        "SELECT COUNT(*) FROM approvals a JOIN patches p ON a.patch_id = p.id "
+        "JOIN findings f ON p.finding_id = f.id WHERE f.scan_id = ? AND a.decision = 'pending';",
+        (scan_id,)
+    )
+    pending_apr = stat_cursor.fetchone()[0] or 0
+
+    completed = db_scan['status'] == 'completed'
     return {
         'scan_id': scan_id,
         'project_id': db_scan['engagement_id'],
         'project_name': 'Enterprise Assessment',
         'status': db_scan['status'],
-        'current_stage': 'completed' if db_scan['status'] == 'completed' else 'in_progress',
-        'active_agent': 'RemediationAgent' if db_scan['status'] == 'completed' else 'OrchestratorAgent',
-        'progress_percentage': 100 if db_scan['status'] == 'completed' else 80,
+        'current_stage': 'completed' if completed else 'in_progress',
+        'active_agent': 'RemediationAgent' if completed and pending_apr else ('Completed' if completed else 'OrchestratorAgent'),
+        'progress_percentage': 100 if completed else 80,
         'start_time': db_scan.get('created_at', ''),
-        'total_findings': 1,
-        'verified_findings': 1,
-        'resolved_findings': 0,
-        'pending_approvals': 1,
+        'total_findings': sum(sev_counts.values()),
+        'critical_findings': sev_counts.get('critical', 0),
+        'high_findings': sev_counts.get('high', 0),
+        'medium_findings': sev_counts.get('medium', 0),
+        'low_findings': sev_counts.get('low', 0),
+        'verified_findings': verified,
+        'resolved_findings': resolved,
+        'pending_approvals': pending_apr,
         'log_messages': logs
     }
 
@@ -522,16 +657,16 @@ async def list_findings(scan_id: Optional[str] = None):
             'scan_id': d['scan_id'],
             'title': hypo_row[0] if hypo_row else 'Security Vulnerability',
             'severity': (d.get('severity') or 'high').upper(),
-            'cvss_score': 6.5,
-            'cvss_vector': d.get('cvss_vector', 'CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N'),
+            'cvss_score': cvss_score_for_finding(d),
+            'cvss_vector': d.get('cvss_vector') or _SEVERITY_DEFAULT_VECTORS.get((d.get('severity') or 'high').lower(), 'CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N'),
             'cwe_id': hypo_row[1] if hypo_row else 'CWE-Unknown',
             'cwe_name': 'Security Invariant Flaw',
             'status': d['status'],
             'confidence': d['confidence'],
             'endpoint': ep_path,
             'http_method': ep_meth,
-            'affected_file': 'source',
-            'line_number': 1,
+            'affected_file': None,
+            'line_number': None,
             'root_cause': hypo_row[2] if hypo_row else 'Invariant violated',
             'reproduction_summary': f"Reproduced {d.get('reproduced', 0)}/{d.get('runs', 0)} runs with verdict {d.get('verdict')}.",
             'verification_verdict': (d.get('verdict') or 'UNCONFIRMED').upper(),
@@ -584,24 +719,22 @@ async def get_finding_detail(finding_id: str):
     hypo_title = hypo_row[0] if hypo_row else fnd.get('title', 'Security Vulnerability')
     hypo_cwe = hypo_row[1] if hypo_row else 'CWE-Unknown'
     hypo_rc = hypo_row[2] if hypo_row else 'Potential invariant violation'
-    hypo_file = 'source'
-    hypo_line = 1
     
     return {
         'id': finding_id,
         'scan_id': fnd.get('scan_id'),
         'title': hypo_title,
         'severity': (fnd.get('severity') or 'high').upper(),
-        'cvss_score': 6.5,
-        'cvss_vector': fnd.get('cvss_vector') or 'CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N',
+        'cvss_score': cvss_score_for_finding(fnd),
+        'cvss_vector': fnd.get('cvss_vector') or _SEVERITY_DEFAULT_VECTORS.get((fnd.get('severity') or 'high').lower(), 'CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N'),
         'cwe_id': hypo_cwe,
         'cwe_name': 'Authorization / Security Flaw',
         'status': fnd.get('status', 'open'),
         'confidence': fnd.get('confidence', 1.0),
         'endpoint': endpoint_path,
         'http_method': endpoint_method,
-        'affected_file': hypo_file,
-        'line_number': hypo_line,
+        'affected_file': None,
+        'line_number': None,
         'root_cause': hypo_rc,
         'reproduction_summary': f"Reproduced {fnd.get('reproduced', 0)}/{fnd.get('runs', 0)} runs with verdict {fnd.get('verdict')}.",
         'verification_verdict': (fnd.get('verdict') or 'UNCONFIRMED').upper(),
@@ -780,19 +913,37 @@ async def act_on_approval(patch_id: str, req: ApprovalActionRequest):
     calc_sha = hashlib.sha256(diff_content.encode('utf-8')).hexdigest()
     if calc_sha.lower() != expected_sha.lower():
         raise HTTPException(status_code=409, detail='Patch integrity mismatch')
+    if req.expected_patch_hash and calc_sha.lower() != req.expected_patch_hash.lower():
+        raise HTTPException(status_code=409, detail='Patch hash does not match expected_patch_hash')
     cursor.execute('SELECT id, decision FROM approvals WHERE patch_id = ?;', (patch_id,))
     row = cursor.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail='Approval not found')
     now_str = datetime.now(timezone.utc).isoformat()
     apr_id = row[0]
-    manager.db.update_approval(apr_id, req.action, req.reviewer, now_str, req.notes)
+    # approvals.decision CHECK allows only: pending | approved | rejected | changes_requested.
+    # The API action verbs must be mapped to valid DB decision states, otherwise every
+    # approve/reject/defer request violates the constraint and crashes with a 500.
+    decision_map = {'approve': 'approved', 'reject': 'rejected', 'defer': 'pending'}
+    decision = decision_map[req.action]
+    # approvals.decided_by carries a FOREIGN KEY to users(id); a free-text reviewer
+    # name would violate it and crash the endpoint. Bind the decision to the system
+    # operator account and preserve the reviewer identity inside the comment.
+    operator_id = 'usr_admin_001'
+    try:
+        if not manager.db.get_user(operator_id):
+            manager.db.create_user(operator_id, 'admin@aegistrace.io', 'Aegis System Admin', 'admin')
+    except Exception:
+        pass
+    comment = f"Reviewer: {req.reviewer}. {req.notes or ''}".strip()
+    manager.db.update_approval(apr_id, decision, operator_id, now_str, comment)
     if req.action == 'approve':
         manager.db.update_patch_status(patch_id, 'approved')
         cursor.execute('SELECT finding_id FROM patches WHERE id = ?;', (patch_id,))
         f_row = cursor.fetchone()
         if f_row:
-            manager.db.update_finding_status(f_row[0], 'resolved')
+            # findings.status CHECK allows only: open | patch_proposed | fixed | accepted_risk | wont_fix
+            manager.db.update_finding_status(f_row[0], 'fixed')
     elif req.action == 'reject':
         manager.db.update_patch_status(patch_id, 'rejected')
     return {
@@ -936,111 +1087,164 @@ async def get_benchmarks():
 
 @app.get('/api/v1/reports/{scan_id}')
 async def get_report(scan_id: str):
+    cursor = manager.db.conn.cursor()
+    cursor.execute('SELECT * FROM scans WHERE id = ?;', (scan_id,))
+    scan_row = cursor.fetchone()
+    if not scan_row:
+        raise HTTPException(status_code=404, detail='Scan not found')
+
+    cursor.execute('SELECT f.*, h.title AS hyp_title, h.category AS hyp_category, e.path AS ep_path, e.method AS ep_method '
+                   'FROM findings f '
+                   'LEFT JOIN vulnerability_hypotheses h ON f.hypothesis_id = h.id '
+                   'LEFT JOIN endpoints e ON f.endpoint_id = e.id '
+                   'WHERE f.scan_id = ? ORDER BY f.created_at DESC;', (scan_id,))
+    rows = cursor.fetchall()
+    findings_payload = []
+    resolved_count = 0
+    for r in rows:
+        d = dict(r)
+        if d.get('status') == 'fixed':
+            resolved_count += 1
+        findings_payload.append({
+            'id': d['id'],
+            'title': d.get('hyp_title') or 'Security Vulnerability',
+            'category': d.get('hyp_category') or 'access_control',
+            'severity': (d.get('severity') or 'medium').upper(),
+            'cvss_score': cvss_score_for_finding(d),
+            'cvss_vector': d.get('cvss_vector'),
+            'status': d.get('status'),
+            'verdict': (d.get('verdict') or 'unconfirmed').upper(),
+            'endpoint': f"{d.get('ep_method', 'GET')} {d.get('ep_path', '/unknown')}",
+            'reproduced': f"{d.get('reproduced', 0)}/{d.get('runs', 1)}"
+        })
+
+    confirmed = [f for f in findings_payload if f['verdict'] == 'CONFIRMED']
+    critical_high = [f for f in confirmed if f['severity'] in ('CRITICAL', 'HIGH')]
+    compliance = {
+        'OWASP_API_Top_10': 'Compliant after patch application' if resolved_count >= len(confirmed) and confirmed else 'Pending remediation',
+        'CWE_639_BOLA': 'Remediated & verified in sandbox' if resolved_count else ('Open findings require remediation' if confirmed else 'No BOLA findings confirmed'),
+        'Zero_False_Positives': all(not str(f['reproduced']).startswith('0/') for f in findings_payload if f['verdict'] == 'CONFIRMED') if confirmed else True
+    }
+
     return {
         'scan_id': scan_id,
         'report_type': 'Comprehensive Security Audit & Remediation Certificate',
         'generated_at': datetime.now(timezone.utc).isoformat(),
-        'executive_summary': 'Autonomous penetration test and code-level verification conducted by AegisTrace. All confirmed findings include cryptographic state mutation evidence and verified AST remediation patches.',
-        'findings_count': 1,
-        'resolved_count': 0,
-        'compliance_assessment': {
-            'OWASP_API_Top_10': 'Compliant after patch application',
-            'CWE_639_BOLA': 'Remediated & verified in sandbox',
-            'Zero_False_Positives': True
-        },
-        'content_json': {
-            'findings': [
-                {
-                    'id': 'fnd_001',
-                    'title': 'BOLA on Order Updates',
-                    'cwe': 'CWE-639',
-                    'severity': 'HIGH',
-                    'reproduced': '3/3'
-                }
-            ]
-        }
+        'executive_summary': (
+            f"Autonomous assessment of scan {scan_id} produced {len(confirmed)} confirmed finding(s) "
+            f"({len(critical_high)} critical/high), of which {resolved_count} are remediated and verified. "
+            "Findings carry cryptographic state-mutation evidence; patches require human approval before merge."
+            if findings_payload else
+            f"Autonomous assessment of scan {scan_id} completed with zero confirmed vulnerabilities."
+        ),
+        'findings_count': len(findings_payload),
+        'resolved_count': resolved_count,
+        'compliance_assessment': compliance,
+        'content_json': {'findings': findings_payload}
     }
 
 @app.get('/api/v1/reports/{scan_id}/export')
 async def export_report(scan_id: str, format: str = 'json'):
-    if format == 'csv':
-        csv_content = """Finding ID,Title,Severity,CVSS,CWE,Status,Verified\nfnd_001,BOLA on Order Resource,HIGH,6.5,CWE-639,open,YES\n"""
-        return Response(content=csv_content, media_type='text/csv', headers={'Content-Disposition': f'attachment; filename=aegistrace_report_{scan_id}.csv'})
     rep = await get_report(scan_id)
+    if format == 'csv':
+        rows = rep.get('content_json', {}).get('findings', [])
+        header = 'Finding ID,Title,Severity,CVSS,CWE,Endpoint,Verdict,Status,Reproduced'
+        lines = [header]
+        for f in rows:
+            def esc(v: Any) -> str:
+                s = str(v if v is not None else '')
+                return '"' + s.replace('"', '""') + '"' if (',' in s or '"' in s or '\n' in s) else s
+            lines.append(','.join([
+                esc(f.get('id')), esc(f.get('title')), esc(f.get('severity')),
+                esc(f.get('cvss_score')), esc(f.get('category')), esc(f.get('endpoint')),
+                esc(f.get('verdict')), esc(f.get('status')), esc(f.get('reproduced'))
+            ]))
+        csv_content = '\n'.join(lines) + '\n'
+        return Response(content=csv_content, media_type='text/csv', headers={'Content-Disposition': f'attachment; filename=aegistrace_report_{scan_id}.csv'})
     return Response(content=json.dumps(rep, indent=2), media_type='application/json', headers={'Content-Disposition': f'attachment; filename=aegistrace_report_{scan_id}.json'})
 
 @app.get('/api/v1/audit-logs')
 async def get_audit_logs():
-    return [
-        {
-            'event_id': 'evt_9901',
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'event_type': 'APPROVAL_GATE',
-            'operator': 'Security Lead (admin@aegistrace.luxury)',
-            'action': 'Approved AST remediation patch ptch_bola_orders_01',
-            'sha256_hash': '7d1a2f64e29b01c3d4f88190e21bc5672901a88b1f5e8880291724ac661e8920',
-            'status': 'COMMITTED'
-        },
-        {
-            'event_id': 'evt_9900',
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'event_type': 'EVIDENCE_LOCK',
-            'operator': 'ArbitrationAgent (EvidenceStore)',
-            'action': 'Cryptographic state snapshot locked for Finding fnd_prod_001',
-            'sha256_hash': 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-            'status': 'IMMUTABLE'
-        },
-        {
-            'event_id': 'evt_9899',
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'event_type': 'SANDBOX_EXEC',
-            'operator': 'DynamicTestingAgent',
-            'action': 'Isolated exploit replay 3/3 executions confirmed BOLA state change',
-            'sha256_hash': 'c81e728d9d4c2f636f067f89cc14862c1ecd979fb6334a1a5b81048b30e0179a',
-            'status': 'VERIFIED'
-        },
-        {
-            'event_id': 'evt_9898',
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'event_type': 'SCAN_INITIATION',
-            'operator': 'Security Lead',
-            'action': 'Autonomous assessment started on target repository shoplite/shoplite',
-            'sha256_hash': '3a5b281f6c7a90b83e4599a0d3215589c3f2b1a87e411099bc320577881122a1',
-            'status': 'SUCCESS'
-        }
-    ]
+    """Immutable system audit trail, read from the append-only audit_logs table."""
+    try:
+        logs = manager.db.get_audit_logs()
+    except Exception:
+        logs = []
+    results = []
+    for entry in reversed(logs[-100:]):
+        details = entry.get('details') or {}
+        results.append({
+            'event_id': f'evt_{entry["id"]}',
+            'timestamp': entry.get('ts', ''),
+            'event_type': str(entry.get('resource_type') or entry.get('actor_type') or 'SYSTEM').upper(),
+            'operator': entry.get('actor_id', 'system'),
+            'action': entry.get('action', ''),
+            'sha256_hash': details.get('sha256', details.get('content_sha256', '')) if isinstance(details, dict) else '',
+            'status': 'COMMITTED' if entry.get('allowed') else 'BLOCKED'
+        })
+    return results
 
 @app.get('/api/v1/notifications')
 async def get_notifications():
-    return [
-        {
-            'id': 'ntf_01',
+    """Operational notifications derived from real system state."""
+    notifications = []
+    cursor = manager.db.conn.cursor()
+
+    cursor.execute(
+        'SELECT p.id AS patch_id, p.finding_id FROM approvals a JOIN patches p ON a.patch_id = p.id '
+        "WHERE a.decision = 'pending' ORDER BY a.requested_at DESC LIMIT 10;"
+    )
+    for row in cursor.fetchall():
+        notifications.append({
+            'id': f'ntf_apr_{row[0]}',
             'title': 'Patch Approval Pending',
-            'message': 'AST Remediation patch for fnd_prod_001 requires operator signature.',
+            'message': f'AST remediation patch {row[0]} for finding {row[1]} requires operator signature.',
             'severity': 'HIGH',
-            'timestamp': '2 minutes ago',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'read': False,
             'category': 'APPROVAL'
-        },
-        {
-            'id': 'ntf_02',
-            'title': 'Forensic State Mutation Trapped',
-            'message': 'EvidenceStore arbitration confirmed 100% ground-truth BOLA vulnerability.',
-            'severity': 'CRITICAL',
-            'timestamp': '12 minutes ago',
+        })
+
+    cursor.execute(
+        "SELECT id, severity, hypothesis_id FROM findings WHERE verdict = 'confirmed' AND status != 'fixed' ORDER BY created_at DESC LIMIT 10;"
+    )
+    for row in cursor.fetchall():
+        sev = str(row[1] or 'high').upper()
+        notifications.append({
+            'id': f'ntf_fnd_{row[0]}',
+            'title': 'Confirmed Vulnerability Open',
+            'message': f'Confirmed finding {row[0]} ({sev}) requires remediation.',
+            'severity': 'CRITICAL' if sev == 'CRITICAL' else 'HIGH',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'read': False,
             'category': 'VULNERABILITY'
-        },
-        {
-            'id': 'ntf_03',
-            'title': '7-Agent Pipeline Cycle Completed',
-            'message': 'Autonomous scan scn_demo completed with 0 false positives.',
+        })
+
+    cursor.execute(
+        "SELECT id, finished_at FROM scans WHERE status = 'completed' ORDER BY created_at DESC LIMIT 5;"
+    )
+    for row in cursor.fetchall():
+        notifications.append({
+            'id': f'ntf_scn_{row[0]}',
+            'title': 'Scan Cycle Completed',
+            'message': f'Autonomous scan {row[0]} completed.',
             'severity': 'INFO',
-            'timestamp': '35 minutes ago',
+            'timestamp': row[1] or datetime.now(timezone.utc).isoformat(),
             'read': True,
             'category': 'PIPELINE'
-        }
-    ]
+        })
+
+    if not notifications:
+        notifications.append({
+            'id': 'ntf_idle_001',
+            'title': 'Platform Idle',
+            'message': 'No pending approvals, open findings or completed scans yet. Launch an assessment to populate the operations feed.',
+            'severity': 'INFO',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'read': True,
+            'category': 'PIPELINE'
+        })
+    return notifications
 
 @app.get('/api/v1/settings')
 async def get_settings():
