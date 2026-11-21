@@ -1844,3 +1844,30 @@ svg.neural-canvas {
 .diff-line.hunk { color: var(--text-muted); }
 @media (max-width: 900px) { .patch-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .patch-meta { grid-template-columns: 1fr; } }
+
+/* ==========================================================================
+   NARROW VIEWPORT FIXES
+   Tables cannot shrink below their content, so they scroll inside .table-wrapper
+   instead of pushing the whole document sideways.
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table { min-width: 560px; }
+  .card-title { min-width: 0; overflow-wrap: anywhere; }
+  .card-header { flex-wrap: wrap; gap: 10px; }
+}
+@media (max-width: 560px) {
+  .data-table { min-width: 480px; font-size: 0.78rem; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .page-title { font-size: 1.6rem; }
+  .verdict-banner { flex-direction: column; align-items: flex-start; }
+  .verdict-score { text-align: left; }
+}
+
+/* Long hashes / ids inside tables and chips must wrap, never widen the page. */
+code, .mono, .badge { overflow-wrap: anywhere; }
+#view-root table code { word-break: break-all; }
+@media (max-width: 1024px) {
+  /* Any table that is not wrapped still scrolls instead of overflowing. */
+  #view-root .card > .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+}

@@ -246,3 +246,12 @@ body.drawer-open .drawer-scrim { opacity: 1; pointer-events: auto; }
   .main-wrapper { margin: 0 !important; }
   body { background: #fff; color: #000; }
 }
+
+
+/* Workspace agent topology: single column on phones so badges never overflow */
+@media (max-width: 560px) {
+  #ws-agents-grid { grid-template-columns: 1fr !important; }
+  #ws-agents-grid > div { padding: 12px !important; }
+  .terminal-box { border-radius: var(--radius-md); }
+  .terminal-header { flex-wrap: wrap; gap: 8px; }
+}

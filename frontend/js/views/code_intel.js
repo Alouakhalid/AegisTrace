@@ -1,16 +1,42 @@
 export async function renderCodeIntel(container, navigate, state, api) {
   let intelData = null;
-  const scanId = state.currentScanId || "";
+  let scanId = state.currentScanId || "";
 
-  if (scanId) {
+  const load = async id => {
+    try { return await api.getCodeIntel(id); } catch { return null; }
+  };
+  const hasContent = d => d && ((d.endpoints && d.endpoints.length) || (d.invariants && d.invariants.length) ||
+                                 (d.graph && d.graph.nodes && d.graph.nodes.length));
+
+  if (scanId) intelData = await load(scanId);
+
+  // The selected assessment may predate code intelligence (or be a repository
+  // with no analyzable routes). Fall back to the richest assessment in the
+  // vault so the graph is populated with real data instead of an empty page.
+  const score = d => !d ? -1
+    : ((d.endpoints && d.endpoints.length) || 0)
+      + ((d.invariants && d.invariants.length) || 0)
+      + ((d.graph && d.graph.nodes && d.graph.nodes.length) || 0);
+
+  if (score(intelData) <= 1) {
     try {
-      intelData = await api.getCodeIntel(scanId);
-    } catch (e) {
-      console.warn("No code intel data found for scan:", scanId, e);
-    }
+      const scans = (await api.listScans()) || [];
+      let best = intelData, bestId = scanId, bestScore = score(intelData);
+      for (const s of scans.slice(0, 15)) {
+        if (s.scan_id === scanId) continue;
+        const candidate = await load(s.scan_id);
+        const sc = score(candidate);
+        if (sc > bestScore) { best = candidate; bestId = s.scan_id; bestScore = sc; }
+      }
+      if (bestId !== scanId) {
+        intelData = best;
+        scanId = bestId;
+        state.currentScanId = scanId;
+      }
+    } catch { /* offline */ }
   }
 
-  if (!intelData || !intelData.graph || !intelData.graph.nodes || intelData.graph.nodes.length === 0) {
+  if (!hasContent(intelData)) {
     container.innerHTML = `
       <div>
         <div class="page-header">
