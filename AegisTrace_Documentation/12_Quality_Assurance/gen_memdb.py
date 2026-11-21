@@ -15,7 +15,7 @@ This document defines how AegisTrace stores, remembers and retrieves information
 
 # 2. Memory Architecture
 
-![Memory architecture](../diagrams/d10_memory.svg)
+![Memory architecture](../../11_Architecture_Diagrams/d10_memory.svg)
 
 ## 2.1 The five memory categories
 
@@ -44,7 +44,7 @@ Passwords, API keys (Groq, Tavily), session tokens, JWTs, cookies, `Authorizatio
 
 # 3. Memory Retrieval
 
-![Memory retrieval pipeline](../diagrams/d11_retrieval.svg)
+![Memory retrieval pipeline](../../11_Architecture_Diagrams/d11_retrieval.svg)
 
 | Stage | What happens |
 |---|---|
@@ -79,15 +79,15 @@ All 29 requested entities were evaluated. All are kept because each has a distin
 
 Generated from the foreign keys of the live schema. The overview shows how the eight table groups depend on each other; Figures 12a to 12d show the tables inside each group. Foreign keys that cross figures are listed in each table's constraints in Section 5.
 
-![ERD overview](../diagrams/d12_overview.svg)
+![ERD overview](../../11_Architecture_Diagrams/d12_overview.svg)
 
-![ERD a](../diagrams/d12a_erd.svg)
+![ERD a](../../11_Architecture_Diagrams/d12a_erd.svg)
 
-![ERD b](../diagrams/d12b_erd.svg)
+![ERD b](../../11_Architecture_Diagrams/d12b_erd.svg)
 
-![ERD c](../diagrams/d12c_erd.svg)
+![ERD c](../../11_Architecture_Diagrams/d12c_erd.svg)
 
-![ERD d](../diagrams/d12d_erd.svg)
+![ERD d](../../11_Architecture_Diagrams/d12d_erd.svg)
 
 # 5. Table Reference
 
@@ -97,7 +97,7 @@ Generated from the live database: purpose and retention are authored; columns, c
 
 # 6. pgvector Integration
 
-![pgvector integration](../diagrams/d13_pgvector.svg)
+![pgvector integration](../../11_Architecture_Diagrams/d13_pgvector.svg)
 
 - Two vector columns: `skill_metadata.embedding` and `memory_items.embedding`, type `vector(384)`.
 - **The dimension 384 is a proposal.** It must equal the output size of the embedding model chosen in Phase 1; changing the model means re-embedding and rebuilding the index.
@@ -107,7 +107,7 @@ Generated from the live database: purpose and retention are authored; columns, c
 
 # 7. Data Lifecycle and Retention
 
-![Data lifecycle](../diagrams/d14_lifecycle.svg)
+![Data lifecycle](../../11_Architecture_Diagrams/d14_lifecycle.svg)
 
 | Data | Proposed retention | Notes |
 |---|---|---|
@@ -172,7 +172,7 @@ ar = """# 1. نظرة عامة ومبادئ التصميم
 
 # 2. معمارية الذاكرة
 
-![معمارية الذاكرة](../diagrams/d10_memory.svg)
+![معمارية الذاكرة](../../11_Architecture_Diagrams/d10_memory.svg)
 
 ## 2.1 فئات الذاكرة الخمس
 
@@ -201,7 +201,7 @@ ar = """# 1. نظرة عامة ومبادئ التصميم
 
 # 3. استرجاع الذاكرة
 
-![خط استرجاع الذاكرة](../diagrams/d11_retrieval.svg)
+![خط استرجاع الذاكرة](../../11_Architecture_Diagrams/d11_retrieval.svg)
 
 | المرحلة | ما يحدث |
 |---|---|
@@ -236,15 +236,15 @@ ar = """# 1. نظرة عامة ومبادئ التصميم
 
 مولَّدة من المفاتيح الأجنبية في المخطط الحي. تُظهر النظرة العامة كيف تعتمد مجموعات الجداول الثماني بعضها على بعض؛ وتُظهر الأشكال 12a إلى 12d الجداول داخل كل مجموعة. والمفاتيح الأجنبية العابرة للأشكال مذكورة في قيود كل جدول في القسم 5.
 
-![ERD overview](../diagrams/d12_overview.svg)
+![ERD overview](../../11_Architecture_Diagrams/d12_overview.svg)
 
-![ERD a](../diagrams/d12a_erd.svg)
+![ERD a](../../11_Architecture_Diagrams/d12a_erd.svg)
 
-![ERD b](../diagrams/d12b_erd.svg)
+![ERD b](../../11_Architecture_Diagrams/d12b_erd.svg)
 
-![ERD c](../diagrams/d12c_erd.svg)
+![ERD c](../../11_Architecture_Diagrams/d12c_erd.svg)
 
-![ERD d](../diagrams/d12d_erd.svg)
+![ERD d](../../11_Architecture_Diagrams/d12d_erd.svg)
 
 # 5. مرجع الجداول
 
@@ -254,7 +254,7 @@ ar = """# 1. نظرة عامة ومبادئ التصميم
 
 # 6. دمج pgvector
 
-![دمج pgvector](../diagrams/d13_pgvector.svg)
+![دمج pgvector](../../11_Architecture_Diagrams/d13_pgvector.svg)
 
 - عمودا متجهات: `skill_metadata.embedding` و`memory_items.embedding` من النوع `vector(384)`.
 - **البعد 384 مقترح.** ويجب أن يساوي حجم خرج نموذج التضمين المختار في المرحلة 1؛ وتغيير النموذج يعني إعادة التضمين وإعادة بناء الفهرس.
@@ -264,7 +264,7 @@ ar = """# 1. نظرة عامة ومبادئ التصميم
 
 # 7. دورة حياة البيانات والاحتفاظ
 
-![دورة حياة البيانات](../diagrams/d14_lifecycle.svg)
+![دورة حياة البيانات](../../11_Architecture_Diagrams/d14_lifecycle.svg)
 
 | البيانات | الاحتفاظ المقترح | ملاحظات |
 |---|---|---|

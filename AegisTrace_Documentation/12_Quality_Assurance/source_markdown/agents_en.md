@@ -1,3 +1,5 @@
+> **Read this first (2026-11-21).** This file is the Edition 2 design, not a record of the process started by `backend/run.py`. The running system is SQLite plus the vanilla JavaScript UI, and a scan does not execute dynamic testing, verification, or remediation. See `AegisTrace_Documentation/00_What_Actually_Runs.md`.
+
 # 1. Overview and Reading Guide
 
 This document specifies how the seven official AegisTrace agents cooperate: responsibilities, hand-offs, control loops, failure handling, human approval checkpoints and the exact JSON contracts they exchange. The Pydantic models in Section 4 and in each agent chapter are the **single source of truth**; the JSON Schemas file `AegisTrace_Agent_JSON_Schemas.json` is exported from them, and every example JSON in this document was validated against those models.
@@ -10,13 +12,13 @@ This document specifies how the seven official AegisTrace agents cooperate: resp
 
 ## 2.1 Seven agents
 
-![Seven agents](../diagrams/d02_agents.svg)
+![Seven agents](../../11_Architecture_Diagrams/d02_agents.svg)
 
 ## 2.2 Communication model
 
 Agents never call each other directly. The Orchestrator is the only router: it sends a validated request, receives a validated response, persists both in `agent_messages`, and decides what runs next. This keeps scope enforcement, retries and audit logging in one place.
 
-![Hub and spoke communication](../diagrams/d04c_comm.svg)
+![Hub and spoke communication](../../11_Architecture_Diagrams/d04c_comm.svg)
 
 Every message carries the shared envelope (ids, `schema_version`, `created_at`). The persisted form of a message is an `agent_messages` row:
 
@@ -39,11 +41,11 @@ Every message carries the shared envelope (ids, `schema_version`, `created_at`).
 
 ## 3.1 End-to-end sequence
 
-![Agent sequence](../diagrams/d05_sequence.svg)
+![Agent sequence](../../11_Architecture_Diagrams/d05_sequence.svg)
 
 ## 3.2 Task dependencies
 
-![Task dependency graph](../diagrams/d06_taskdeps.svg)
+![Task dependency graph](../../11_Architecture_Diagrams/d06_taskdeps.svg)
 
 ## 3.3 Parallelism and loops (exact conditions)
 
@@ -58,11 +60,11 @@ Every message carries the shared envelope (ids, `schema_version`, `created_at`).
 
 ## 3.4 State transitions
 
-![Task states](../diagrams/d07_states.svg)
+![Task states](../../11_Architecture_Diagrams/d07_states.svg)
 
 ## 3.5 Failure and retry
 
-![Failure and retry](../diagrams/d08_retry.svg)
+![Failure and retry](../../11_Architecture_Diagrams/d08_retry.svg)
 
 ## 3.6 Human approval checkpoints
 
@@ -72,7 +74,7 @@ Every message carries the shared envelope (ids, `schema_version`, `created_at`).
 | 2 | Test-plan approval | Only when `environment=staging_approved` | Reviewer |
 | 3 | Patch approval | Remediation returned `patch_ready_for_review` | Reviewer (`approvals` table). A human performs any merge |
 
-![Remediation and approval](../diagrams/d17_approval.svg)
+![Remediation and approval](../../11_Architecture_Diagrams/d17_approval.svg)
 
 ## 3.7 What each agent hands to the next
 

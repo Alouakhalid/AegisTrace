@@ -1,3 +1,5 @@
+> **Read this first (2026-11-21).** This file is the Edition 2 design, not a record of the process started by `backend/run.py`. The running system is SQLite plus the vanilla JavaScript UI, and a scan does not execute dynamic testing, verification, or remediation. See `AegisTrace_Documentation/00_What_Actually_Runs.md`.
+
 # 1. Project Identity and Scope
 
 ## 1.1 Vision
@@ -12,7 +14,7 @@ AegisTrace is deliberately **not** a pattern-matching scanner. A scanner reports
 
 The central engineering idea connects three representations of the same application and looks for discrepancies between them.
 
-![Code-to-Behavior Security Twin](../diagrams/d03_twin.svg)
+![Code-to-Behavior Security Twin](../../11_Architecture_Diagrams/d03_twin.svg)
 
 | Representation | Contents | Produced by |
 |---|---|---|
@@ -49,7 +51,7 @@ The architecture below is fixed. Any deviation requires a documented technical r
 
 These are architectural layers, **not** AI agents.
 
-![Seven-layer architecture](../diagrams/d01_layers.svg)
+![Seven-layer architecture](../../11_Architecture_Diagrams/d01_layers.svg)
 
 | # | Layer | Recommended technology | Responsibility |
 |---|---|---|---|
@@ -65,7 +67,7 @@ These are architectural layers, **not** AI agents.
 
 There are exactly seven agents. Report generation is a **deterministic service**, not an eighth agent.
 
-![Seven agents and hand-offs](../diagrams/d02_agents.svg)
+![Seven agents and hand-offs](../../11_Architecture_Diagrams/d02_agents.svg)
 
 | # | Agent | Primary output | Key responsibility |
 |---|---|---|---|
@@ -81,7 +83,7 @@ There are exactly seven agents. Report generation is a **deterministic service**
 
 The nominal order is: User Request → Orchestrator → Scope Validation → Code Intelligence → Recon → Vulnerability Research → Dynamic Testing → Verification → Remediation → Human Approval → Final Report. The actual runtime graph has parallelism and loops.
 
-![End-to-end workflow](../diagrams/d04_workflow.svg)
+![End-to-end workflow](../../11_Architecture_Diagrams/d04_workflow.svg)
 
 | Pattern | Exact condition | Bound |
 |---|---|---|

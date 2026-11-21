@@ -1,6 +1,11 @@
 -- =====================================================================
--- AegisTrace - PostgreSQL schema (proposal v1.0.0)
--- Target: PostgreSQL 16 + pgvector (validated on 16.x with pgvector 0.6.0)
+-- NOT THE DATABASE THE APPLICATION OPENS.
+-- AegisDatabase in "memory and database/database.py" loads
+-- "memory and database/schema.sql" (SQLite). This file is a PostgreSQL
+-- port kept for a future migration. Do not treat it as executed by the app.
+-- =====================================================================
+-- AegisTrace - PostgreSQL schema (proposal v1.0.0, not loaded at runtime)
+-- Target: PostgreSQL 16 + pgvector (a lab check, not the product database)
 -- IDs are prefixed text so DB identifiers equal contract identifiers.
 -- Embedding dimension (384) is a PROPOSAL: it must match the embedding
 -- model chosen in Phase 1. Changing it requires re-embedding.

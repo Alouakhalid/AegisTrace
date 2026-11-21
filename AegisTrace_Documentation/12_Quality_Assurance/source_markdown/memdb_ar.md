@@ -1,3 +1,5 @@
+> **اقرأ هذا أولًا (2026-11-21).** هذا الملف تصميم الإصدار الثاني، وليس وصف العملية التي يبدأها `backend/run.py`. التشغيل الفعلي SQLite وواجهة JavaScript عادية، والفحص لا ينفّذ الاختبار الديناميكي ولا التحقق ولا الإصلاح. انظر `AegisTrace_Documentation/00_What_Actually_Runs_AR.md`.
+
 # 1. نظرة عامة ومبادئ التصميم
 
 تحدد هذه الوثيقة كيف يخزّن AegisTrace المعلومات ويتذكرها ويسترجعها: نموذج الذاكرة، وخط الاسترجاع، ومخطط PostgreSQL واستخدام pgvector، والاحتفاظ والأمان. وقد **نُفِّذ DDL في ملف `AegisTrace_Database_SQL_Appendix.sql` فعلياً على PostgreSQL 16 مع pgvector 0.6.0**، وجدول المرجع في القسم 5 مولَّد من ذلك المخطط الحي، فلا يمكن أن تنحرف الوثيقة عن الـ SQL.
@@ -13,7 +15,7 @@
 
 # 2. معمارية الذاكرة
 
-![معمارية الذاكرة](../diagrams/d10_memory.svg)
+![معمارية الذاكرة](../../11_Architecture_Diagrams/d10_memory.svg)
 
 ## 2.1 فئات الذاكرة الخمس
 
@@ -42,7 +44,7 @@
 
 # 3. استرجاع الذاكرة
 
-![خط استرجاع الذاكرة](../diagrams/d11_retrieval.svg)
+![خط استرجاع الذاكرة](../../11_Architecture_Diagrams/d11_retrieval.svg)
 
 | المرحلة | ما يحدث |
 |---|---|
@@ -77,15 +79,15 @@
 
 مولَّدة من المفاتيح الأجنبية في المخطط الحي. تُظهر النظرة العامة كيف تعتمد مجموعات الجداول الثماني بعضها على بعض؛ وتُظهر الأشكال 12a إلى 12d الجداول داخل كل مجموعة. والمفاتيح الأجنبية العابرة للأشكال مذكورة في قيود كل جدول في القسم 5.
 
-![ERD overview](../diagrams/d12_overview.svg)
+![ERD overview](../../11_Architecture_Diagrams/d12_overview.svg)
 
-![ERD a](../diagrams/d12a_erd.svg)
+![ERD a](../../11_Architecture_Diagrams/d12a_erd.svg)
 
-![ERD b](../diagrams/d12b_erd.svg)
+![ERD b](../../11_Architecture_Diagrams/d12b_erd.svg)
 
-![ERD c](../diagrams/d12c_erd.svg)
+![ERD c](../../11_Architecture_Diagrams/d12c_erd.svg)
 
-![ERD d](../diagrams/d12d_erd.svg)
+![ERD d](../../11_Architecture_Diagrams/d12d_erd.svg)
 
 # 5. مرجع الجداول
 
@@ -1066,7 +1068,7 @@
 
 # 6. دمج pgvector
 
-![دمج pgvector](../diagrams/d13_pgvector.svg)
+![دمج pgvector](../../11_Architecture_Diagrams/d13_pgvector.svg)
 
 - عمودا متجهات: `skill_metadata.embedding` و`memory_items.embedding` من النوع `vector(384)`.
 - **البعد 384 مقترح.** ويجب أن يساوي حجم خرج نموذج التضمين المختار في المرحلة 1؛ وتغيير النموذج يعني إعادة التضمين وإعادة بناء الفهرس.
@@ -1076,7 +1078,7 @@
 
 # 7. دورة حياة البيانات والاحتفاظ
 
-![دورة حياة البيانات](../diagrams/d14_lifecycle.svg)
+![دورة حياة البيانات](../../11_Architecture_Diagrams/d14_lifecycle.svg)
 
 | البيانات | الاحتفاظ المقترح | ملاحظات |
 |---|---|---|

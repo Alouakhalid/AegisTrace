@@ -1,3 +1,5 @@
+> **Read this first (2026-11-21).** This file is the Edition 2 design, not a record of the process started by `backend/run.py`. The running system is SQLite plus the vanilla JavaScript UI, and a scan does not execute dynamic testing, verification, or remediation. See `AegisTrace_Documentation/00_What_Actually_Runs.md`.
+
 # 1. Overview and Design Principles
 
 This document defines how AegisTrace stores, remembers and retrieves information: the memory model, the retrieval pipeline, the PostgreSQL schema and its pgvector usage, retention and security. The DDL in `AegisTrace_Database_SQL_Appendix.sql` was **executed on PostgreSQL 16 with pgvector 0.6.0** and the table reference in Section 5 is generated from that live schema, so the document cannot drift from the SQL.
@@ -13,7 +15,7 @@ This document defines how AegisTrace stores, remembers and retrieves information
 
 # 2. Memory Architecture
 
-![Memory architecture](../diagrams/d10_memory.svg)
+![Memory architecture](../../11_Architecture_Diagrams/d10_memory.svg)
 
 ## 2.1 The five memory categories
 
@@ -42,7 +44,7 @@ Passwords, API keys (Groq, Tavily), session tokens, JWTs, cookies, `Authorizatio
 
 # 3. Memory Retrieval
 
-![Memory retrieval pipeline](../diagrams/d11_retrieval.svg)
+![Memory retrieval pipeline](../../11_Architecture_Diagrams/d11_retrieval.svg)
 
 | Stage | What happens |
 |---|---|
@@ -77,15 +79,15 @@ All 29 requested entities were evaluated. All are kept because each has a distin
 
 Generated from the foreign keys of the live schema. The overview shows how the eight table groups depend on each other; Figures 12a to 12d show the tables inside each group. Foreign keys that cross figures are listed in each table's constraints in Section 5.
 
-![ERD overview](../diagrams/d12_overview.svg)
+![ERD overview](../../11_Architecture_Diagrams/d12_overview.svg)
 
-![ERD a](../diagrams/d12a_erd.svg)
+![ERD a](../../11_Architecture_Diagrams/d12a_erd.svg)
 
-![ERD b](../diagrams/d12b_erd.svg)
+![ERD b](../../11_Architecture_Diagrams/d12b_erd.svg)
 
-![ERD c](../diagrams/d12c_erd.svg)
+![ERD c](../../11_Architecture_Diagrams/d12c_erd.svg)
 
-![ERD d](../diagrams/d12d_erd.svg)
+![ERD d](../../11_Architecture_Diagrams/d12d_erd.svg)
 
 # 5. Table Reference
 
@@ -1066,7 +1068,7 @@ Generated from the live database: purpose and retention are authored; columns, c
 
 # 6. pgvector Integration
 
-![pgvector integration](../diagrams/d13_pgvector.svg)
+![pgvector integration](../../11_Architecture_Diagrams/d13_pgvector.svg)
 
 - Two vector columns: `skill_metadata.embedding` and `memory_items.embedding`, type `vector(384)`.
 - **The dimension 384 is a proposal.** It must equal the output size of the embedding model chosen in Phase 1; changing the model means re-embedding and rebuilding the index.
@@ -1076,7 +1078,7 @@ Generated from the live database: purpose and retention are authored; columns, c
 
 # 7. Data Lifecycle and Retention
 
-![Data lifecycle](../diagrams/d14_lifecycle.svg)
+![Data lifecycle](../../11_Architecture_Diagrams/d14_lifecycle.svg)
 
 | Data | Proposed retention | Notes |
 |---|---|---|
