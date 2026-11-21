@@ -138,6 +138,31 @@ export async function renderCodeIntel(container, navigate, state, api) {
           </div>
         </div>
 
+        <!-- ORM Models Table -->
+        ${(intelData.models && intelData.models.length) ? `
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Extracted ORM Models</div>
+            <span class="badge badge-cyan">${intelData.models.length} Models</span>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr><th>Model</th><th>Table</th><th>Source</th><th>Owner field</th></tr>
+              </thead>
+              <tbody>
+                ${intelData.models.map(m => `
+                  <tr>
+                    <td style="font-weight:600;color:#fff;">${m.name}</td>
+                    <td class="mono dim">${m.table || "—"}</td>
+                    <td class="mono dim">${m.file || "—"}${m.line ? ":" + m.line : ""}</td>
+                    <td class="mono">${m.owner_field || "—"}</td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>` : ""}
+
         <!-- Discovered Endpoints Table -->
         <div class="card">
           <div class="card-header">

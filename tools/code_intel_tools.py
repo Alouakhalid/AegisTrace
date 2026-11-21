@@ -13,7 +13,44 @@ from crewai.tools import BaseTool
 
 PY_LANGUAGE = Language(tree_sitter_python.language())
 
-def find_python_files(repo_path: str, include_globs: Optional[List[str]] = None, max_files: int = 200) -> List[str]:
+#: Directories that hold test code rather than the application itself.
+#: Routes declared inside them are test fixtures, not deployed endpoints, and
+#: including them produced 132 "routes" for the Flask framework repository
+#: (mostly "/1", "/2", "/3" declared in tests/test_basic.py).
+TEST_DIRECTORY_NAMES = {
+    "test", "tests", "testing", "test_", "_test", "tests_",
+    "__tests__", "spec", "specs", "fixtures", "testdata", "test_data",
+    "e2e", "integration_tests", "conftest", "benchmarks", "benchmark",
+    "migrations", "examples", "example", "samples", "sample", "docs", "doc",
+}
+
+
+def _is_test_or_example_path(repo_path: str, filepath: str) -> bool:
+    """True when a file lives in a test/example tree rather than app code."""
+    try:
+        rel = os.path.relpath(filepath, repo_path)
+    except ValueError:
+        return False
+    parts = rel.replace("\\", "/").split("/")
+    directories = parts[:-1]
+    stem = parts[-1].lower()
+    for d in directories:
+        if d.lower() in TEST_DIRECTORY_NAMES:
+            return True
+        # directories such as "tests_utils" or "app_tests"
+        base = d.lower().rstrip("/")
+        if base.startswith("test") or base.endswith("_test") or base.endswith("_tests") or base.endswith("tests"):
+            return True
+    # module-level test files: test_foo.py / foo_test.py / conftest.py
+    if stem.startswith("test_") or stem.endswith("_test.py") or stem == "conftest.py":
+        return True
+    if stem.startswith("test.") or ".test." in stem or ".spec." in stem:
+        return True
+    return False
+
+
+def find_python_files(repo_path: str, include_globs: Optional[List[str]] = None, max_files: int = 200,
+                      include_tests: bool = False) -> List[str]:
     files = []
     if not os.path.exists(repo_path):
         return files
@@ -21,10 +58,13 @@ def find_python_files(repo_path: str, include_globs: Optional[List[str]] = None,
     for pattern in patterns:
         search_path = os.path.join(repo_path, pattern)
         for filepath in glob.glob(search_path, recursive=True):
-            if os.path.isfile(filepath):
-                files.append(filepath)
-                if len(files) >= max_files:
-                    return sorted(list(set(files)))
+            if not os.path.isfile(filepath):
+                continue
+            if not include_tests and _is_test_or_example_path(repo_path, filepath):
+                continue
+            files.append(filepath)
+            if len(files) >= max_files:
+                return sorted(list(set(files)))
     return sorted(list(set(files)))
 
 def parse_dependencies(repo_path: str) -> Dict[str, str]:

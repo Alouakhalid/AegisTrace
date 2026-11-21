@@ -62,12 +62,19 @@ def _map_hypothesis_category(category: str) -> str:
     authn_authz_flaw | business_logic). The full original category remains
     visible in the finding title and description."""
     c = str(category or '').lower()
-    if 'idor' in c or 'access' in c:
+    if 'secret' in c or 'data security' in c or 'deserial' in c:
+        # Exposed secrets and unsafe deserialisation are not access-control
+        # flaws. The schema has no dedicated bucket, so they land on the
+        # generic category while the finding text keeps the true meaning.
+        return 'broken_access_control'
+    if 'idor' in c or 'access control' in c or 'object level' in c:
         return 'idor'
     if 'auth' in c:
         return 'authn_authz_flaw'
     if 'logic' in c or 'state' in c:
         return 'business_logic'
+    if 'access' in c:
+        return 'broken_access_control'
     return 'broken_access_control'
 
 
@@ -89,6 +96,30 @@ def _sanitize_endpoint_id(raw: Any) -> str:
         s = 'ep_' + s
     s = re.sub(r'[^a-z0-9_]', '', s)
     return s[:64] or 'ep_unknown'
+
+
+def _scan_scoped_id(prefix: str, raw: Any, scan_token: str) -> str:
+    """Make a deterministic id unique per scan.
+
+    ``vulnerability_hypotheses.id``, ``security_invariants.id`` and
+    ``endpoints.id`` are global PRIMARY KEYs, but the discovery agents derive
+    stable ids from the route shape (``hyp_idor_get_cust_id``,
+    ``inv_owner_check_customer_access``). Scanning the same repository twice
+    therefore produced the same ids, and the idempotency guard
+    (``if not self.db.get_vulnerability_hypothesis(hyp_id)``) found the row
+    written by the *previous* scan and skipped the insert. The second scan
+    ended with zero hypotheses, zero findings and an empty console.
+
+    Prefixing the scan token keeps the readable suffix while guaranteeing the
+    global key stays unique.
+    """
+    tail = re.sub(r'[^a-z0-9_]+', '_', str(raw or '').lower()).strip('_')
+    tail = re.sub(r'_{2,}', '_', tail)
+    prefix = prefix.strip('_')
+    if tail.startswith(prefix + '_'):
+        tail = tail[len(prefix) + 1:]
+    scoped = f'{prefix}_{scan_token}_{tail}' if tail else f'{prefix}_{scan_token}'
+    return re.sub(r'[^a-z0-9_]', '', scoped)[:64]
 
 
 def _git_toplevel(path: str) -> str:
@@ -456,6 +487,9 @@ class ScanExecutionManager:
         cor_id = f'cor_{uuid.uuid4().hex[:12]}'
         eng_id = f'eng_{uuid.uuid4().hex[:12]}'
         scm_id = f'scm_{uuid.uuid4().hex[:12]}'
+        # Short, stable token used to scope global evidence-vault keys
+        # (endpoints, security invariants, hypotheses) to this scan.
+        scan_token = re.sub(r'[^a-z0-9]+', '', str(scan_id)[4:].lower())[:10] or 'scan'
 
         self.active_scans[scan_id] = {
             'scan_id': scan_id,
@@ -484,20 +518,35 @@ class ScanExecutionManager:
         }
 
         try:
+            # These vault writes used to be wrapped in `except Exception: pass`.
+            # A duplicate-key error (the same project name scanned twice, the
+            # same system user re-bootstrapped) silently skipped the rest of
+            # the block, so the `scans` row was never inserted. Every
+            # downstream table (endpoints, code_nodes, findings) references
+            # scans(id) with ON DELETE CASCADE, so a missing scan row meant
+            # the whole assessment produced nothing and code-intel 404'd.
+            # The writes are idempotent now and a failure is reported instead
+            # of swallowed.
             try:
                 self.db.create_user('usr_admin_001', 'admin@aegistrace.io', 'Aegis System Admin', 'admin')
-            except Exception:
-                pass
+            except Exception as exc:
+                await self.emit_log(scan_id, 'initialization', 'OrchestratorAgent', f'User bootstrap skipped: {exc}', 'WARN')
             try:
-                self.db.create_project(project_id, 'usr_admin_001', project_name)
-            except Exception:
-                pass
+                # create_project reuses an existing project with the same owner
+                # and name and returns the record that really exists, so the
+                # engagement points at a valid project id.
+                project_row = self.db.create_project(project_id, 'usr_admin_001', project_name)
+                if project_row and project_row.get('id'):
+                    project_id = project_row['id']
+                    self.active_scans[scan_id]['project_id'] = project_id
+            except Exception as exc:
+                await self.emit_log(scan_id, 'initialization', 'OrchestratorAgent', f'Project bootstrap skipped: {exc}', 'WARN')
             try:
                 self.db.create_engagement(eng_id, project_id, f'Scan {scan_id}', 'full' if assessment_mode in ('full', 'custom') else assessment_mode, 'sandbox', status='draft')
                 self.db.create_scope_manifest(scm_id, eng_id, 1, manifest, 'usr_admin_001', valid=True)
                 self.db.create_scan(scan_id, eng_id, scm_id, cor_id, 'usr_admin_001', status='running', config=scan_config)
-            except Exception:
-                pass
+            except Exception as exc:
+                await self.emit_log(scan_id, 'initialization', 'OrchestratorAgent', f'Vault registration failed for {scan_id}: {exc}', 'ERROR')
 
             await self.emit_log(scan_id, 'initialization', 'OrchestratorAgent', f'Starting Assessment for repository at {target_dir} (commit {commit_sha[:8]})')
             await self.emit_log(scan_id, 'orchestrator', 'OrchestratorAgent', f'Assessment Scope: {assessment_mode.upper()}. Categories: {", ".join(selected_categories)}')
@@ -614,10 +663,11 @@ class ScanExecutionManager:
                         pass
 
                 for inv in invariants_derived:
-                    inv_id = inv.get('invariant_id', f'inv_{uuid.uuid4().hex[:8]}')
+                    inv_id = _scan_scoped_id('inv', inv.get('invariant_id') or f'inv_{uuid.uuid4().hex[:8]}', scan_token)
                     stmt = inv.get('statement', '')
                     kind = inv.get('kind', 'ownership')
                     conf = float(inv.get('confidence', 0.9))
+                    inv['invariant_id'] = inv_id
                     try:
                         self.db.insert_security_invariant(inv_id, project_id, stmt, kind, 'code', conf, 'candidate')
                     except Exception:
@@ -730,32 +780,58 @@ class ScanExecutionManager:
                 inv_by_id = {inv.get('invariant_id'): inv for inv in (invariants_derived or []) if isinstance(inv, dict)}
                 for h in hypotheses:
                     try:
-                        hyp_id = h.get('hypothesis_id') or f'hyp_{uuid.uuid4().hex[:8]}'
+                        raw_hyp_id = h.get('hypothesis_id') or f'hyp_{uuid.uuid4().hex[:8]}'
+                        hyp_id = _scan_scoped_id('hyp', raw_hyp_id, scan_token)
                         h['hypothesis_id'] = hyp_id
+                        # Keep the discovery id: the paired test plan still
+                        # refers to the hypothesis by that id, and the dynamic
+                        # and verification stages join on it.
+                        h['source_hypothesis_id'] = raw_hyp_id
+                        # Keep the originating route id: the remediation stage
+                        # needs the source file of the route to synthesise a
+                        # patch, and the endpoint id no longer encodes it.
+                        route_match = re.search(r'(rte_[a-z0-9_]+)$', str(h.get('endpoint_id') or ''))
+                        h['route_id'] = route_match.group(1) if route_match else None
                         # Canonical endpoint id shared by hypotheses, findings,
-                        # dynamic testing and verification.
-                        ep_id = _sanitize_endpoint_id(h.get('endpoint_id'))
+                        # dynamic testing and verification. It is scan-scoped
+                        # for the same reason as the hypothesis id: the
+                        # endpoint table key is global.
+                        ep_id = _scan_scoped_id('ep', _sanitize_endpoint_id(h.get('endpoint_id')), scan_token)
                         h['endpoint_id'] = ep_id
-                        plan = plan_by_hyp.get(hyp_id) or {}
+                        plan = plan_by_hyp.get(raw_hyp_id) or {}
                         method, raw_path = _parse_method_path_from_steps(plan.get('steps'))
                         if not method:
                             method, raw_path = 'GET', '/'
-                        if not self.db.get_endpoint(ep_id):
-                            self.db.insert_endpoint(
-                                ep_id, scan_id, method, raw_path,
-                                re.findall(r'\{([a-zA-Z0-9_]+)\}', raw_path),
-                                True, source='code_routes'
-                            )
-                        inv_id = h.get('invariant_id') or (invariants_derived[0].get('invariant_id') if invariants_derived else 'inv_default')
+                        existing_ep = self.db.get_endpoint(ep_id)
+                        if not existing_ep:
+                            # Two hypotheses on the same route must share one
+                            # endpoint row: endpoints has UNIQUE(scan_id,
+                            # method, path), so inserting a second id for the
+                            # same route raised and skipped the hypothesis.
+                            existing_ep = self.db.find_endpoint_by_route(scan_id, method, raw_path)
+                            if existing_ep:
+                                ep_id = existing_ep['id']
+                            else:
+                                self.db.insert_endpoint(
+                                    ep_id, scan_id, method, raw_path,
+                                    re.findall(r'\{([a-zA-Z0-9_]+)\}', raw_path),
+                                    True, source='code_routes'
+                                )
+                        h['endpoint_id'] = ep_id
+                        raw_inv_id = h.get('invariant_id') or (invariants_derived[0].get('invariant_id') if invariants_derived else 'inv_default')
+                        inv_id = _scan_scoped_id('inv', raw_inv_id, scan_token)
                         h['invariant_id'] = inv_id
-                        inv = inv_by_id.get(inv_id) or {}
+                        inv = inv_by_id.get(raw_inv_id) or {}
                         if not self.db.get_security_invariant(inv_id):
-                            self.db.insert_security_invariant(
-                                inv_id, project_id,
-                                inv.get('statement', 'Derived access-control invariant'),
-                                inv.get('kind', 'ownership'), 'code',
-                                float(inv.get('confidence', 0.9)), 'candidate'
-                            )
+                            try:
+                                self.db.insert_security_invariant(
+                                    inv_id, project_id,
+                                    inv.get('statement', 'Derived access-control invariant'),
+                                    inv.get('kind', 'ownership'), 'code',
+                                    float(inv.get('confidence', 0.9)), 'candidate'
+                                )
+                            except Exception:
+                                pass
                         if not self.db.get_vulnerability_hypothesis(hyp_id):
                             self.db.insert_vulnerability_hypothesis(
                                 hyp_id,
@@ -808,7 +884,9 @@ class ScanExecutionManager:
                     for plan in ranked_plans[:4]:
                         if not isinstance(plan, dict):
                             continue
-                        hyp = next((h for h in hypotheses if h.get('hypothesis_id') == plan.get('hypothesis_id')), None)
+                        hyp = next((h for h in hypotheses
+                                    if h.get('source_hypothesis_id') == plan.get('hypothesis_id')
+                                    or h.get('hypothesis_id') == plan.get('hypothesis_id')), None)
                         if not hyp:
                             continue
                         method, raw_path = _parse_method_path_from_steps(plan.get('steps'))
@@ -1038,7 +1116,7 @@ class ScanExecutionManager:
                                 'endpoint': f"{method} {raw_path}" if method else hyp.get('endpoint_id'),
                                 'reproduction': f"{(repro or {}).get('reproduced', 3)}/{(repro or {}).get('runs', 3)} sandbox replays",
                                 'evidence_ids': evidence_ids,
-                                'route_id': (re.match(r'^ep_[a-z]+_(rte_.+)$', str(hyp.get('endpoint_id') or '')) or [None]) and (re.match(r'^ep_[a-z]+_(rte_.+)$', str(hyp.get('endpoint_id') or '')).group(1) if re.match(r'^ep_[a-z]+_(rte_.+)$', str(hyp.get('endpoint_id') or '')) else None),
+                                'route_id': hyp.get('route_id'),
                                 'test_plan_id': res['plan'].get('test_plan_id'),
                                 'sandbox': {
                                     'sandbox_id': f'sbx_{uuid.uuid4().hex[:12]}',

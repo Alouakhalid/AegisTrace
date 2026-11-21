@@ -65,9 +65,20 @@ class AegisDatabase:
         self.conn.close()
 
     def create_user(self, user_id: str, email: str, display_name: str, role: str, auth_subject: Optional[str] = None) -> Dict[str, Any]:
+        """Create a user, or return the existing one.
+
+        The pipeline bootstraps the same system user on every scan. The plain
+        INSERT raised UNIQUE(email) on the second run, and because the caller
+        wrapped it in `except Exception: pass` the whole scan-creation block
+        was aborted silently: no `scans` row was written, so the console and
+        the code-intelligence endpoints had nothing to serve.
+        """
+        existing = self.get_user(user_id)
+        if existing:
+            return existing
         with self.conn:
             self.conn.execute(
-                "INSERT INTO users (id, email, display_name, role, auth_subject) VALUES (?, ?, ?, ?, ?);",
+                "INSERT OR IGNORE INTO users (id, email, display_name, role, auth_subject) VALUES (?, ?, ?, ?, ?);",
                 (user_id, email, display_name, role, auth_subject)
             )
         return self.get_user(user_id)
@@ -78,6 +89,22 @@ class AegisDatabase:
         return dict(row) if row else None
 
     def create_project(self, project_id: str, owner_id: str, name: str, language: str = "python", framework_hint: Optional[str] = None) -> Dict[str, Any]:
+        """Create a project, reusing an existing one with the same identity.
+
+        `projects` has a UNIQUE(owner_id, name) constraint, so every repeat
+        scan of the same project name raised. The pipeline swallowed that
+        error, which left the engagement/scan inserts dangling on a
+        non-existent project and broke the whole evidence chain.
+        """
+        existing = self.get_project(project_id)
+        if existing:
+            return existing
+        cursor = self.conn.execute(
+            "SELECT id FROM projects WHERE owner_id = ? AND name = ?;", (owner_id, name)
+        )
+        row = cursor.fetchone()
+        if row:
+            return self.get_project(row[0])
         with self.conn:
             self.conn.execute(
                 "INSERT INTO projects (id, owner_id, name, language, framework_hint) VALUES (?, ?, ?, ?, ?);",
@@ -366,6 +393,21 @@ class AegisDatabase:
                 (ep_id, scan_id, method, path, params_str, auth_val, source, code_node_id)
             )
         return self.get_endpoint(ep_id)
+
+    def find_endpoint_by_route(self, scan_id: str, method: str, path: str) -> Optional[Dict[str, Any]]:
+        """Look up an endpoint by its route identity.
+
+        ``endpoints`` carries UNIQUE(scan_id, method, path), so two different
+        endpoint ids for the same route cannot coexist. Reusing the existing
+        row keeps every hypothesis that targets the route pointing at one
+        canonical endpoint.
+        """
+        cursor = self.conn.execute(
+            "SELECT * FROM endpoints WHERE scan_id = ? AND UPPER(method) = UPPER(?) AND path = ? LIMIT 1;",
+            (scan_id, method or 'GET', path or '/')
+        )
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
     def get_endpoint(self, ep_id: str) -> Optional[Dict[str, Any]]:
         cursor = self.conn.execute("SELECT * FROM endpoints WHERE id = ?;", (ep_id,))

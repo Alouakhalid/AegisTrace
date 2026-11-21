@@ -946,6 +946,7 @@ async def get_finding_detail(finding_id: str):
 async def get_code_intel(scan_id: str):
     endpoints = []
     invariants = []
+    models = []
     nodes = []
     edges = []
     found_any = False
@@ -1022,6 +1023,25 @@ async def get_code_intel(scan_id: str):
                         'label': ed.get('kind', 'relates')
                     })
 
+            # ORM models live in code_nodes with kind='db_model'. They were
+            # extracted all along but never returned, so the console reported
+            # "0 models" for every assessment.
+            cursor.execute("SELECT * FROM code_nodes WHERE analysis_id = ? AND kind = 'db_model';", (ran_id,))
+            for mr in cursor.fetchall():
+                md = dict(mr)
+                try:
+                    props = json.loads(md.get('props') or '{}')
+                except Exception:
+                    props = {}
+                models.append({
+                    'id': md.get('name', ''),
+                    'name': md.get('name', ''),
+                    'file': md.get('file', ''),
+                    'line': md.get('line', 1),
+                    'table': props.get('table', ''),
+                    'owner_field': props.get('owner_field', ''),
+                })
+
             cursor.execute('SELECT * FROM security_invariants WHERE analysis_id = ?;', (ran_id,))
             for ir in cursor.fetchall():
                 id_dict = dict(ir)
@@ -1062,6 +1082,7 @@ async def get_code_intel(scan_id: str):
         'scan_id': scan_id,
         'endpoints': endpoints,
         'invariants': invariants,
+        'models': models,
         'graph': {
             'nodes': nodes,
             'edges': edges

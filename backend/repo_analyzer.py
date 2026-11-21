@@ -32,7 +32,27 @@ IGNORED_DIRECTORIES = {
     "target",
     "vendor",
     "coverage",
-    ".next"
+    ".next",
+    # Test / example trees hold fixtures, not deployed code. Reading them
+    # produced 132 "routes" for the Flask framework repository, most of them
+    # ("/1", "/2", "/3") declared inside tests/test_basic.py.
+    "test",
+    "tests",
+    "testing",
+    "__tests__",
+    "spec",
+    "specs",
+    "fixtures",
+    "testdata",
+    "test_data",
+    "e2e",
+    "examples",
+    "example",
+    "samples",
+    "sample",
+    "migrations",
+    "benchmarks",
+    "benchmark"
 }
 
 IGNORED_EXTENSIONS = {
@@ -168,7 +188,9 @@ class RepositoryIntelligenceEngine:
         files_data = self._enumerate_files()
         tech_data = self._detect_technologies(files_data["all_files"])
         arch_data = self._analyze_architecture(files_data["code_files"])
-        risk_data = self._identify_risk_areas(files_data["code_files"], tech_data, files_data["all_files"])
+        risk_data = self._identify_risk_areas(
+            files_data["code_files"], tech_data, files_data["all_files"],
+            endpoints=arch_data.get("endpoints", []))
 
         return {
             "repository_name": self.repo_name,
@@ -457,36 +479,94 @@ class RepositoryIntelligenceEngine:
 
         return None
 
-    def _identify_risk_areas(self, code_files: List[str], tech_data: Dict[str, Any], all_files: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    def _identify_risk_areas(self, code_files: List[str], tech_data: Dict[str, Any],
+                             all_files: Optional[List[str]] = None,
+                             endpoints: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         """Correlates detected technologies and sensitive modules into risk areas."""
         risk_areas = []
 
         all_f = all_files or code_files
-        has_env_file = any(f.endswith(".env") or ".env" in f for f in all_f)
-        if has_env_file:
+
+        # Match the file itself, not any path containing the letters "env".
+        # The old substring test flagged files such as
+        # "terminal.environmentChanges.contribution.ts" and every test fixture
+        # ending in ".env".
+        env_candidates = []
+        for f in all_f:
+            base = os.path.basename(f)
+            if base == ".env" or (base.startswith(".env.") and len(base) > 5):
+                env_candidates.append(f)
+            elif base.endswith(".env.example") or base.endswith(".env.sample") or base.endswith(".env.template"):
+                continue
+            elif re.match(r"^env\.(example|sample|template)$", base, re.IGNORECASE):
+                continue
+            elif base in ("env.py", "environment.py", "environ.py"):
+                continue
+            elif base.endswith(".env.dist"):
+                continue
+        # Test fixtures and vendored trees are not deployment secrets.
+        env_candidates = [
+            f for f in env_candidates
+            if not re.search(r"(^|/)(test|tests|testing|fixtures?|__tests__|node_modules|vendor|\.venv|venv|examples?|docs?)/", f, re.IGNORECASE)
+            and "/test" not in f.lower()
+            and not os.path.basename(f).endswith((".test.env", ".spec.env"))
+        ]
+        if env_candidates:
             risk_areas.append({
                 "category": "Data Security & Secrets",
-                "severity": "medium",
-                "title": "Local Environment Config (.env) Detected in Repository",
-                "description": "Repository contains environment configuration files that may leak credentials or sensitive endpoints."
+                "severity": "high",
+                "title": "Local Environment Config (.env) Committed to the Repository",
+                "description": (
+                    f"Repository contains committed environment configuration files ({', '.join(env_candidates[:3])}) "
+                    "that may leak credentials, service tokens or internal endpoints. Restore the file from history if it ever held real secrets."
+                ),
+                "file": env_candidates[0],
             })
 
-        db_binaries = [f for f in all_f if f.endswith((".db", ".sqlite", ".sqlite3"))]
+        db_binaries = [
+            f for f in all_f
+            if f.endswith((".db", ".sqlite", ".sqlite3"))
+            # Test fixtures and caches are not deployed data stores.
+            and not re.search(r"(^|/)(test|tests|testing|fixtures?|__tests__|node_modules|cache|\.git)/", f, re.IGNORECASE)
+            and "/cache/" not in f.lower()
+            and "/test" not in f.lower()
+        ]
         if db_binaries:
             risk_areas.append({
                 "category": "Data Security & Secrets",
-                "severity": "high",
+                "severity": "medium",
                 "title": "Committed SQLite / Database Binary Files",
-                "description": f"Repository contains committed database binary files ({', '.join(db_binaries[:3])}) exposing local data records or schemas."
+                "description": (
+                    f"Repository contains committed database binary files ({', '.join(db_binaries[:3])}) "
+                    "which may expose local data records or schemas."
+                ),
+                "file": db_binaries[0],
             })
 
         frameworks = tech_data.get("frameworks", [])
-        if "FastAPI" in frameworks:
+        # A framework on its own is not a finding. "This repo uses FastAPI"
+        # says nothing about whether any route is actually vulnerable, so the
+        # generic BOLA risk area is only reported when the repository actually
+        # exposes mutating routes that take a resource id — the shape a
+        # BOLA/IDOR exploit needs.
+        mutating_id_routes = []
+        for ep in endpoints or []:
+            path = str(ep.get("path") or ep.get("route") or "")
+            method = str(ep.get("method") or "").upper()
+            if method in ("POST", "PUT", "PATCH", "DELETE") and re.search(r"\{[^}]+\}", path):
+                mutating_id_routes.append(f"{method} {path}")
+        if "FastAPI" in frameworks and mutating_id_routes:
             risk_areas.append({
                 "category": "Access Control & IDOR",
-                "severity": "high",
-                "title": "API Object-Level Authorization (BOLA/IDOR)",
-                "description": "FastAPI router endpoints require rigorous multi-tenant tenant_id and ownership checks."
+                "severity": "medium",
+                "title": "Object-Level Authorization Candidates (BOLA/IDOR)",
+                "description": (
+                    f"{len(mutating_id_routes)} mutating route(s) accept a resource identifier "
+                    f"(e.g. {mutating_id_routes[0]}) and require an explicit ownership check. "
+                    "Ownership was not proven absent here: these are candidates that the "
+                    "dynamic-testing stage tries to confirm against a live target."
+                ),
+                "candidates": mutating_id_routes[:10],
             })
 
         for dep in tech_data.get("dependencies", []):
