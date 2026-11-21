@@ -91,7 +91,8 @@ export const state = {
   currentProjectId: "prj_default",
   currentProjectName: "Enterprise Core API",
   currentScanId: null,
-  selectedFindingId: "fnd_prod_001"
+  selectedFindingId: "fnd_prod_001",
+  targetRepoUrl: null
 };
 
 // Toast Notifications
@@ -100,19 +101,19 @@ export function toast(message, type = "info") {
   if (!container) return;
   const t = document.createElement("div");
   t.className = `toast ${type}`;
+  const glyph = type === "success" ? "✓" : type === "critical" ? "✕" : type === "warn" ? "!" : "i";
+  const color = type === "success" ? "var(--success)" : type === "critical" ? "var(--critical)" : type === "warn" ? "var(--warning)" : "var(--cyan-accent)";
   t.innerHTML = `
-    <div style="font-weight: 700; color: #fff; font-size: 0.88rem;">
-      ${type === 'success' ? '✓' : (type === 'critical' ? '✖' : 'ℹ')}
-    </div>
-    <div style="font-size: 0.84rem; color: #fff;">${message}</div>
+    <div style="font-weight:800;color:${color};font-family:var(--font-mono);font-size:0.9rem;">${glyph}</div>
+    <div style="font-size:0.84rem;color:var(--text-primary);">${message}</div>
   `;
   container.appendChild(t);
   setTimeout(() => {
     t.style.opacity = "0";
-    t.style.transform = "translateX(100%)";
+    t.style.transform = "translateX(24px)";
     t.style.transition = "all 0.3s ease";
-    setTimeout(() => t.remove(), 300);
-  }, 4000);
+    setTimeout(() => t.remove(), 320);
+  }, 4200);
 }
 
 // Modal Dialog Manager
@@ -206,7 +207,7 @@ export async function navigate(route) {
   try {
     let p;
     switch (route) {
-      case "landing": p = renderLanding(viewRoot, navigate, state); break;
+      case "landing": p = renderLanding(viewRoot, navigate, state, api); break;
       case "auth": p = renderAuth(viewRoot, navigate, state, api, toast); break;
       case "dashboard": p = renderDashboard(viewRoot, navigate, state, api); break;
       case "projects": p = renderProjects(viewRoot, navigate, state, api, showModal, toast); break;
@@ -216,8 +217,8 @@ export async function navigate(route) {
       case "surface": p = renderAttackSurface(viewRoot, navigate, state, api, showModal); break;
       case "findings": p = renderFindings(viewRoot, navigate, state, api, showModal); break;
       case "finding_details": p = renderFindingDetails(viewRoot, navigate, state, api, toast); break;
-      case "verification": p = renderVerification(viewRoot, navigate); break;
-      case "remediation": p = renderRemediation(viewRoot, navigate, state); break;
+      case "verification": p = renderVerification(viewRoot, navigate, state, api); break;
+      case "remediation": p = renderRemediation(viewRoot, navigate, state, api); break;
       case "approvals": p = renderApprovals(viewRoot, navigate, state, api, showModal, toast); break;
       case "reports": p = renderReports(viewRoot, navigate, state, api, toast); break;
       case "skills": p = renderSkills(viewRoot, navigate, state, api, showModal); break;
@@ -236,54 +237,241 @@ export async function navigate(route) {
   }
 }
 
+// ==========================================================================
+// Route metadata (single source of truth for nav, palette, and breadcrumbs)
+// ==========================================================================
+export const ROUTES = [
+  { id: "dashboard", title: "Overview", group: "Workspace", desc: "Executive telemetry and posture" },
+  { id: "projects", title: "Projects", group: "Workspace", desc: "Targets and repositories" },
+  { id: "wizard", title: "Assessments", group: "Workspace", desc: "Launch a new security assessment" },
+  { id: "workspace", title: "Agent Workspace", group: "Workspace", desc: "Live pipeline and agent logs" },
+  { id: "code_intel", title: "Code Intelligence", group: "Security Intelligence", desc: "AST routes and invariants" },
+  { id: "surface", title: "Attack Surface", group: "Security Intelligence", desc: "Endpoints and parameters" },
+  { id: "findings", title: "Findings", group: "Security Intelligence", desc: "Vulnerability inventory" },
+  { id: "finding_details", title: "Evidence Dossier", group: "Security Intelligence", desc: "Forensic detail for a finding" },
+  { id: "verification", title: "Verification Center", group: "Security Intelligence", desc: "Arbitration and reproduction" },
+  { id: "remediation", title: "Remediation", group: "Remediation", desc: "Patches and diffs" },
+  { id: "approvals", title: "Human Approvals", group: "Remediation", desc: "Authorization gate for patches" },
+  { id: "reports", title: "Reports", group: "Remediation", desc: "Exports and compliance" },
+  { id: "skills", title: "Skills Library", group: "Platform", desc: "BugHunter knowledge base" },
+  { id: "benchmarks", title: "Benchmarks", group: "Platform", desc: "Accuracy and recall matrix" },
+  { id: "settings", title: "Settings", group: "Platform", desc: "Vaults and integrations" },
+  { id: "supporting", title: "Supporting Screens", group: "Platform", desc: "Notifications, audit, system" },
+  { id: "landing", title: "Landing Hero", group: "Platform", desc: "Public product surface" },
+  { id: "auth", title: "Authentication", group: "Platform", desc: "Sign in surface" }
+];
+
+const ROUTE_TITLES = Object.fromEntries(ROUTES.map(r => [r.id, r.title]));
+
+// ==========================================================================
+// Mobile drawer
+// ==========================================================================
+function isMobileShell() {
+  return window.matchMedia("(max-width: 1024px)").matches;
+}
+
+export function openDrawer() {
+  if (!isMobileShell()) return;
+  document.body.classList.add("drawer-open");
+}
+
+export function closeDrawer() {
+  document.body.classList.remove("drawer-open");
+}
+
+function toggleDrawer() {
+  document.body.classList.toggle("drawer-open");
+}
+
+// ==========================================================================
+// Command palette
+// ==========================================================================
+let cmdkState = { items: [], index: 0 };
+
+export function closeCommandPalette() {
+  document.getElementById("cmdk-overlay")?.classList.remove("open");
+}
+
+function buildPaletteItems(query) {
+  const q = query.trim().toLowerCase();
+  const routeItems = ROUTES.map(r => ({
+    kind: "Navigate",
+    label: r.title,
+    meta: r.group,
+    hint: r.desc,
+    run: () => navigate(r.id)
+  }));
+  const actionItems = [
+    { kind: "Action", label: "New assessment", meta: "⌘N", hint: "Start the 7-agent pipeline", run: () => navigate("wizard") },
+    { kind: "Action", label: "Landing page", meta: "Marketing", hint: "Open the public product surface", run: () => navigate("landing") },
+    { kind: "Action", label: "Live pipeline", meta: "Workspace", hint: "Watch agents execute", run: () => navigate("workspace") },
+    { kind: "Action", label: "Audit trail", meta: "Immutable", hint: "Evidence and operator actions", run: () => navigate("supporting") }
+  ];
+  const all = [...actionItems, ...routeItems];
+  if (!q) return all;
+  return all.filter(i =>
+    i.label.toLowerCase().includes(q) ||
+    i.kind.toLowerCase().includes(q) ||
+    (i.hint || "").toLowerCase().includes(q)
+  );
+}
+
+function renderPalette(query) {
+  const results = document.getElementById("cmdk-results");
+  if (!results) return;
+  cmdkState.items = buildPaletteItems(query);
+  cmdkState.index = 0;
+  const hint = document.getElementById("cmdk-hint");
+  if (hint) hint.textContent = `${cmdkState.items.length} result${cmdkState.items.length === 1 ? "" : "s"}`;
+
+  if (!cmdkState.items.length) {
+    results.innerHTML = `<div class="cmdk-empty">No matches for “${query}”.</div>`;
+    return;
+  }
+
+  let html = "";
+  let lastKind = null;
+  cmdkState.items.forEach((item, i) => {
+    if (item.kind !== lastKind) {
+      html += `<div class="cmdk-group-label">${item.kind}</div>`;
+      lastKind = item.kind;
+    }
+    html += `
+      <div class="cmdk-item ${i === 0 ? "active" : ""}" data-index="${i}">
+        <span>${item.label}</span>
+        <span class="cmdk-item-meta">${item.meta || ""}</span>
+      </div>`;
+  });
+  results.innerHTML = html;
+
+  results.querySelectorAll(".cmdk-item").forEach(el => {
+    el.addEventListener("mouseenter", () => {
+      results.querySelectorAll(".cmdk-item").forEach(x => x.classList.remove("active"));
+      el.classList.add("active");
+      cmdkState.index = Number(el.getAttribute("data-index"));
+    });
+    el.addEventListener("click", () => runPaletteItem(cmdkState.index));
+  });
+}
+
+function runPaletteItem(index) {
+  const item = cmdkState.items[index];
+  if (!item) return;
+  closeCommandPalette();
+  item.run();
+}
+
+export function openCommandPalette() {
+  const overlay = document.getElementById("cmdk-overlay");
+  const input = document.getElementById("cmdk-input");
+  if (!overlay || !input) return;
+  overlay.classList.add("open");
+  input.value = "";
+  renderPalette("");
+  setTimeout(() => input.focus(), 30);
+}
+
+function initCommandPalette() {
+  const overlay = document.getElementById("cmdk-overlay");
+  const input = document.getElementById("cmdk-input");
+  if (!overlay || !input) return;
+
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) closeCommandPalette();
+  });
+
+  input.addEventListener("input", e => renderPalette(e.target.value));
+
+  input.addEventListener("keydown", e => {
+    const items = document.querySelectorAll(".cmdk-item");
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!items.length) return;
+      cmdkState.index = e.key === "ArrowDown"
+        ? (cmdkState.index + 1) % items.length
+        : (cmdkState.index - 1 + items.length) % items.length;
+      items.forEach(x => x.classList.remove("active"));
+      items[cmdkState.index]?.classList.add("active");
+      items[cmdkState.index]?.scrollIntoView({ block: "nearest" });
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      runPaletteItem(cmdkState.index);
+    }
+  });
+
+  document.addEventListener("keydown", e => {
+    const isMac = navigator.platform.toUpperCase().includes("MAC");
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if (mod && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      overlay.classList.contains("open") ? closeCommandPalette() : openCommandPalette();
+    } else if (e.key === "Escape" && overlay.classList.contains("open")) {
+      closeCommandPalette();
+    } else if (e.key === "Escape") {
+      closeDrawer();
+    }
+  });
+}
+
+// ==========================================================================
 // App Initialization
+// ==========================================================================
 window.addEventListener("DOMContentLoaded", () => {
-  // Bind sidebar nav links
+  // Sidebar nav
   document.querySelectorAll(".nav-item").forEach(item => {
     item.addEventListener("click", (e) => {
       e.preventDefault();
-      const route = e.currentTarget.getAttribute("data-route");
-      navigate(route);
+      navigate(e.currentTarget.getAttribute("data-route"));
+      closeDrawer();
     });
   });
 
-  // Brand link -> dashboard
-  document.getElementById("brand-link")?.addEventListener("click", () => navigate("dashboard"));
-  
-  // Toggle Landing Hero
-  document.getElementById("btn-toggle-landing")?.addEventListener("click", () => {
-    if (state.currentRoute === "landing") {
-      navigate("dashboard");
-    } else {
-      navigate("landing");
-    }
+  document.getElementById("brand-link")?.addEventListener("click", () => {
+    navigate("dashboard");
+    closeDrawer();
+  });
+  document.getElementById("brand-link")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") navigate("dashboard");
   });
 
-  // Topbar New Assessment button
+  // Drawer controls
+  document.getElementById("btn-hamburger")?.addEventListener("click", toggleDrawer);
+  document.getElementById("sidebar-close")?.addEventListener("click", closeDrawer);
+  document.getElementById("drawer-scrim")?.addEventListener("click", closeDrawer);
+
+  // Command palette
+  document.getElementById("btn-command")?.addEventListener("click", openCommandPalette);
+  initCommandPalette();
+
+  // Landing toggle
+  document.getElementById("btn-toggle-landing")?.addEventListener("click", () => {
+    navigate(state.currentRoute === "landing" ? "dashboard" : "landing");
+  });
+
   document.getElementById("btn-new-assessment")?.addEventListener("click", () => navigate("wizard"));
 
-  // Handle hash change events
+  // Browser back/forward + manual hash edits
   window.addEventListener("hashchange", () => {
     const route = window.location.hash.replace("#", "");
-    if (route && route !== state.currentRoute) {
-      navigate(route);
-    }
+    if (route && route !== state.currentRoute) navigate(route);
   });
 
-  // Handle hash routing on initial load (defaults to Dashboard so tabs are immediately visible)
+  // First visit lands on the product page; deep links keep working.
   const hashRoute = window.location.hash.replace("#", "");
-  navigate(hashRoute || "dashboard");
+  const seenLanding = (() => {
+    try { return sessionStorage.getItem("aegis.visited") === "1"; } catch (e) { return false; }
+  })();
+  const initialRoute = hashRoute || (seenLanding ? "dashboard" : "landing");
+  try { sessionStorage.setItem("aegis.visited", "1"); } catch (e) { /* private mode */ }
+  navigate(initialRoute);
 
-  // Load projects into global selector in background (non-blocking)
+  // Projects dropdown (non-blocking)
   api.listProjects().then(projects => {
     const pSel = document.getElementById("global-project-select");
-    if (pSel && projects && projects.length > 0) {
-      pSel.innerHTML = projects.map(p => `
-        <option value="${p.id}">${p.name}</option>
-      `).join("");
+    if (pSel && Array.isArray(projects) && projects.length > 0) {
+      pSel.innerHTML = projects.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
       state.currentProjectId = projects[0].id;
       state.currentProjectName = projects[0].name;
-
       pSel.addEventListener("change", (e) => {
         state.currentProjectId = e.target.value;
         const selected = projects.find(p => p.id === e.target.value);
@@ -291,7 +479,17 @@ window.addEventListener("DOMContentLoaded", () => {
         navigate(state.currentRoute);
       });
     }
-  }).catch(e => {
-    console.warn("Could not load global projects dropdown:", e);
+  }).catch(e => console.warn("Could not load projects:", e));
+
+  // Keep the topbar "live" pill honest
+  api.getHealth().then(h => {
+    const txt = document.getElementById("live-status-text");
+    const ok = String(h?.status || "").toLowerCase() === "healthy";
+    if (txt) txt.textContent = ok ? "Neural Defense Armed" : "Degraded";
+    document.getElementById("live-pill")?.classList.toggle("degraded", !ok);
+  }).catch(() => {
+    const txt = document.getElementById("live-status-text");
+    if (txt) txt.textContent = "Backend unreachable";
+    document.getElementById("live-pill")?.classList.add("degraded");
   });
 });

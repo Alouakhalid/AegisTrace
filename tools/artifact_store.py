@@ -115,7 +115,15 @@ def find_task_output_for_test_plan(test_plan_id: str) -> Optional[Dict[str, Any]
     tasks_dir = os.path.join(CACHE_ROOT, "tasks")
     if not os.path.isdir(tasks_dir):
         return None
-    for name in sorted(os.listdir(tasks_dir)):
+    def _mtime(name: str) -> float:
+        try:
+            return os.path.getmtime(os.path.join(tasks_dir, name))
+        except OSError:
+            return 0.0
+    # Prefer the most recent artifact: several scans may execute the same
+    # test plan id, and replaying a stale artifact would validate a patch
+    # against outdated requests.
+    for name in sorted(os.listdir(tasks_dir), key=_mtime, reverse=True):
         if not name.endswith(".json"):
             continue
         data = _read_json(os.path.join(tasks_dir, name))

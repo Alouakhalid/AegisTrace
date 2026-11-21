@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
@@ -24,6 +24,46 @@ class ProjectResponse(BaseModel):
     open_findings: int = 0
     security_score: Optional[int] = None
 
+#: The orchestrator contract only accepts these three modes. The HTTP layer
+#: accepted any string, so an "unknown" mode used to pass request validation and
+#: then blow up inside the pipeline at 15% progress — after the repository had
+#: already been cloned. Normalising at the edge keeps every downstream stage and
+#: the engagement row consistent.
+ASSESSMENT_MODES = ("code_only", "dynamic_only", "full")
+
+_ASSESSMENT_MODE_ALIASES = {
+    "source": "code_only",
+    "source_only": "code_only",
+    "source-only": "code_only",
+    "static": "code_only",
+    "static_only": "code_only",
+    "code": "code_only",
+    "sast": "code_only",
+    "dynamic": "dynamic_only",
+    "dynamic-only": "dynamic_only",
+    "dast": "dynamic_only",
+    "runtime": "dynamic_only",
+    "live": "dynamic_only",
+    "complete": "full",
+    "all": "full",
+    "custom": "full",
+    "": "full",
+}
+
+
+def normalize_assessment_mode(value: str) -> str:
+    """Map a user-supplied mode onto the orchestrator contract enum."""
+    raw = str(value or "").strip().lower()
+    if raw in ASSESSMENT_MODES:
+        return raw
+    mapped = _ASSESSMENT_MODE_ALIASES.get(raw)
+    if mapped:
+        return mapped
+    raise ValueError(
+        f"Unsupported assessment_mode '{value}'. Use one of: {', '.join(ASSESSMENT_MODES)}."
+    )
+
+
 class ScanCreateRequest(BaseModel):
     project_id: Optional[str] = None
     project_name: Optional[str] = "Default Assessment"
@@ -39,6 +79,11 @@ class ScanCreateRequest(BaseModel):
     auth_token: Optional[str] = Field(default=None)
     test_user_roles: List[str] = Field(default_factory=lambda: ["admin", "buyer_a", "buyer_b"])
     active_testing_consented: bool = Field(default=True)
+
+    @field_validator("assessment_mode")
+    @classmethod
+    def _normalize_mode(cls, v: str) -> str:
+        return normalize_assessment_mode(v)
 
 class ScanProgressEvent(BaseModel):
     scan_id: str
@@ -194,6 +239,11 @@ class AssessmentCreateRequest(BaseModel):
     instructions: Optional[str] = None
     auth_token: Optional[str] = None
     active_testing_consented: bool = True
+
+    @field_validator("assessment_mode")
+    @classmethod
+    def _normalize_mode(cls, v: str) -> str:
+        return normalize_assessment_mode(v)
 
 class TavilyTestRequest(BaseModel):
     query: Optional[str] = "FastAPI security advisory"

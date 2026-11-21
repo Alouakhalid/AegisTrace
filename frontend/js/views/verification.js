@@ -1,152 +1,193 @@
-export function renderVerification(container, navigate) {
-  container.innerHTML = `
-    <div>
+/**
+ * Verification center.
+ *
+ * Arbitration is only meaningful if the numbers are real, so this view is built
+ * from the evidence record attached to each finding: how many replays ran, how
+ * many reproduced, whether a state mutation was trapped, and the CVSS vector the
+ * backend actually stored. The previous version hardcoded a "CONFIRMED" verdict.
+ */
+
+const METRICS = [
+  ["AV", "Attack Vector", { N: "Network", A: "Adjacent", L: "Local", P: "Physical" }],
+  ["AC", "Attack Complexity", { L: "Low", H: "High" }],
+  ["PR", "Privileges Required", { N: "None", L: "Low", H: "High" }],
+  ["UI", "User Interaction", { N: "None", R: "Required" }],
+  ["S", "Scope", { U: "Unchanged", C: "Changed" }],
+  ["C", "Confidentiality", { N: "None", L: "Low", H: "High" }],
+  ["I", "Integrity", { N: "None", L: "Low", H: "High" }],
+  ["A", "Availability", { N: "None", L: "Low", H: "High" }]
+];
+
+function parseVector(vector) {
+  const out = {};
+  if (!vector) return out;
+  String(vector).split("/").slice(1).forEach(part => {
+    const [k, v] = part.split(":");
+    if (k && v) out[k] = v;
+  });
+  return out;
+}
+
+function verdictBadge(verdict) {
+  const v = String(verdict || "").toUpperCase();
+  if (v === "CONFIRMED") return `<span class="badge badge-critical">CONFIRMED</span>`;
+  if (v === "REJECTED" || v === "FALSE_POSITIVE") return `<span class="badge badge-success">${v}</span>`;
+  if (v) return `<span class="badge badge-medium">${v}</span>`;
+  return `<span class="badge badge-outline">not arbitrated</span>`;
+}
+
+export async function renderVerification(container, navigate, state, api) {
+  let findings = [];
+  try {
+    findings = (await api.listFindings(state.currentScanId)) || [];
+  } catch { /* offline */ }
+
+  if (!findings.length) {
+    container.innerHTML = `
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
-            Dual-Phase Arbitration & Ground-Truth Guarantee
-          </div>
-          <h1 class="page-title">Verification Center & Arbitration</h1>
-          <p class="page-subtitle">EvidenceStore arbitration engine validating 3x reproduction consistency, state mutations, and CVSS v3.1 scoring.</p>
-        </div>
-        <div style="display: flex; gap: 12px;">
-          <button class="btn btn-secondary btn-sm" id="verif-btn-findings">
-            &larr; View Findings
-          </button>
-          <button class="btn btn-primary btn-sm" id="verif-btn-remediation">
-            Proceed to Remediation &rarr;
-          </button>
+          <div class="page-eyebrow">Arbitration</div>
+          <h1 class="page-title">Verification Center</h1>
+          <p class="page-subtitle">Replay evidence for every candidate finding.</p>
         </div>
       </div>
+      <div class="card" style="padding:52px 32px;text-align:center;">
+        <div style="font-size:2.2rem;margin-bottom:12px;">⚖️</div>
+        <h2 style="font-family:var(--font-serif);font-style:italic;font-size:1.35rem;color:#fff;margin-bottom:8px;">Nothing to arbitrate</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;">The verification stage only runs on candidates that reached active probing.</p>
+        <button class="btn btn-primary" id="verif-new-scan">Run an assessment</button>
+      </div>`;
+    container.querySelector("#verif-new-scan")?.addEventListener("click", () => navigate("wizard"));
+    return;
+  }
 
-      <!-- Verdict Banner -->
-      <div class="card card-glass" style="margin-bottom: 28px; border-left: 4px solid var(--cyan-accent); box-shadow: 0 0 50px rgba(167, 139, 113, 0.15);">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-          <div style="display: flex; align-items: center; gap: 20px;">
-            <div style="width: 54px; height: 54px; border-radius: 50%; background: rgba(167, 139, 113, 0.12); border: 2px solid var(--cyan-accent); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--cyan-accent);">
-              ✓
-            </div>
-            <div>
-              <div style="font-size: 1.35rem; font-weight: 800; color: #fff; font-family: 'Inter', serif; font-style: italic;">
-                Forensic Arbitration Verdict: CONFIRMED
-              </div>
-              <div style="font-size: 0.84rem; color: var(--cyan-accent); margin-top: 4px;">
-                Finding <code style="color: var(--cyan-accent); font-weight: 700;">fnd_prod_001</code> | CWE-639 (BOLA/IDOR) | False Positive Probability: <strong style="color: var(--success); font-family: monospace;">0.00%</strong>
-              </div>
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-size: 2.4rem; font-weight: 800; color: var(--cyan-accent); font-family: 'Inter', serif; font-style: italic; line-height: 1;">8.8</div>
-            <span class="badge badge-critical" style="margin-top: 6px;">Critical Severity</span>
-          </div>
-        </div>
+  const selectedId =
+    findings.find(f => f.id === state.selectedFindingId)?.id || findings[0].id;
+  state.selectedFindingId = selectedId;
+
+  let detail = findings.find(f => f.id === selectedId);
+  try {
+    const full = await api.getFindingDetail(selectedId);
+    if (full) detail = full;
+  } catch { /* keep list record */ }
+
+  const evidence = detail.evidence || {};
+  const attempts = Number(evidence.reproduction_attempts || 0);
+  const successes = Number(evidence.reproduction_successes || 0);
+  const consistency = attempts ? `${successes}/${attempts}` : "—";
+  const vector = parseVector(detail.cvss_vector);
+  const confirmedCount = findings.filter(f => String(f.verification_verdict || "").toUpperCase() === "CONFIRMED").length;
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Arbitration</div>
+        <h1 class="page-title">Verification Center</h1>
+        <p class="page-subtitle">Reproduction record for every candidate. ${confirmedCount} of ${findings.length} survived replay.</p>
       </div>
-
-      <!-- Grid Details -->
-      <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-bottom: 28px;">
-        <!-- CVSS Breakdown -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">CVSS 3.1 Vector Breakdown</div>
-            <code style="color: var(--cyan-accent); font-size: 0.76rem; background: rgba(255,255,255,0.02); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border-subtle);">CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N</code>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.82rem; padding: 18px;">
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-              <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Attack Vector (AV)</span>
-              <div style="color: #fff; font-weight: 700; margin-top: 2px;">Network (N)</div>
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-              <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Attack Complexity (AC)</span>
-              <div style="color: #fff; font-weight: 700; margin-top: 2px;">Low (L)</div>
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-              <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Privileges Required (PR)</span>
-              <div style="color: #fff; font-weight: 700; margin-top: 2px;">Low (L - Authenticated Buyer)</div>
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-              <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">User Interaction (UI)</span>
-              <div style="color: #fff; font-weight: 700; margin-top: 2px;">None (N)</div>
-            </div>
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-              <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase;">Scope (S)</span>
-              <div style="color: #fff; font-weight: 700; margin-top: 2px;">Unchanged (U)</div>
-            </div>
-            <div style="background: rgba(220, 38, 38, 0.05); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(220, 38, 38, 0.3);">
-              <span style="color: #f87171; font-size: 0.72rem; text-transform: uppercase;">Integrity Impact (I)</span>
-              <div style="color: #fca5a5; font-weight: 700; margin-top: 2px;">High (H - State Mutated)</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3x Reproduction Table -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Sandbox Reproduction Consistency</div>
-            <span class="badge badge-success">3/3 Passed</span>
-          </div>
-
-          <div class="table-wrapper">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Attempt</th>
-                  <th>Isolated Jail</th>
-                  <th>Status</th>
-                  <th>Mutation Fingerprint</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="font-weight: 700; color: #fff;">Run #1</td>
-                  <td>sbx_jail_01</td>
-                  <td><span class="badge badge-critical">MUTATED (200)</span></td>
-                  <td><code style="font-size: 0.72rem; color: var(--cyan-accent);">e3b0c442...</code></td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #fff;">Run #2</td>
-                  <td>sbx_jail_02</td>
-                  <td><span class="badge badge-critical">MUTATED (200)</span></td>
-                  <td><code style="font-size: 0.72rem; color: var(--cyan-accent);">e3b0c442...</code></td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #fff;">Run #3</td>
-                  <td>sbx_jail_03</td>
-                  <td><span class="badge badge-critical">MUTATED (200)</span></td>
-                  <td><code style="font-size: 0.72rem; color: var(--cyan-accent);">e3b0c442...</code></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Formal Verification Invariant Logic -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Formal Verification & Constraint Solver Proof</div>
-          <span class="badge badge-cyan">SMT Invariant Solver</span>
-        </div>
-
-        <div style="padding: 18px; font-family: monospace; font-size: 0.8rem; line-height: 1.6; color: var(--text-secondary);">
-          <div style="color: var(--cyan-accent); font-weight: 700; margin-bottom: 8px;">
-            Invariant Specification: ∀ order ∈ Orders: (UserCanMutate(user, order) ⇔ (order.owner_id == user.id ∨ user.role == "admin"))
-          </div>
-          <div style="background: #050505; border: 1px solid var(--border-subtle); padding: 14px; border-radius: var(--radius-sm); color: #fff; margin-bottom: 12px;">
-            <div style="color: #f87171;">[FAIL] Invariant Violated at target_app.py:88</div>
-            <div style="color: var(--text-muted); margin-top: 4px;">Satisfying Counter-example:</div>
-            <div style="color: var(--cyan-accent); margin-left: 14px;">- user.id = "id_buyer_b"</div>
-            <div style="color: var(--cyan-accent); margin-left: 14px;">- order.owner_id = "id_buyer_a"</div>
-            <div style="color: var(--cyan-accent); margin-left: 14px;">- Execution Path: update_order() &rarr; db.commit() without conditional guard</div>
-          </div>
-          <div style="color: var(--cyan-accent); font-size: 0.78rem;">
-            Solver status: UNSAT (Safe invariant cannot be satisfied without AST patch). Patch synthesized in Remediation Center.
-          </div>
-        </div>
+      <div class="surface-tools">
+        <select class="form-control" id="verif-select" style="max-width:380px;">
+          ${findings.map(f => `<option value="${f.id}" ${f.id === selectedId ? "selected" : ""}>${f.severity || "?"} · ${(f.title || f.id).slice(0, 60)}</option>`).join("")}
+        </select>
+        <button class="btn btn-secondary" id="verif-btn-findings">All findings →</button>
       </div>
     </div>
+
+    <div class="verdict-banner ${String(detail.verification_verdict || "").toUpperCase() === "CONFIRMED" ? "confirmed" : "pending"}">
+      <div class="verdict-left">
+        <div class="verdict-mark">${String(detail.verification_verdict || "").toUpperCase() === "CONFIRMED" ? "✓" : "…"}</div>
+        <div>
+          <div class="verdict-title">${detail.verification_verdict ? `Verdict: ${String(detail.verification_verdict).toUpperCase()}` : "Awaiting arbitration"}</div>
+          <div class="verdict-sub">
+            <code>${detail.id}</code>
+            ${detail.cwe_id ? ` · <span class="badge badge-outline">${detail.cwe_id}</span>` : ""}
+            · replays <b>${consistency}</b>
+          </div>
+        </div>
+      </div>
+      <div class="verdict-score">
+        <div class="verdict-cvss">${detail.cvss_score ?? "—"}</div>
+        <span class="badge badge-${String(detail.severity || "low").toLowerCase()}">${String(detail.severity || "—").toUpperCase()}</span>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <section class="card">
+        <div class="card-header"><div class="card-title">Reproduction evidence</div>
+          <span class="badge ${successes && successes === attempts ? "badge-success" : "badge-outline"}">
+            ${attempts ? `${successes}/${attempts} reproduced` : "no replay data"}
+          </span>
+        </div>
+        <div class="repro-grid">
+          <div class="repro-cell"><span>Attempts</span><b>${attempts || "—"}</b></div>
+          <div class="repro-cell"><span>Successes</span><b>${successes || "—"}</b></div>
+          <div class="repro-cell"><span>State mutation trapped</span><b>${evidence.db_mutation_trapped ? "yes" : "no"}</b></div>
+          <div class="repro-cell"><span>Identity used</span><b>${evidence.identity_used || "—"}</b></div>
+          <div class="repro-cell"><span>Target owner</span><b>${evidence.target_resource_owner || "—"}</b></div>
+          <div class="repro-cell"><span>HTTP</span><b>${evidence.http_method || ""} ${evidence.http_status ?? ""}</b></div>
+        </div>
+
+        <div class="report-section-title" style="margin-top:20px;">Root cause</div>
+        <div class="report-summary" style="margin-bottom:0;">${detail.root_cause || "No root cause was recorded for this finding."}</div>
+
+        ${evidence.sha256_snapshot_hash ? `
+          <div class="report-section-title" style="margin-top:18px;">State snapshot</div>
+          <div class="hash-block">
+            <div><span>before sha256</span><code>${evidence.sha256_snapshot_hash}</code></div>
+            ${evidence.state_before ? `<pre>${evidence.state_before}</pre>` : ""}
+            ${evidence.state_after ? `<pre>${evidence.state_after}</pre>` : ""}
+          </div>` : ""}
+      </section>
+
+      <section class="card">
+        <div class="card-header"><div class="card-title">CVSS v3.1 breakdown</div>
+          ${detail.cvss_vector ? `<code class="vector-code">${detail.cvss_vector}</code>` : ""}
+        </div>
+        ${detail.cvss_vector ? `
+        <div class="cvss-grid">
+          ${METRICS.map(([key, label, map]) => {
+            const raw = vector[key];
+            const human = raw ? (map[raw] || raw) : "—";
+            return `<div class="cvss-cell"><span>${label}</span><b>${raw || "?"} · ${human}</b></div>`;
+          }).join("")}
+        </div>` : `<p class="empty-row" style="border:0;">No CVSS vector was computed for this finding.</p>`}
+
+        ${detail.reproduction_summary ? `
+          <div class="report-section-title" style="margin-top:18px;">Arbitration note</div>
+          <div class="report-summary" style="margin-bottom:0;">${detail.reproduction_summary}</div>` : ""}
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-header"><div class="card-title">All candidates in this assessment</div>
+        <span class="dim" style="font-size:0.74rem;">${findings.length} records</span>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Finding</th><th>Severity</th><th>CVSS</th><th>Verdict</th><th>Replays</th><th></th></tr></thead>
+          <tbody>
+            ${findings.map(f => `
+              <tr>
+                <td>${f.title || f.id}</td>
+                <td><span class="badge badge-${String(f.severity || "low").toLowerCase()}">${f.severity || "—"}</span></td>
+                <td class="mono">${f.cvss_score ?? "—"}</td>
+                <td>${verdictBadge(f.verification_verdict)}</td>
+                <td class="mono dim">${f.reproduction_summary || "—"}</td>
+                <td><button class="btn btn-outline btn-sm verif-pick" data-id="${f.id}">Inspect</button></td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
   `;
 
-  document.getElementById("verif-btn-findings")?.addEventListener("click", () => navigate("findings"));
-  document.getElementById("verif-btn-remediation")?.addEventListener("click", () => navigate("remediation"));
+  container.querySelector("#verif-select")?.addEventListener("change", e => {
+    state.selectedFindingId = e.target.value;
+    navigate("verification");
+  });
+  container.querySelector("#verif-btn-findings")?.addEventListener("click", () => navigate("findings"));
+  container.querySelectorAll(".verif-pick").forEach(b => b.addEventListener("click", e => {
+    state.selectedFindingId = e.currentTarget.getAttribute("data-id");
+    navigate("finding_details");
+  }));
 }

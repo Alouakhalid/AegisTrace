@@ -19,6 +19,7 @@ if mem_db_dir not in sys.path:
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query, BackgroundTasks, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
@@ -50,6 +51,26 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+
+class StaticRevalidationMiddleware(BaseHTTPMiddleware):
+    """Force browsers to revalidate the SPA shell and its assets.
+
+    Without this, browsers apply heuristic caching to /static and to the HTML
+    document, so a deploy can keep serving stale JS that no longer matches the
+    markup. Assets are revalidated with ETag/Last-Modified (cheap 304s) rather
+    than being cached blindly.
+    """
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if path == '/' or path.startswith('/static'):
+            response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+        return response
+
+
+app.add_middleware(StaticRevalidationMiddleware)
 
 manager = ScanExecutionManager()
 
@@ -162,6 +183,58 @@ def calculate_security_score(conn, project_id: Optional[str] = None) -> Optional
 
     return max(0, min(100, 100 - total_penalty))
 
+def _scan_confirmed_count(scan_id: str) -> int:
+    """Findings in this scan whose verdict survived sandbox replay."""
+    try:
+        cur = manager.db.conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM findings WHERE scan_id = ? AND verdict = 'confirmed';", (scan_id,))
+        return cur.fetchone()[0] or 0
+    except Exception:
+        return 0
+
+
+def _scan_pending_approvals(scan_id: str) -> int:
+    try:
+        cur = manager.db.conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM approvals a JOIN patches p ON a.patch_id = p.id "
+            "JOIN findings f ON p.finding_id = f.id WHERE f.scan_id = ? AND a.decision = 'pending';",
+            (scan_id,)
+        )
+        return cur.fetchone()[0] or 0
+    except Exception:
+        return 0
+
+
+def _scan_project_name(db_scan: Any) -> str:
+    """Resolve a human project name for a stored scan.
+
+    The old endpoint answered with the literal string "Enterprise Assessment"
+    for every scan in the database, which made the workspace header a lie.
+    """
+    cfg = db_scan.get('config') if isinstance(db_scan, dict) else None
+    if isinstance(cfg, str) and cfg:
+        try:
+            cfg = json.loads(cfg)
+        except Exception:
+            cfg = None
+    if isinstance(cfg, dict) and cfg.get('project_name'):
+        return str(cfg['project_name'])
+    try:
+        cur = manager.db.conn.cursor()
+        cur.execute(
+            "SELECT p.name FROM projects p JOIN engagements e ON e.project_id = p.id "
+            "WHERE e.id = ? LIMIT 1;",
+            (db_scan.get('engagement_id') if isinstance(db_scan, dict) else None,)
+        )
+        row = cur.fetchone()
+        if row and row[0]:
+            return str(row[0])
+    except Exception:
+        pass
+    return 'Unnamed project'
+
+
 @app.get('/api/v1/stats/overview', response_model=OverviewStatsResponse)
 async def get_overview_stats():
     cursor = manager.db.conn.cursor()
@@ -269,6 +342,36 @@ _scan_request_history: List[float] = []
 _scan_rate_limits = _scan_request_history
 _MAX_SCANS_PER_MINUTE = 10
 
+def _register_queued_scan(scan_id: str, config: Dict[str, Any]) -> None:
+    """Make a freshly queued scan visible to the status endpoints immediately.
+
+    Both scan entry points (/scans and /assessments) used to hand the browser a
+    scan id that no endpoint could resolve until the worker had finished its
+    first stage, so the workspace rendered "no assessment selected" for the
+    first seconds of every run.
+    """
+    manager.active_scans[scan_id] = {
+        'scan_id': scan_id,
+        'project_id': config.get('project_id') or 'prj_default',
+        'project_name': config.get('project_name') or 'Security Assessment',
+        'status': 'queued',
+        'current_stage': 'queued',
+        'active_agent': 'OrchestratorAgent',
+        'progress_percentage': 0,
+        'start_time': datetime.now(timezone.utc).isoformat(),
+        'findings_count': 0,
+        'resolved_count': 0,
+        'commit_sha': None,
+        'assessment_mode': config.get('assessment_mode', 'full'),
+        'selected_categories': config.get('selected_categories') or [],
+        'skills_used': [],
+        'repo_intelligence': None,
+    }
+    manager.scan_logs.setdefault(scan_id, []).append(
+        f'[{datetime.now(timezone.utc).strftime("%H:%M:%S")}] [INFO] [OrchestratorAgent] Assessment queued; waiting for a worker slot.'
+    )
+
+
 @app.post('/api/v1/scans')
 async def start_scan(req: ScanCreateRequest, background_tasks: BackgroundTasks):
     now = time.time()
@@ -305,6 +408,8 @@ async def start_scan(req: ScanCreateRequest, background_tasks: BackgroundTasks):
     config['scan_id'] = scan_id
     if not config.get('project_id'):
         config['project_id'] = 'prj_default'
+    _register_queued_scan(scan_id, config)
+
     background_tasks.add_task(manager.run_pipeline, config)
     return {
         'scan_id': scan_id,
@@ -351,6 +456,7 @@ async def create_assessment(req: AssessmentCreateRequest, background_tasks: Back
         'auth_token': req.auth_token,
         'active_testing_consented': req.active_testing_consented
     }
+    _register_queued_scan(scan_id, config)
     background_tasks.add_task(manager.run_pipeline, config)
     return {
         'assessment_id': scan_id,
@@ -501,7 +607,7 @@ async def list_scans():
         scans.append({
             'scan_id': scan_id,
             'project_id': d['engagement_id'],
-            'project_name': cfg.get('project_name', 'Enterprise Assessment'),
+            'project_name': (cfg.get('project_name') if isinstance(cfg, dict) else None) or _scan_project_name(d),
             'status': d['status'],
             'current_stage': stage,
             'active_agent': agent,
@@ -534,30 +640,14 @@ async def get_scan_status(scan_id: str):
             'progress_percentage': active['progress_percentage'],
             'start_time': active['start_time'],
             'total_findings': active['findings_count'],
-            'verified_findings': active['findings_count'],
+            'verified_findings': _scan_confirmed_count(scan_id),
             'resolved_findings': active['resolved_count'],
-            'pending_approvals': 1 if active['status'] == 'completed' else 0,
+            'pending_approvals': _scan_pending_approvals(scan_id),
             'log_messages': logs[-100:]
         }
     
     db_scan = manager.db.get_scan(scan_id)
     if not db_scan:
-        if scan_id.startswith('scn_demo'):
-            return {
-                'scan_id': scan_id,
-                'project_id': 'prj_default',
-                'project_name': 'Enterprise Core API',
-                'status': 'completed',
-                'current_stage': 'completed',
-                'active_agent': 'RemediationAgent',
-                'progress_percentage': 100,
-                'start_time': datetime.now(timezone.utc).isoformat(),
-                'total_findings': 1,
-                'verified_findings': 1,
-                'resolved_findings': 0,
-                'pending_approvals': 1,
-                'log_messages': []
-            }
         raise HTTPException(status_code=404, detail='Scan not found')
     
     logs = manager.scan_logs.get(scan_id, [])
@@ -579,7 +669,7 @@ async def get_scan_status(scan_id: str):
     return {
         'scan_id': scan_id,
         'project_id': db_scan['engagement_id'],
-        'project_name': 'Enterprise Assessment',
+        'project_name': _scan_project_name(db_scan),
         'status': db_scan['status'],
         'current_stage': 'completed' if completed else 'in_progress',
         'active_agent': 'RemediationAgent' if completed and pending_apr else ('Completed' if completed else 'OrchestratorAgent'),
@@ -1314,12 +1404,43 @@ async def get_settings():
     }
 
 frontend_dir = os.path.join(workspace_root, 'frontend')
+
+
+def _frontend_asset_version() -> str:
+    """Short fingerprint of the SPA assets.
+
+    Browsers cache ES modules aggressively (module map + HTTP cache), so a
+    deploy that changes app.js can otherwise keep running the old graph against
+    new markup. Stamping asset URLs with this fingerprint guarantees a fresh
+    module graph whenever any asset changes.
+    """
+    digest = hashlib.sha256()
+    for root, _dirs, files in os.walk(frontend_dir):
+        for name in sorted(files):
+            if not name.endswith(('.js', '.css', '.html')):
+                continue
+            path = os.path.join(root, name)
+            try:
+                stat = os.stat(path)
+                digest.update(name.encode('utf-8'))
+                digest.update(str(stat.st_size).encode('utf-8'))
+                digest.update(str(int(stat.st_mtime)).encode('utf-8'))
+            except OSError:
+                continue
+    return digest.hexdigest()[:12]
+
+
 if os.path.exists(frontend_dir):
     app.mount('/static', StaticFiles(directory=frontend_dir), name='static')
-    
+
     @app.get('/')
     async def serve_index():
         idx_path = os.path.join(frontend_dir, 'index.html')
-        if os.path.exists(idx_path):
+        if not os.path.exists(idx_path):
+            return HTMLResponse('<h1>AegisTrace Backend Running</h1><p>Frontend index.html initializing...</p>')
+        try:
+            with open(idx_path, 'r', encoding='utf-8') as handle:
+                markup = handle.read()
+        except OSError:
             return FileResponse(idx_path)
-        return HTMLResponse('<h1>AegisTrace Backend Running</h1><p>Frontend index.html initializing...</p>')
+        return HTMLResponse(markup.replace('__ASSET_V__', _frontend_asset_version()))

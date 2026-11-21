@@ -1,268 +1,319 @@
-import { drawRadialGauge, drawLineTrendChart } from "../charts.js";
+import { drawRadialGauge } from "../charts.js";
+
+/**
+ * Executive overview.
+ * Every number is derived from the API. When the vault is empty the UI says so
+ * instead of substituting placeholder values.
+ */
+
+const SEVERITY_ORDER = ["critical", "high", "medium", "low"];
+
+function num(v) {
+  return typeof v === "number" && Number.isFinite(v) ? v : 0;
+}
+
+function relativeTime(iso) {
+  if (!iso) return "—";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "—";
+  const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
+  return `${Math.floor(secs / 86400)}d ago`;
+}
+
+function statusClass(status) {
+  const s = String(status || "").toLowerCase();
+  if (s === "completed") return "badge-success";
+  if (s === "failed") return "badge-critical";
+  if (s === "running" || s === "queued") return "badge-cyan";
+  return "badge-outline";
+}
 
 export async function renderDashboard(container, navigate, state, api) {
-  let stats = {
-    total_projects: 0,
-    total_scans: 0,
-    total_findings: 0,
-    confirmed_findings: 0,
-    resolved_findings: 0,
-    critical_findings: 0,
-    security_score: null,
-    pending_approvals: 0
-  };
-  
-  let recentScans = [];
+  let stats = {};
+  let scans = [];
+  let approvals = [];
+  let findings = [];
+  let loadError = null;
 
   try {
-    stats = await api.getOverviewStats();
-    recentScans = await api.listScans();
+    const [s, sc, ap, fd] = await Promise.all([
+      api.getOverviewStats().catch(() => null),
+      api.listScans().catch(() => []),
+      api.listApprovals().catch(() => []),
+      api.listFindings().catch(() => [])
+    ]);
+    stats = s || {};
+    scans = Array.isArray(sc) ? sc : [];
+    approvals = Array.isArray(ap) ? ap : [];
+    findings = Array.isArray(fd) ? fd : [];
   } catch (e) {
-    console.warn("Could not fetch dashboard telemetry:", e);
+    loadError = e.message;
   }
 
+  const total = num(stats.total_findings);
+  const confirmed = num(stats.confirmed_findings);
+  const resolved = num(stats.resolved_findings);
+  const activeScans = scans.filter(s => ["running", "queued"].includes(String(s.status).toLowerCase())).length;
+
+  // Severity mix across the vault (from scan aggregates, which are computed in SQL).
+  const severity = SEVERITY_ORDER.reduce((acc, k) => {
+    acc[k] = scans.reduce((sum, s) => sum + num(s[`${k}_findings`]), 0);
+    return acc;
+  }, {});
+  const sevTotal = SEVERITY_ORDER.reduce((sum, k) => sum + severity[k], 0);
+
+  const pendingApprovals = approvals.filter(a => String(a.status).toLowerCase() === "pending");
+
   container.innerHTML = `
-    <div>
+    <div class="dash">
+      <!-- Header -->
       <div class="page-header">
         <div>
+          <div class="dash-eyebrow">
+            <span class="live-dot"></span>
+            Live posture · <span id="dash-updated">just now</span>
+          </div>
           <h1 class="page-title">Autonomous Security Overview</h1>
-          <p class="page-subtitle">Real-time telemetry across multi-agent pipelines, active assessments, and verified findings.</p>
+          <p class="page-subtitle">
+            Cross-agent telemetry from the evidence vault. A finding is only counted once it survived sandbox replay.
+          </p>
         </div>
-        <div style="display: flex; gap: 14px;">
+        <div class="dash-actions">
           <button class="btn btn-secondary" id="dash-btn-view-pipeline">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-            Active Pipeline
+            Pipeline
           </button>
-          <button class="btn btn-primary" id="dash-btn-new-scan">
-            + New Assessment
-          </button>
+          <button class="btn btn-primary" id="dash-btn-new-scan">+ New Assessment</button>
         </div>
       </div>
 
-      <!-- KPI Grid (Gold-on-Black) -->
+      ${loadError ? `<div class="dash-alert">Could not reach the API: ${loadError}</div>` : ""}
+
+      <!-- KPI row -->
       <div class="kpi-grid">
-        <div class="stat-card gold">
+        <div class="stat-card">
           <div class="stat-header">
-            <span class="stat-label">Total Projects</span>
-            <div class="stat-icon">📁</div>
+            <span class="stat-label">Assessments</span>
+            <span class="stat-icon">⚡</span>
           </div>
-          <div class="stat-value">${stats.total_projects ?? 0}</div>
-          <div class="stat-desc">Target repositories & services</div>
+          <div class="stat-value">${num(stats.total_scans)}</div>
+          <div class="stat-desc">${activeScans > 0 ? `<span class="pulse-text">${activeScans} running now</span>` : "Full agent cycles"}</div>
         </div>
 
         <div class="stat-card">
           <div class="stat-header">
-            <span class="stat-label">Total Scans Run</span>
-            <div class="stat-icon">⚡</div>
+            <span class="stat-label">Findings</span>
+            <span class="stat-icon">⚠️</span>
           </div>
-          <div class="stat-value">${stats.total_scans ?? 0}</div>
-          <div class="stat-desc">Full autonomous cycles executed</div>
+          <div class="stat-value">${total}</div>
+          <div class="stat-desc">Recorded in the vault</div>
         </div>
 
-        <div class="stat-card critical">
+        <div class="stat-card gold">
           <div class="stat-header">
-            <span class="stat-label">Confirmed Findings</span>
-            <div class="stat-icon">⚠️</div>
+            <span class="stat-label">Confirmed</span>
+            <span class="stat-icon">✓</span>
           </div>
-          <div class="stat-value" style="color: var(--critical);">${stats.confirmed_findings ?? 0}</div>
-          <div class="stat-desc">Empirically verified findings</div>
+          <div class="stat-value" style="color: var(--success);">${confirmed}</div>
+          <div class="stat-desc">Reproduced 3× in sandbox</div>
         </div>
 
-        <div class="stat-card green">
+        <div class="stat-card">
           <div class="stat-header">
-            <span class="stat-label">Resolved Patches</span>
-            <div class="stat-icon">🛡️</div>
+            <span class="stat-label">Pending approvals</span>
+            <span class="stat-icon">🛡️</span>
           </div>
-          <div class="stat-value" style="color: var(--success);">${stats.resolved_findings ?? 0}</div>
-          <div class="stat-desc">AST verified & test-passed</div>
+          <div class="stat-value" style="color: ${pendingApprovals.length ? "var(--warning)" : "var(--text-secondary)"};">${pendingApprovals.length}</div>
+          <div class="stat-desc">${pendingApprovals.length ? "Awaiting human decision" : "Nothing blocked"}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Patched</span>
+            <span class="stat-icon">🔧</span>
+          </div>
+          <div class="stat-value">${resolved}</div>
+          <div class="stat-desc">Exploit replay closed</div>
         </div>
       </div>
 
-      <!-- Repository Quick Audit Launcher -->
-      <div class="card card-central-glow" style="padding: 22px 28px; margin-bottom: 28px; border: 1px solid var(--border-accent); background: rgba(13, 16, 34, 0.95); border-radius: var(--radius-lg);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <div style="font-size: 0.82rem; font-weight: 700; color: var(--cyan-accent); text-transform: uppercase; letter-spacing: 1.2px; display: flex; align-items: center; gap: 8px;">
-            <span>🐙</span> <span>Scan a GitHub Repository with 7 AI Agents</span>
+      <!-- Main grid -->
+      <div class="dash-grid">
+        <!-- Posture + severity -->
+        <section class="card dash-posture">
+          <div class="card-header">
+            <div class="card-title">Security posture</div>
+            <span class="badge ${confirmed === 0 ? "badge-success" : "badge-medium"}">
+              ${confirmed === 0 ? "No unresolved proof" : `${confirmed} confirmed`}
+            </span>
           </div>
-          <span class="badge badge-cyan" style="font-size: 0.70rem;">Zero-Config Autonomous Audit</span>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="text" id="dash-repo-input" value="https://github.com/Alouakhalid/SQL_Mentor" 
-                 placeholder="https://github.com/owner/repository" 
-                 style="flex: 1; padding: 12px 16px; font-size: 0.92rem; font-family: var(--font-mono); background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-md); color: #fff;">
-          <button class="btn btn-primary" id="dash-btn-run-audit" style="padding: 12px 24px; font-size: 0.92rem; font-weight: 700; white-space: nowrap;">
-            <span>⚡</span> Analyze & Audit
+          <div class="posture-body">
+            <div class="posture-gauge">
+              ${
+                stats.security_score !== null && stats.security_score !== undefined
+                  ? `<canvas id="gaugeCanvas" width="180" height="180"></canvas>`
+                  : `<div class="gauge-empty"><b>N/A</b><span>Run an assessment to compute posture</span></div>`
+              }
+            </div>
+            <div class="severity-list">
+              ${SEVERITY_ORDER.map(sev => {
+                const value = severity[sev];
+                const pct = sevTotal ? Math.round((value / sevTotal) * 100) : 0;
+                return `
+                  <div class="sev-row">
+                    <span class="sev-label">${sev}</span>
+                    <span class="sev-track"><span class="sev-fill ${sev}" style="width:${pct}%"></span></span>
+                    <span class="sev-value">${value}</span>
+                  </div>`;
+              }).join("")}
+              <div class="sev-note">${sevTotal ? `${sevTotal} findings classified across ${scans.length} assessments` : "No classified findings yet"}</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick launch -->
+        <section class="card dash-launch">
+          <div class="card-header">
+            <div class="card-title">Run an assessment</div>
+            <span class="badge badge-cyan">7 agents</span>
+          </div>
+          <p class="launch-hint">Paste a repository URL. The pipeline clones it, derives invariants, and probes a live target if one is provided.</p>
+          <div class="launch-input-row">
+            <input id="dash-repo-input" class="form-control" type="text" spellcheck="false"
+                   placeholder="https://github.com/owner/repository"
+                   value="${state.targetRepoUrl || ""}">
+          </div>
+          <button class="btn btn-primary" id="dash-btn-run-audit" style="width:100%;justify-content:center;">
+            ⚡ Analyze &amp; audit
           </button>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
-          <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Quick Targets:</span>
-          <button class="dash-preset-btn" data-url="https://github.com/Alouakhalid/SQL_Mentor" style="background: rgba(121,59,255,0.15); border: 1px solid rgba(121,59,255,0.35); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; cursor: pointer;">🎯 SQL_Mentor</button>
-          <button class="dash-preset-btn" data-url="https://github.com/Alouakhalid/Neurovain-Data-Analysis-AI" style="background: rgba(66,107,255,0.15); border: 1px solid rgba(66,107,255,0.35); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; cursor: pointer;">🧠 Neurovain-AI</button>
-          <button class="dash-preset-btn" data-url="https://github.com/Alouakhalid/chess_RL" style="background: rgba(36,200,245,0.15); border: 1px solid rgba(36,200,245,0.35); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.74rem; cursor: pointer;">♟️ chess_RL</button>
-        </div>
-      </div>
-
-      <!-- Charts Row -->
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 28px; margin-bottom: 32px;">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan-accent)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              Vulnerability Trends & Resolution (Historical)
-            </div>
-            <div style="display: flex; gap: 16px; font-size: 0.76rem;">
-              <span style="display: flex; align-items: center; gap: 6px; color: var(--critical);">
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--critical);"></span> Discovered
-              </span>
-              <span style="display: flex; align-items: center; gap: 6px; color: var(--cyan-accent);">
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--cyan-accent);"></span> Resolved
-              </span>
-            </div>
+          <div class="launch-presets">
+            <button class="chip" data-url="https://github.com/we45/Vulnerable-Flask-App">Vulnerable-Flask-App</button>
+            <button class="chip" data-url="https://github.com/renceInbox/fastapi-todo">fastapi-todo</button>
+            <button class="chip" data-url="https://github.com/Ishanoshada/flask-auth-app">flask-auth-app</button>
           </div>
-          <canvas id="trendChartCanvas" style="width: 100%; height: 210px;"></canvas>
-        </div>
-
-        <div class="card card-central-glow" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-          <div class="card-title" style="margin-bottom: 12px; font-size: 1.15rem;">Security Posture Score</div>
-          ${stats.security_score !== null && stats.security_score !== undefined ? `
-            <canvas id="gaugeCanvas" style="width: 180px; height: 180px;"></canvas>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
-              System Health: <span style="color: var(--cyan-accent); font-weight: 600;">Active Pipeline</span>
-            </div>
-          ` : `
-            <div style="height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-muted); margin-bottom: 8px;">N/A</div>
-              <span class="badge badge-secondary" style="color: var(--text-muted);">Not Measured</span>
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px;">
-              Run a completed assessment to compute posture score.
-            </div>
-          `}
-        </div>
+        </section>
       </div>
 
-      <!-- Tables Row -->
-      <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px;">
-        <!-- Recent Scans Table -->
-        <div class="card">
+      <!-- Recent + approvals -->
+      <div class="dash-grid-2">
+        <section class="card">
           <div class="card-header">
-            <div class="card-title">Recent Assessments</div>
-            <a href="javascript:void(0)" id="link-all-scans" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cyan-accent); text-decoration: none;">View Workspace &rarr;</a>
+            <div class="card-title">Recent assessments</div>
+            <a href="javascript:void(0)" id="link-all-scans" class="link-more">All assessments →</a>
           </div>
           <div class="table-wrapper">
             <table class="data-table">
               <thead>
-                <tr>
-                  <th>Scan ID</th>
-                  <th>Target</th>
-                  <th>Status</th>
-                  <th>Findings</th>
-                  <th>Action</th>
-                </tr>
+                <tr><th>Scan</th><th>Status</th><th>Findings</th><th>Confirmed</th><th>Started</th><th></th></tr>
               </thead>
               <tbody>
-                ${recentScans.slice(0, 4).map(s => `
+                ${scans.slice(0, 6).map(s => `
                   <tr>
-                    <td style="font-family: monospace; font-weight: 700; color: #fff;">${s.scan_id}</td>
-                    <td>${s.project_name || "Enterprise API"}</td>
-                    <td><span class="badge ${s.status === 'completed' ? 'badge-success' : 'badge-cyan'}">${s.status}</span></td>
-                    <td><span style="color: var(--critical); font-weight: 800;">${s.total_findings || 1}</span></td>
-                    <td>
-                      <button class="btn btn-outline btn-sm btn-view-scan" data-scan-id="${s.scan_id}">
-                        Telemetry
-                      </button>
-                    </td>
-                  </tr>
-                `).join("") || `
-                  <tr>
-                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">No assessments yet. Launch your first run.</td>
-                  </tr>
-                `}
+                    <td class="mono">${s.scan_id}</td>
+                    <td><span class="badge ${statusClass(s.status)}">${s.status}</span></td>
+                    <td>${num(s.total_findings)}</td>
+                    <td style="color: var(--success); font-weight: 700;">${num(s.verified_findings)}</td>
+                    <td class="dim">${relativeTime(s.start_time)}</td>
+                    <td><button class="btn btn-outline btn-sm btn-view-scan" data-scan-id="${s.scan_id}">Open</button></td>
+                  </tr>`).join("") || `
+                  <tr><td colspan="6" class="empty-row">No assessments yet — launch your first run above.</td></tr>`}
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <!-- Pending Approvals & Actions -->
-        <div class="card" style="border: 1px solid var(--border-gold);">
+        <section class="card">
           <div class="card-header">
-            <div class="card-title" style="color: var(--cyan-accent);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-              Pending Human Approvals (${stats.pending_approvals || 1})
-            </div>
-            <span class="badge badge-cyan">Action Required</span>
+            <div class="card-title">Approval queue</div>
+            ${pendingApprovals.length ? `<span class="badge badge-medium">${pendingApprovals.length} pending</span>` : `<span class="badge badge-success">clear</span>`}
           </div>
-          <div style="background: rgba(10, 10, 10, 0.6); padding: 18px; border-radius: var(--radius-md); border-left: 3px solid var(--cyan-accent); margin-bottom: 20px;">
-            <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 6px;">
-              BOLA / IDOR AST Remediation Patch
-            </div>
-            <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
-              File: <code style="color: var(--cyan-accent);">target_app.py:88</code> | Branch: <code style="color: var(--cyan-accent);">aegis-remediation</code>
-            </div>
-            <div style="display: flex; gap: 10px;">
-              <span class="badge badge-success">Unit Tests: 10/10 PASS</span>
-              <span class="badge badge-cyan">Exploit Closed: 403 OK</span>
-            </div>
+          <div class="approval-list">
+            ${pendingApprovals.slice(0, 3).map(a => `
+              <div class="approval-item">
+                <div class="approval-top">
+                  <span class="mono dim">${a.patch_id || "—"}</span>
+                  <span class="badge badge-medium">pending</span>
+                </div>
+                <div class="approval-title">${a.finding_title || "Remediation patch"}</div>
+                <div class="approval-meta">
+                  ${a.branch ? `<span class="mono">${a.branch}</span>` : ""}
+                  ${a.target_file ? `<span class="mono dim">${a.target_file}</span>` : ""}
+                </div>
+                <button class="btn btn-secondary btn-sm btn-goto-approvals">Review</button>
+              </div>`).join("") || `
+              <div class="empty-row" style="border:0;">No patches are waiting for a human decision.</div>`}
           </div>
-          <button class="btn btn-primary btn-sm" style="width: 100%;" id="dash-btn-go-approvals">
-            Review & Authorize Patch Application &rarr;
-          </button>
-        </div>
+          ${pendingApprovals.length > 3 ? `<button class="btn btn-outline btn-sm" id="dash-btn-go-approvals" style="width:100%;margin-top:10px;justify-content:center;">View all ${pendingApprovals.length}</button>` : ""}
+        </section>
       </div>
+
+      <!-- Confirmed findings preview -->
+      ${confirmed > 0 ? `
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">Proven findings</div>
+          <a href="javascript:void(0)" id="link-all-findings" class="link-more">Open findings →</a>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>Finding</th><th>Severity</th><th>CVSS</th><th>Endpoint</th><th>Verdict</th></tr></thead>
+            <tbody>
+              ${findings.slice(0, 5).map(f => `
+                <tr>
+                  <td>${f.title}</td>
+                  <td><span class="badge badge-${String(f.severity || "low").toLowerCase()}">${f.severity}</span></td>
+                  <td class="mono">${f.cvss_score ?? "—"}</td>
+                  <td class="mono dim">${f.http_method || ""} ${f.endpoint || ""}</td>
+                  <td><span class="badge ${String(f.verification_verdict).toUpperCase() === "CONFIRMED" ? "badge-critical" : "badge-outline"}">${f.verification_verdict || "—"}</span></td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+      </section>` : ""}
     </div>
   `;
 
-  // Draw Charts
+  // ---- charts ----
   setTimeout(() => {
-    const gaugeCanvas = document.getElementById("gaugeCanvas");
-    if (gaugeCanvas && stats.security_score !== null && stats.security_score !== undefined) {
-      drawRadialGauge(gaugeCanvas, stats.security_score, 100, "Security Posture", "#24C8F5");
+    const gauge = document.getElementById("gaugeCanvas");
+    if (gauge && stats.security_score !== null && stats.security_score !== undefined) {
+      drawRadialGauge(gauge, Number(stats.security_score), 100, "Posture", "#24C8F5");
     }
+  }, 30);
 
-    const trendCanvas = document.getElementById("trendChartCanvas");
-    if (trendCanvas) {
-      const labels = ["T-4", "T-3", "T-2", "T-1", "Current"];
-      const discovered = [4, 6, 3, 5, stats.total_findings || 2];
-      const resolved = [2, 4, 3, 5, stats.resolved_findings || 1];
-      drawLineTrendChart(trendCanvas, labels, discovered, resolved);
-    }
-  }, 50);
-
-  // Event Listeners
+  // ---- interactions ----
+  const go = id => document.getElementById(id)?.addEventListener("click", () => navigate("wizard"));
   document.getElementById("dash-btn-new-scan")?.addEventListener("click", () => navigate("wizard"));
   document.getElementById("dash-btn-view-pipeline")?.addEventListener("click", () => navigate("workspace"));
   document.getElementById("link-all-scans")?.addEventListener("click", () => navigate("workspace"));
+  document.getElementById("link-all-findings")?.addEventListener("click", () => navigate("findings"));
   document.getElementById("dash-btn-go-approvals")?.addEventListener("click", () => navigate("approvals"));
+  container.querySelectorAll(".btn-goto-approvals").forEach(b => b.addEventListener("click", () => navigate("approvals")));
 
-  const dashRepoInput = container.querySelector("#dash-repo-input");
-  const dashBtnAudit = container.querySelector("#dash-btn-run-audit");
-  if (dashBtnAudit && dashRepoInput) {
-    dashBtnAudit.addEventListener("click", () => {
-      const val = dashRepoInput.value.trim();
-      if (val) {
-        state.targetRepoUrl = val;
-        navigate("wizard");
-      }
-    });
-    dashRepoInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") dashBtnAudit.click();
-    });
-  }
+  const repoInput = container.querySelector("#dash-repo-input");
+  const startAudit = () => {
+    const val = (repoInput?.value || "").trim();
+    if (!val) return;
+    state.targetRepoUrl = val;
+    navigate("wizard");
+  };
+  container.querySelector("#dash-btn-run-audit")?.addEventListener("click", startAudit);
+  repoInput?.addEventListener("keydown", e => { if (e.key === "Enter") startAudit(); });
 
-  container.querySelectorAll(".dash-preset-btn").forEach(btn => {
+  container.querySelectorAll(".launch-presets .chip").forEach(btn => {
     btn.addEventListener("click", () => {
-      const u = btn.getAttribute("data-url");
-      if (u) {
-        state.targetRepoUrl = u;
-        navigate("wizard");
-      }
+      const url = btn.getAttribute("data-url");
+      if (repoInput) repoInput.value = url;
+      state.targetRepoUrl = url;
     });
   });
 
   container.querySelectorAll(".btn-view-scan").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const scanId = e.currentTarget.getAttribute("data-scan-id");
-      state.currentScanId = scanId;
+    btn.addEventListener("click", e => {
+      state.currentScanId = e.currentTarget.getAttribute("data-scan-id");
       navigate("workspace");
     });
   });

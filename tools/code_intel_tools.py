@@ -310,6 +310,36 @@ class CodeVisitor(ast.NodeVisitor):
                                 "description": f"Decorator guard applied to {node.name}"
                             })
 
+                    # Inline identity usage (Flask-style): handlers that read
+                    # the session / current_user / auth tokens inside their
+                    # body authenticate the caller even without a decorator.
+                    if not auth_required:
+                        param_names = set()
+                        try:
+                            param_names = {a.arg.lower() for a in getattr(node.args, "args", [])}
+                            param_names |= {a.arg.lower() for a in getattr(node.args, "kwonlyargs", [])}
+                        except Exception:
+                            pass
+                        identity_names = {"session", "current_user", "jwt", "auth", "login", "logged_in", "flask_login"}
+                        body_names = set()
+                        for sub in ast.walk(node):
+                            if isinstance(sub, ast.Name):
+                                body_names.add(sub.id.lower())
+                            elif isinstance(sub, ast.Attribute):
+                                body_names.add(sub.attr.lower())
+                        used_identity = (body_names & identity_names) or any(
+                            n in body_names for n in ("user_id", "authorization") if n not in param_names
+                        )
+                        if used_identity:
+                            auth_required = True
+                            authz_checks.append("session_identity_check")
+                            self.auth_mechanisms.append({
+                                "name": "session_identity_check",
+                                "kind": "authentication",
+                                "location": f"{self.rel_path}:{node.lineno}",
+                                "description": f"Inline session/identity usage detected in handler {node.name}"
+                            })
+
                     http_method = "GET" if method == "route" else method.upper()
                     clean_path = re.sub(r"[^a-zA-Z0-9_]+", "_", path).strip("_").lower()
                     route_id = f"rte_{http_method.lower()}_{clean_path}" if clean_path else f"rte_{http_method.lower()}_root"

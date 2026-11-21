@@ -286,7 +286,7 @@ export async function renderWizard(container, navigate, state, api, toast) {
         try {
           toast("Analyzing repository architecture & code structure...", "info");
           const report = await api.analyzeRepository(url, authToken || null);
-          analysisReport = report;
+          analysisReport = { ...(report || {}), repository_url: url };
           isAnalyzing = false;
           toast("Repository intelligence report ready!", "success");
           render();
@@ -296,6 +296,11 @@ export async function renderWizard(container, navigate, state, api, toast) {
           render();
         }
       };
+
+      repoInput.addEventListener("input", () => {
+        initialUrl = repoInput.value;
+        state.targetRepoUrl = initialUrl;
+      });
 
       repoInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") btnAnalyze.click();
@@ -348,7 +353,8 @@ export async function renderWizard(container, navigate, state, api, toast) {
     const btnLaunch = container.querySelector("#btn-launch-assessment");
     if (btnLaunch) {
       btnLaunch.onclick = async () => {
-        const url = repoInput.value.trim();
+        const typed = container.querySelector("#repo-url-input");
+        const url = ((typed && typed.value) || analysisReport?.repository_url || initialUrl || "").trim();
         if (!url) {
           toast("Please specify a target repository", "warning");
           return;

@@ -1,301 +1,256 @@
-export async function renderAttackSurface(container, navigate, state, api, showModal) {
-  const scanId = state.currentScanId || "scn_demo";
-  let endpoints = [
-    {
-      path: "/api/v1/orders/{order_id}",
-      method: "PATCH",
-      auth_required: true,
-      controller: "update_order",
-      params: "order_id (int), payload (JSON: delivery_address)",
-      risk: "CRITICAL",
-      description: "Updates order delivery details. BOLA vector traps unverified owner_id comparison.",
-      ast_file: "target_app.py",
-      ast_line: 88,
-      jwt_scope: "buyer:write",
-      rate_limit: "60 req/min"
-    },
-    {
-      path: "/api/v1/orders/{order_id}",
-      method: "GET",
-      auth_required: true,
-      controller: "get_order",
-      params: "order_id (int)",
-      risk: "HIGH",
-      description: "Retrieves order receipt by ID. Sensitive PII exposure vector.",
-      ast_file: "target_app.py",
-      ast_line: 54,
-      jwt_scope: "buyer:read",
-      rate_limit: "120 req/min"
-    },
-    {
-      path: "/api/v1/transfers/{transfer_id}",
-      method: "PATCH",
-      auth_required: true,
-      controller: "update_transfer",
-      params: "transfer_id (int), amount (float)",
-      risk: "HIGH",
-      description: "Financial balance adjustment entrypoint with currency validation.",
-      ast_file: "target_app.py",
-      ast_line: 112,
-      jwt_scope: "buyer:write",
-      rate_limit: "30 req/min"
-    },
-    {
-      path: "/api/v1/users/profile",
-      method: "GET",
-      auth_required: true,
-      controller: "get_profile",
-      params: "none",
-      risk: "LOW",
-      description: "Current authenticated session details and organizational claims.",
-      ast_file: "target_app.py",
-      ast_line: 32,
-      jwt_scope: "profile:read",
-      rate_limit: "300 req/min"
-    },
-    {
-      path: "/api/v1/catalog/items",
-      method: "GET",
-      auth_required: false,
-      controller: "list_catalog",
-      params: "category (str), limit (int), offset (int)",
-      risk: "LOW",
-      description: "Public marketplace catalog listings with pagination parameters.",
-      ast_file: "target_app.py",
-      ast_line: 18,
-      jwt_scope: "public",
-      rate_limit: "1000 req/min"
-    },
-    {
-      path: "/api/v1/auth/login",
-      method: "POST",
-      auth_required: false,
-      controller: "login_endpoint",
-      params: "username (str), password (str)",
-      risk: "MEDIUM",
-      description: "Credential verification issuing RSA-256 signed JWT tokens.",
-      ast_file: "target_app.py",
-      ast_line: 6,
-      jwt_scope: "public",
-      rate_limit: "10 req/min"
-    }
-  ];
+/**
+ * Attack surface map.
+ *
+ * Everything shown here comes from the AST extraction stored for the selected
+ * scan. The view deliberately does not invent scopes, rate limits or source
+ * anchors: when the analyzer did not record a value the cell says "not
+ * recorded", because a security console that guesses is worse than one that
+ * admits a gap.
+ */
 
+const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function methodClass(method) {
+  const m = String(method || "").toUpperCase();
+  if (m === "GET") return "badge-cyan-subtle";
+  if (m === "POST") return "badge-cyan";
+  if (m === "PATCH" || m === "PUT") return "badge-bronze";
+  if (m === "DELETE") return "badge-critical";
+  return "badge-outline";
+}
+
+function riskOf(ep) {
+  // Risk is a function of what the route can do, not a random label.
+  const mutating = MUTATING.has(String(ep.method || "").toUpperCase());
+  if (mutating && !ep.auth_required) return "CRITICAL";
+  if (mutating) return "HIGH";
+  if (ep.auth_required) return "MEDIUM";
+  return "LOW";
+}
+
+function riskClass(risk) {
+  if (risk === "CRITICAL") return "badge-critical";
+  if (risk === "HIGH") return "badge-warning";
+  if (risk === "MEDIUM") return "badge-cyan";
+  return "badge-success";
+}
+
+export async function renderAttackSurface(container, navigate, state, api, showModal) {
+  let scans = [];
   try {
-    const intel = await api.getCodeIntel(scanId);
-    if (intel && intel.endpoints && intel.endpoints.length > 0) {
-      endpoints = intel.endpoints.map(e => ({
-        ...e,
-        params: e.path_params ? e.path_params.join(", ") : "id (int)",
-        risk: e.method === "PATCH" ? "CRITICAL" : (e.auth_required ? "HIGH" : "LOW"),
-        description: e.description || `Autonomous mapped route handler for ${e.path}`,
-        ast_file: e.file || "target_app.py",
-        ast_line: e.line || 88,
-        jwt_scope: e.auth_required ? "bearer:jwt" : "public",
-        rate_limit: "60 req/min"
-      }));
-    }
+    scans = (await api.listScans()) || [];
+  } catch { /* offline */ }
+
+  let scanId = state.currentScanId || (scans[0] && scans[0].scan_id) || "";
+  if (!scanId) {
+    container.innerHTML = emptyState("No assessments yet", "The attack surface is derived from a scan's AST artifacts. Run your first assessment to populate it.", navigate);
+    bindEmpty(container, navigate);
+    return;
+  }
+  state.currentScanId = scanId;
+
+  let intel = null;
+  let error = null;
+  try {
+    intel = await api.getCodeIntel(scanId);
   } catch (e) {
-    console.warn("Using baseline attack surface data:", e);
+    error = e.message;
   }
 
-  const criticalCount = endpoints.filter(e => e.risk === "CRITICAL").length;
-  const highCount = endpoints.filter(e => e.risk === "HIGH").length;
-  const authCount = endpoints.filter(e => e.auth_required).length;
+  const endpoints = (intel && Array.isArray(intel.endpoints) ? intel.endpoints : []).map(e => ({
+    ...e,
+    path: e.path || "/",
+    method: String(e.method || "GET").toUpperCase(),
+    params: Array.isArray(e.path_params) && e.path_params.length ? e.path_params.join(", ") : "",
+    risk: riskOf(e)
+  }));
 
-  container.innerHTML = `
-    <div>
+  const invariants = (intel && Array.isArray(intel.invariants) ? intel.invariants : []);
+  const invariantRoutes = new Set(
+    invariants.map(i => `${String(i.http_method || "").toUpperCase()} ${i.endpoint_id || ""}`)
+  );
+
+  if (!endpoints.length) {
+    container.innerHTML = `
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
-            Reconnaissance Surface & Boundary Gate
-          </div>
-          <h1 class="page-title">Attack Surface Reconnaissance</h1>
-          <p class="page-subtitle">Interactive map of validated entry points, parameter contracts, and ScopeGate authorization boundaries.</p>
+          <div class="page-eyebrow">Reconnaissance surface</div>
+          <h1 class="page-title">Attack Surface</h1>
+          <p class="page-subtitle">No routes were extracted for this assessment.</p>
         </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="text" class="form-control" id="surface-search" placeholder="Search routes, params, or controllers..." style="width: 290px; padding: 8px 16px; font-size: 0.84rem;">
-          <button class="btn btn-secondary btn-sm" id="btn-export-surface">
-            Export Schema
-          </button>
-        </div>
+        ${scanPicker(scans, scanId)}
       </div>
+      <div class="card" style="padding:52px 32px;text-align:center;">
+        <div style="font-size:2.2rem;margin-bottom:12px;">🛰️</div>
+        <h2 style="font-family:var(--font-serif);font-style:italic;font-size:1.35rem;color:#fff;margin-bottom:8px;">No routes recorded</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;max-width:520px;margin:0 auto 20px;line-height:1.6;">
+          ${error ? `The code-intelligence endpoint returned: <code>${error}</code>` : "The AST pass found no FastAPI/Flask route decorators in this repository. This is expected for non-Python targets or empty repositories."}
+        </p>
+        <button class="btn btn-primary" id="surface-new-scan">Run a new assessment</button>
+      </div>`;
+    bindEmpty(container, navigate);
+    bindScanPicker(container, state, navigate);
+    return;
+  }
 
-      <!-- ScopeGate Status & Summary KPI Bar -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 24px;">
-        <div class="stat-card">
-          <div class="stat-label">Total Routes Mapped</div>
-          <div class="stat-value">${endpoints.length}</div>
-          <div class="stat-desc">Full AST Coverage</div>
-        </div>
+  const critical = endpoints.filter(e => e.risk === "CRITICAL").length;
+  const high = endpoints.filter(e => e.risk === "HIGH").length;
+  const authed = endpoints.filter(e => e.auth_required).length;
 
-        <div class="stat-card red">
-          <div class="stat-label">High / Critical Mutation Risk</div>
-          <div class="stat-value">${criticalCount + highCount}</div>
-          <div class="stat-desc">Targeted for Active Probing</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-label">Authenticated Routes</div>
-          <div class="stat-value">${authCount}</div>
-          <div class="stat-desc">Require Bearer Token Context</div>
-        </div>
-
-        <div class="stat-card green">
-          <div class="stat-label">ScopeGate Status</div>
-          <div class="stat-value" style="font-size: 1.35rem; margin-top: 4px;">ENFORCED</div>
-          <div class="stat-desc">Zero Out-of-Scope Requests</div>
-        </div>
+  container.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Reconnaissance surface</div>
+        <h1 class="page-title">Attack Surface</h1>
+        <p class="page-subtitle">Every route the AST pass extracted, with its authorization gate and inferred risk.</p>
       </div>
-
-      <!-- Main Surface Table Card -->
-      <div class="card">
-        <div class="card-header">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="card-title">Authorized Scope Surface (${endpoints.length} Routes)</div>
-            <span class="badge badge-cyan" style="font-size: 0.68rem;">JWT Dual-Tenant Active</span>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-outline btn-sm filter-method active" data-method="ALL">ALL</button>
-            <button class="btn btn-outline btn-sm filter-method" data-method="GET">GET</button>
-            <button class="btn btn-outline btn-sm filter-method" data-method="POST">POST</button>
-            <button class="btn btn-outline btn-sm filter-method" data-method="PATCH">PATCH</button>
-          </div>
-        </div>
-
-        <div class="table-wrapper">
-          <table class="data-table" id="surface-table">
-            <thead>
-              <tr>
-                <th>Method</th>
-                <th>Route Path</th>
-                <th>Parameter Schema</th>
-                <th>Authorization Gate</th>
-                <th>AST Controller</th>
-                <th>Risk Profile</th>
-                <th>Inspect</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${endpoints.map((ep, idx) => `
-                <tr class="surface-row" data-method="${ep.method}" data-search="${ep.path.toLowerCase()} ${ep.controller ? ep.controller.toLowerCase() : ''} ${ep.params.toLowerCase()}">
-                  <td>
-                    <span class="badge ${ep.method === 'PATCH' ? 'badge-bronze' : (ep.method === 'POST' ? 'badge-cyan' : (ep.method === 'DELETE' ? 'badge-critical' : 'badge-cyan-subtle'))}">
-                      ${ep.method}
-                    </span>
-                  </td>
-                  <td style="font-family: monospace; font-size: 0.88rem; color: #fff; font-weight: 600;">
-                    ${ep.path}
-                  </td>
-                  <td style="font-family: monospace; font-size: 0.78rem; color: var(--cyan-accent);">
-                    ${ep.params || "none"}
-                  </td>
-                  <td>
-                    <span class="badge ${ep.auth_required ? 'badge-success' : 'badge-outline'}">
-                      ${ep.auth_required ? 'Bearer JWT Required' : 'Public Access'}
-                    </span>
-                  </td>
-                  <td style="font-family: monospace; color: var(--cyan-accent); font-size: 0.82rem;">
-                    ${ep.controller || "handler"}
-                  </td>
-                  <td>
-                    <span class="badge ${ep.risk === 'CRITICAL' ? 'badge-critical' : (ep.risk === 'HIGH' ? 'badge-warning' : 'badge-success')}">
-                      ${ep.risk}
-                    </span>
-                  </td>
-                  <td>
-                    <button class="btn btn-secondary btn-sm btn-inspect-route" data-idx="${idx}" style="padding: 4px 10px; font-size: 0.74rem;">
-                      Contract
-                    </button>
-                  </td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
+      <div class="surface-tools">
+        ${scanPicker(scans, scanId)}
+        <input type="text" class="form-control" id="surface-search" placeholder="Filter routes…" spellcheck="false">
+        <button class="btn btn-secondary" id="btn-export-surface">Export JSON</button>
       </div>
     </div>
-  `;
 
-  // Search filter
-  const searchInput = document.getElementById("surface-search");
-  searchInput?.addEventListener("input", (e) => {
-    const val = e.target.value.toLowerCase();
+    <div class="kpi-grid kpi-grid-4">
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Routes</span><span class="stat-icon">🧭</span></div>
+        <div class="stat-value">${endpoints.length}</div>
+        <div class="stat-desc">Extracted from source</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Unauthenticated mutations</span><span class="stat-icon">🔥</span></div>
+        <div class="stat-value" style="color:${critical ? "var(--critical)" : "var(--success)"};">${critical}</div>
+        <div class="stat-desc">Highest priority</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Authenticated mutations</span><span class="stat-icon">🔐</span></div>
+        <div class="stat-value">${high}</div>
+        <div class="stat-desc">BOLA / IDOR candidates</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">With auth</span><span class="stat-icon">🎫</span></div>
+        <div class="stat-value">${authed}<span style="font-size:0.8rem;color:var(--text-muted);"> / ${endpoints.length}</span></div>
+        <div class="stat-desc">${invariants.length} invariants derived</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Routes</div>
+        <div class="filter-row">
+          ${["ALL", "GET", "POST", "PATCH", "DELETE"].map((m, i) =>
+            `<button class="btn btn-outline btn-sm filter-method ${i === 0 ? "active" : ""}" data-method="${m}">${m}</button>`).join("")}
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table" id="surface-table">
+          <thead>
+            <tr><th>Method</th><th>Path</th><th>Path params</th><th>Auth</th><th>Handler</th><th>Source</th><th>Risk</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${endpoints.map((ep, idx) => `
+              <tr class="surface-row" data-method="${ep.method}" data-search="${(ep.path + " " + (ep.controller || "")).toLowerCase()}">
+                <td><span class="badge ${methodClass(ep.method)}">${ep.method}</span></td>
+                <td class="mono" style="color:#fff;font-weight:600;">${ep.path}</td>
+                <td class="mono dim">${ep.params || "—"}</td>
+                <td><span class="badge ${ep.auth_required ? "badge-success" : "badge-outline"}">${ep.auth_required ? "required" : "public"}</span></td>
+                <td class="mono dim">${ep.controller || "—"}</td>
+                <td class="dim">${ep.source || "—"}</td>
+                <td><span class="badge ${riskClass(ep.risk)}">${ep.risk}</span></td>
+                <td><button class="btn btn-secondary btn-sm btn-inspect-route" data-idx="${idx}">Contract</button></td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+
+  bindScanPicker(container, state, navigate);
+
+  const search = container.querySelector("#surface-search");
+  const applyFilters = () => {
+    const term = (search?.value || "").toLowerCase();
+    const method = container.querySelector(".filter-method.active")?.getAttribute("data-method") || "ALL";
     container.querySelectorAll(".surface-row").forEach(row => {
-      const txt = row.getAttribute("data-search");
-      row.style.display = txt.includes(val) ? "" : "none";
+      const okTerm = row.getAttribute("data-search").includes(term);
+      const okMethod = method === "ALL" || row.getAttribute("data-method") === method;
+      row.style.display = okTerm && okMethod ? "" : "none";
     });
-  });
-
-  // Method filter
+  };
+  search?.addEventListener("input", applyFilters);
   container.querySelectorAll(".filter-method").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", e => {
       container.querySelectorAll(".filter-method").forEach(b => b.classList.remove("active"));
       e.currentTarget.classList.add("active");
-      const m = e.currentTarget.getAttribute("data-method");
-      container.querySelectorAll(".surface-row").forEach(row => {
-        const rowMethod = row.getAttribute("data-method");
-        row.style.display = (m === "ALL" || m === rowMethod) ? "" : "none";
-      });
+      applyFilters();
     });
   });
 
-  // Export schema button
-  document.getElementById("btn-export-surface")?.addEventListener("click", () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(endpoints, null, 2));
-    const dlAnchor = document.createElement("a");
-    dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", `attack_surface_${scanId}.json`);
-    dlAnchor.click();
-    dlAnchor.remove();
+  container.querySelector("#btn-export-surface")?.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ scan_id: scanId, endpoints, invariants }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `attack_surface_${scanId}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   });
 
-  // Inspect route modal
   container.querySelectorAll(".btn-inspect-route").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const idx = parseInt(e.currentTarget.getAttribute("data-idx"), 10);
-      const ep = endpoints[idx];
+    btn.addEventListener("click", e => {
+      const ep = endpoints[Number(e.currentTarget.getAttribute("data-idx"))];
       if (!ep || !showModal) return;
-
+      const linked = invariants.filter(i => String(i.endpoint_id || "") === String(ep.endpoint_id || ""));
       showModal({
-        title: `Route Security Contract — ${ep.method} ${ep.path}`,
+        title: `${ep.method} ${ep.path}`,
         bodyHtml: `
-          <div style="display: flex; flex-direction: column; gap: 16px;">
-            <div style="background: rgba(167, 139, 113, 0.08); border: 1px solid var(--border-gold); border-radius: var(--radius-md); padding: 14px 18px;">
-              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; letter-spacing: 0.12em;">Route Description</div>
-              <div style="color: #fff; font-size: 0.88rem; margin-top: 4px; line-height: 1.5;">${ep.description}</div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.82rem;">
-              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px 14px; border-radius: var(--radius-sm);">
-                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">AST Source Anchor</span>
-                <div style="font-family: monospace; color: var(--cyan-accent); margin-top: 4px;">${ep.ast_file}:${ep.ast_line}</div>
-              </div>
-
-              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px 14px; border-radius: var(--radius-sm);">
-                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">Required Scope</span>
-                <div style="font-family: monospace; color: #fff; margin-top: 4px;">${ep.jwt_scope}</div>
-              </div>
-
-              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px 14px; border-radius: var(--radius-sm);">
-                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">Rate Limiting Policy</span>
-                <div style="font-family: monospace; color: #fff; margin-top: 4px;">${ep.rate_limit}</div>
-              </div>
-
-              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 12px 14px; border-radius: var(--radius-sm);">
-                <span style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; font-weight: 700;">ScopeGate Isolation</span>
-                <div style="font-family: monospace; color: var(--success); margin-top: 4px;">ENFORCED (Host Whitelisted)</div>
-              </div>
-            </div>
-
-            <div style="background: #050505; border: 1px solid var(--border-gold); border-radius: var(--radius-sm); padding: 14px; font-family: monospace; font-size: 0.78rem;">
-              <div style="color: var(--cyan-accent); margin-bottom: 6px;">// Expected Parameter Signature</div>
-              <div style="color: #fff;">${ep.params}</div>
-            </div>
+          <div class="contract-grid">
+            <div class="contract-cell"><span>Authorization</span><b>${ep.auth_required ? "Required" : "None detected"}</b></div>
+            <div class="contract-cell"><span>Handler</span><b>${ep.controller || "not recorded"}</b></div>
+            <div class="contract-cell"><span>Path params</span><b>${ep.params || "none"}</b></div>
+            <div class="contract-cell"><span>Detected by</span><b>${ep.source || "not recorded"}</b></div>
+            <div class="contract-cell"><span>Endpoint id</span><b>${ep.endpoint_id || "—"}</b></div>
+            <div class="contract-cell"><span>Invariants</span><b>${linked.length}</b></div>
           </div>
+          ${linked.length ? `<div class="contract-code">${linked.map(i => `• ${i.statement || i.description || i.id}`).join("\n")}</div>`
+            : `<p class="dim" style="font-size:0.82rem;margin-top:12px;">No security invariant was derived for this route.</p>`}
         `,
         confirmText: "Close"
       });
     });
   });
+}
+
+function scanPicker(scans, current) {
+  if (!scans.length) return "";
+  return `
+    <select class="form-control" id="surface-scan-select" style="max-width:260px;">
+      ${scans.slice(0, 25).map(s =>
+        `<option value="${s.scan_id}" ${s.scan_id === current ? "selected" : ""}>${s.scan_id} · ${s.status}</option>`).join("")}
+    </select>`;
+}
+
+function bindScanPicker(container, state, navigate) {
+  container.querySelector("#surface-scan-select")?.addEventListener("change", e => {
+    state.currentScanId = e.target.value;
+    navigate("surface");
+  });
+}
+
+function bindEmpty(container, navigate) {
+  container.querySelector("#surface-new-scan")?.addEventListener("click", () => navigate("wizard"));
+}
+
+function emptyState(title, body, navigate) {
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Reconnaissance surface</div>
+        <h1 class="page-title">Attack Surface</h1>
+        <p class="page-subtitle">${body}</p>
+      </div>
+    </div>
+    <div class="card" style="padding:52px 32px;text-align:center;">
+      <div style="font-size:2.2rem;margin-bottom:12px;">🛰️</div>
+      <h2 style="font-family:var(--font-serif);font-style:italic;font-size:1.35rem;color:#fff;margin-bottom:8px;">${title}</h2>
+      <button class="btn btn-primary" id="surface-new-scan">Run an assessment</button>
+    </div>`;
 }

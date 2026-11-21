@@ -1,132 +1,130 @@
+/**
+ * Reports & compliance deliverables.
+ *
+ * Renders the report the backend actually generates for the selected scan and
+ * links to the real CSV/JSON exports. Nothing here is pre-written: if a scan
+ * has no findings the certificate says so.
+ */
+
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleString();
+}
+
+function sevBadge(sev) {
+  const s = String(sev || "low").toLowerCase();
+  return `<span class="badge badge-${s}">${String(sev || "—").toUpperCase()}</span>`;
+}
+
 export async function renderReports(container, navigate, state, api, toast) {
-  const scanId = state.currentScanId || "scn_demo";
-  let rep = {
-    scan_id: scanId,
-    report_type: "Comprehensive Security Audit & Remediation Certificate",
-    generated_at: new Date().toISOString(),
-    executive_summary: "Autonomous penetration test and code-level verification conducted by AegisTrace. All confirmed findings include cryptographic state mutation evidence and verified AST remediation patches.",
-    findings_count: 1,
-    resolved_count: 1,
-    compliance_assessment: {
-      OWASP_API_Top_10: "Compliant after AST patch application",
-      CWE_639_BOLA: "Remediated & verified in sandbox",
-      Zero_False_Positives: true
-    }
-  };
+  let scans = [];
+  try { scans = (await api.listScans()) || []; } catch { /* offline */ }
 
-  try {
-    const fetched = await api.getReport(scanId);
-    if (fetched) rep = fetched;
-  } catch (e) {
-    console.warn("Using baseline report:", e);
-  }
-
-  container.innerHTML = `
-    <div>
+  const scanId = state.currentScanId || (scans[0] && scans[0].scan_id) || "";
+  if (!scanId) {
+    container.innerHTML = `
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
-            Auditor Deliverables & Governance Attestation
-          </div>
-          <h1 class="page-title">Reports & Compliance Analytics</h1>
-          <p class="page-subtitle">Exportable executive attestation and technical security audit deliverables.</p>
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <a class="btn btn-secondary btn-sm" href="/api/v1/reports/${scanId}/export?format=csv" download>
-            Export CSV
-          </a>
-          <a class="btn btn-primary btn-sm" href="/api/v1/reports/${scanId}/export?format=json" download>
-            Export JSON
-          </a>
-          <button class="btn btn-secondary btn-sm" id="btn-print-report">
-            Print Certificate
-          </button>
+          <div class="page-eyebrow">Deliverables</div>
+          <h1 class="page-title">Reports</h1>
+          <p class="page-subtitle">Reports are generated from a completed assessment.</p>
         </div>
       </div>
+      <div class="card" style="padding:52px 32px;text-align:center;">
+        <div style="font-size:2.2rem;margin-bottom:12px;">📄</div>
+        <h2 style="font-family:var(--font-serif);font-style:italic;font-size:1.35rem;color:#fff;margin-bottom:8px;">Nothing to report yet</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:20px;">Run an assessment and its certificate will appear here.</p>
+        <button class="btn btn-primary" id="reports-new-scan">Run an assessment</button>
+      </div>`;
+    container.querySelector("#reports-new-scan")?.addEventListener("click", () => navigate("wizard"));
+    return;
+  }
+  state.currentScanId = scanId;
 
-      <!-- Certificate Hero Card -->
-      <div class="card card-glass" style="margin-bottom: 24px; border: 1px solid var(--border-gold); box-shadow: 0 0 50px rgba(167, 139, 113, 0.12);">
-        <div class="card-header" style="border-bottom: 1px solid rgba(167, 139, 113, 0.15);">
-          <div>
-            <div style="font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 4px;">
-              Official Security Intelligence Attestation
-            </div>
-            <div class="card-title" style="font-size: 1.3rem;">${rep.report_type}</div>
-            <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 4px;">
-              Scan ID: <code style="color: var(--cyan-accent);">${rep.scan_id}</code> | Timestamp: ${rep.generated_at}
-            </div>
-          </div>
-          <span class="badge badge-cyan" style="font-size: 0.8rem; padding: 6px 14px;">Audit Certified</span>
-        </div>
+  let rep = null;
+  let error = null;
+  try {
+    rep = await api.getReport(scanId);
+  } catch (e) {
+    error = e.message;
+  }
 
-        <div style="padding: 24px;">
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); padding: 20px; border-radius: var(--radius-md); margin-bottom: 24px; line-height: 1.7; font-size: 0.92rem; color: var(--cyan-accent);">
-            <strong style="color: #fff; display: block; font-size: 1rem; margin-bottom: 8px; font-family: 'Inter', serif; font-style: italic;">
-              Executive Governance Summary:
-            </strong>
-            ${rep.executive_summary}
-          </div>
+  const content = (rep && rep.content_json) || {};
+  const findings = Array.isArray(content.findings) ? content.findings : [];
+  const confirmed = findings.filter(f => String(f.verdict || "").toUpperCase() === "CONFIRMED").length;
+  const fixed = findings.filter(f => String(f.status || "").toLowerCase() === "fixed").length;
 
-          <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 16px; font-family: 'Inter', serif; font-style: italic;">
-            Regulatory & Standard Compliance Assessment
-          </h3>
-
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px;">
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 18px; border-radius: var(--radius-md); border-left: 3px solid var(--cyan-accent); border-top: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
-              <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">OWASP API Security Top 10</div>
-              <div style="font-size: 0.92rem; color: #fff; font-weight: 700; margin-top: 6px;">API1:2023 Broken Object Level Auth</div>
-              <div style="font-size: 0.76rem; color: var(--success); margin-top: 8px; font-weight: 600;">100% Remediated via AST Guard</div>
-            </div>
-
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 18px; border-radius: var(--radius-md); border-left: 3px solid var(--cyan-accent); border-top: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
-              <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">CWE / SANS Top 25</div>
-              <div style="font-size: 0.92rem; color: #fff; font-weight: 700; margin-top: 6px;">CWE-639 Authorization Bypass</div>
-              <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 8px; font-weight: 600;">Zero False Positives Guaranteed</div>
-            </div>
-
-            <div style="background: rgba(255, 255, 255, 0.02); padding: 18px; border-radius: var(--radius-md); border-left: 3px solid var(--success); border-top: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
-              <div style="font-size: 0.74rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Cryptographic Integrity</div>
-              <div style="font-size: 0.92rem; color: #fff; font-weight: 700; margin-top: 6px;">SHA-256 State Hashing</div>
-              <div style="font-size: 0.76rem; color: var(--success); margin-top: 8px; font-weight: 600;">Immutable SQLite Vault Certified</div>
-            </div>
-          </div>
-
-          <!-- Deliverables Table -->
-          <div class="card" style="background: rgba(0,0,0,0.4);">
-            <div class="card-header">
-              <div class="card-title">Verified Findings & Remediation Deliverables</div>
-            </div>
-            <div class="table-wrapper">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Finding ID</th>
-                    <th>Vulnerability Title</th>
-                    <th>CWE</th>
-                    <th>Severity</th>
-                    <th>Reproduction Consistency</th>
-                    <th>Remediation Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="font-family: monospace; font-weight: 700; color: #fff;">fnd_prod_001</td>
-                    <td style="color: #fff; font-weight: 600;">Broken Object-Level Authorization (BOLA) in Order Mutation</td>
-                    <td><span class="badge badge-cyan">CWE-639</span></td>
-                    <td><span class="badge badge-critical">CRITICAL (8.8)</span></td>
-                    <td><span style="color: var(--success); font-weight: 700;">3/3 Consistent</span></td>
-                    <td><span class="badge badge-success">AST PATCH MERGED</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+  container.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Deliverables</div>
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">Auditor-ready evidence for the selected assessment.</p>
+      </div>
+      <div class="surface-tools">
+        <select class="form-control" id="reports-scan-select" style="max-width:250px;">
+          ${scans.slice(0, 25).map(s => `<option value="${s.scan_id}" ${s.scan_id === scanId ? "selected" : ""}>${s.scan_id} · ${s.status}</option>`).join("")}
+        </select>
+        <a class="btn btn-secondary" href="/api/v1/reports/${encodeURIComponent(scanId)}/export?format=csv" download>CSV</a>
+        <a class="btn btn-secondary" href="/api/v1/reports/${encodeURIComponent(scanId)}/export?format=json" download>JSON</a>
+        <button class="btn btn-primary" id="btn-print-report">Print</button>
       </div>
     </div>
+
+    ${error ? `<div class="dash-alert">Could not load the report: ${error}</div>` : ""}
+
+    ${!rep ? "" : `
+    <div class="card report-cert">
+      <div class="report-cert-head">
+        <div>
+          <div class="page-eyebrow">Security attestation</div>
+          <div class="card-title" style="font-size:1.3rem;">${rep.report_type || "Security Assessment"}</div>
+          <div class="report-meta">
+            <span class="mono">${rep.scan_id}</span>
+            <span>·</span>
+            <span>${fmtDate(rep.generated_at)}</span>
+          </div>
+        </div>
+        <div class="report-cert-badges">
+          <span class="badge badge-cyan">${findings.length} findings</span>
+          <span class="badge badge-success">${confirmed} confirmed</span>
+          <span class="badge badge-outline">${fixed} fixed</span>
+        </div>
+      </div>
+
+      <div class="report-summary">${rep.executive_summary || "No executive summary was produced for this assessment."}</div>
+
+      <div class="report-section-title">Findings in this assessment</div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>ID</th><th>Title</th><th>CWE</th><th>Severity</th><th>CVSS</th><th>Verdict</th><th>Status</th><th>Endpoint</th></tr></thead>
+          <tbody>
+            ${findings.map(f => `
+              <tr>
+                <td class="mono dim">${f.id || "—"}</td>
+                <td>${f.title || "—"}</td>
+                <td>${f.category ? `<span class="badge badge-outline">${f.category}</span>` : "—"}</td>
+                <td>${sevBadge(f.severity)}</td>
+                <td class="mono">${f.cvss_score ?? "—"}</td>
+                <td><span class="badge ${String(f.verdict || "").toUpperCase() === "CONFIRMED" ? "badge-critical" : "badge-outline"}">${f.verdict || "—"}</span></td>
+                <td class="dim">${f.status || "—"}</td>
+                <td class="mono dim">${f.endpoint || "—"}</td>
+              </tr>`).join("") || `<tr><td colspan="8" class="empty-row">This assessment recorded no findings.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="report-footnote">
+        Exports above are generated live from the evidence vault. CSV and JSON contain the same rows you see here.
+      </p>
+    </div>`}
   `;
 
-  document.getElementById("btn-print-report")?.addEventListener("click", () => {
-    window.print();
+  container.querySelector("#reports-scan-select")?.addEventListener("change", e => {
+    state.currentScanId = e.target.value;
+    navigate("reports");
   });
+  container.querySelector("#btn-print-report")?.addEventListener("click", () => window.print());
+  if (toast && rep) toast("Report loaded from the evidence vault", "success");
 }

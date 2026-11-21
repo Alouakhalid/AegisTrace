@@ -24,9 +24,29 @@ def mask_sensitive_data(val: Any) -> Any:
         return [mask_sensitive_data(item) for item in val]
     return val
 
+DEFAULT_DB_FILENAME = "aegis_production.db"
+
+
+def _default_db_path() -> str:
+    """Resolve the on-disk evidence vault.
+
+    An in-memory default meant the entire evidence chain (scans, findings,
+    patches, approvals, audit log) vanished on every process restart, which
+    defeats the point of an immutable audit trail. The vault now lives on disk
+    unless a caller explicitly asks for ``:memory:`` (tests do).
+
+    Override with ``AEGIS_DB_PATH``.
+    """
+    env_path = os.environ.get("AEGIS_DB_PATH")
+    if env_path:
+        return env_path
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(project_root, DEFAULT_DB_FILENAME)
+
+
 class AegisDatabase:
-    def __init__(self, db_path: str = ":memory:"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        self.db_path = db_path if db_path is not None else _default_db_path()
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON;")

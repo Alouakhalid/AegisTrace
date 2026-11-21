@@ -319,7 +319,7 @@ body {
   height: 8px;
   border-radius: 50%;
   background: var(--success);
-  animation: pulseDot 2s infinite;
+  animation: pulseDot 2s ease-out 3;
 }
 
 .live-pill .live-tag {
@@ -391,9 +391,13 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 320px;
+  min-width: 0;
+  max-width: min(440px, calc(100vw - 32px));
   animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.live-pill.degraded .green-dot { background: var(--warning); box-shadow: 0 0 10px var(--warning); }
+.live-pill.degraded .status-text { color: var(--warning); }
 
 .toast.success { border-color: var(--success); }
 .toast.critical { border-color: var(--critical); }

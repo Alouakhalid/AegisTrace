@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import time
@@ -225,6 +226,45 @@ class CodeIntelligenceAgent:
                     "applies_to_route_ids": [r["route_id"]],
                     "source": "code",
                     "confidence": 0.85
+                })
+
+            # Fallback for applications whose state lives in module-level stores
+            # (dicts) instead of declarative ORM models: a mutating route that
+            # authenticates the caller but carries no ownership/authorization
+            # check is a candidate ownership invariant keyed by the REST
+            # resource name. Authentication-only dependencies such as
+            # get_current_user do NOT count as an ownership check.
+            authn_keys = ("auth", "login", "token", "jwt", "session", "current_user")
+            authz_keys = ("owner", "tenant", "perm", "role", "scope", "protect", "guard", "require", "admin", "authoriz")
+            def _has_ownership_check(checks: List[str]) -> bool:
+                for chk in checks:
+                    c = chk.lower()
+                    if any(k in c for k in authz_keys) or not any(k in c for k in authn_keys):
+                        return True
+                return False
+            if (
+                (r["method"] in ["POST", "PUT", "PATCH", "DELETE"] or (r["method"] == "GET" and "{" in r["path"]))
+                and r["auth_required"]
+                and not _has_ownership_check(r["authz_checks"])
+                and not any(inv.get("applies_to_route_ids") == [r["route_id"]] for inv in invariants)
+            ):
+                segments = [s for s in r["path"].strip("/").split("/") if s and not s.startswith("{")]
+                table = re.sub(r"[^a-z0-9_]", "", (segments[-1] if segments else "resource").lower()) or "resource"
+                param = re.sub(r"[^a-z0-9_]", "", r["path"].strip("/").split("/")[-1].strip("{}").lower()) or "id"
+                owner_field = param if param.endswith("_id") else "user_id"
+                inv_id = f"inv_{r['method'].lower()}_{table}_{param}_ownership"
+                access_verb = "Mutations to" if r["method"] != "GET" else "Access to"
+                invariants.append({
+                    "invariant_id": inv_id,
+                    "statement": (
+                        f"{access_verb} {table} records via {r['method']} {r['path']} are restricted to the "
+                        f"record owner ({table}.{owner_field}); any other authenticated principal must be "
+                        f"rejected with 403 and cause no state change."
+                    ),
+                    "kind": "ownership",
+                    "applies_to_route_ids": [r["route_id"]],
+                    "source": "code",
+                    "confidence": 0.80
                 })
 
         seen_ids = set()

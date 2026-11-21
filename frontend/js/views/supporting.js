@@ -5,71 +5,15 @@ export async function renderSupporting(container, navigate, state, api, toast) {
   try {
     auditLogs = await api.getAuditLogs ? await api.getAuditLogs() : await api.req("/api/v1/audit-logs");
   } catch (e) {
-    console.warn("Using baseline audit logs:", e);
-    auditLogs = [
-      {
-        event_id: "evt_9901",
-        timestamp: new Date().toISOString(),
-        event_type: "APPROVAL_GATE",
-        operator: "Security Lead (admin@aegistrace.luxury)",
-        action: "Approved AST remediation patch ptch_bola_orders_01",
-        sha256_hash: "7d1a2f64e29b01c3d4f88190e21bc5672901a88b1f5e8880291724ac661e8920",
-        status: "COMMITTED"
-      },
-      {
-        event_id: "evt_9900",
-        timestamp: new Date().toISOString(),
-        event_type: "EVIDENCE_LOCK",
-        operator: "ArbitrationAgent (EvidenceStore)",
-        action: "Cryptographic state snapshot locked for Finding fnd_prod_001",
-        sha256_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        status: "IMMUTABLE"
-      },
-      {
-        event_id: "evt_9899",
-        timestamp: new Date().toISOString(),
-        event_type: "SANDBOX_EXEC",
-        operator: "DynamicTestingAgent",
-        action: "Isolated exploit replay 3/3 executions confirmed BOLA state change",
-        sha256_hash: "c81e728d9d4c2f636f067f89cc14862c1ecd979fb6334a1a5b81048b30e0179a",
-        status: "VERIFIED"
-      }
-    ];
+    console.warn("Audit log unavailable:", e);
+    auditLogs = [];
   }
 
   try {
     notifications = await api.getNotifications ? await api.getNotifications() : await api.req("/api/v1/notifications");
   } catch (e) {
-    console.warn("Using baseline notifications:", e);
-    notifications = [
-      {
-        id: "ntf_01",
-        title: "Patch Approval Pending",
-        message: "AST Remediation patch for fnd_prod_001 requires operator signature.",
-        severity: "HIGH",
-        timestamp: "2 minutes ago",
-        read: false,
-        category: "APPROVAL"
-      },
-      {
-        id: "ntf_02",
-        title: "Forensic State Mutation Trapped",
-        message: "EvidenceStore arbitration confirmed 100% ground-truth BOLA vulnerability.",
-        severity: "CRITICAL",
-        timestamp: "12 minutes ago",
-        read: false,
-        category: "VULNERABILITY"
-      },
-      {
-        id: "ntf_03",
-        title: "7-Agent Pipeline Cycle Completed",
-        message: "Autonomous scan scn_demo completed with 0 false positives.",
-        severity: "INFO",
-        timestamp: "35 minutes ago",
-        read: true,
-        category: "PIPELINE"
-      }
-    ];
+    console.warn("Notifications unavailable:", e);
+    notifications = [];
   }
 
   container.innerHTML = `
@@ -194,7 +138,7 @@ export async function renderSupporting(container, navigate, state, api, toast) {
                     <td><code style="font-size: 0.72rem; color: var(--cyan-accent);">${(l.sha256_hash || '').substring(0, 16)}...</code></td>
                     <td><span class="badge badge-success">${l.status}</span></td>
                   </tr>
-                `).join("")}
+                `).join("") || `<tr><td colspan="7" class="empty-row">No audit events are stored yet.</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -227,7 +171,7 @@ export async function renderSupporting(container, navigate, state, api, toast) {
 
                 <button class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 0.72rem;">Dismiss</button>
               </div>
-            `).join("")}
+            `).join("") || `<div class="empty-row" style="border:0;">You have no notifications.</div>`}
           </div>
         </div>
       </div>

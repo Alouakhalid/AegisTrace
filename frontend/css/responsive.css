@@ -1,0 +1,248 @@
+/* ==========================================================================
+   AegisTrace — Responsive Layer
+   Breakpoints: 1280 / 1024 (drawer) / 768 / 560 / 400
+   The dashboard shell is sidebar + content. Below 1024px the sidebar becomes
+   an off-canvas drawer so the content always owns the full viewport.
+   ========================================================================== */
+
+/* ---------- Shared shells ---------- */
+.svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--primary), var(--electric-blue));
+  color: #fff;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.9rem;
+  box-shadow: 0 0 16px rgba(121, 59, 255, 0.4);
+}
+
+.brand-text { display: flex; flex-direction: column; min-width: 0; }
+.sidebar-avatar { background: var(--bg-surface-elevated); color: var(--cyan-accent); font-family: var(--font-mono); font-weight: 700; border: 1px solid var(--border-cyan); }
+.sidebar-close {
+  display: none;
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.sidebar-close:hover { color: #fff; background: var(--bg-surface-hover); }
+
+.nav-item { position: relative; }
+.nav-item > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.icon-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.icon-btn:hover { color: #fff; border-color: var(--border-strong); background: var(--bg-surface-hover); }
+.icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+.hamburger { display: none; }
+
+/* ---------- Command palette trigger ---------- */
+.cmd-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.cmd-trigger:hover { color: var(--text-primary); border-color: var(--border-strong); background: rgba(255, 255, 255, 0.06); }
+.cmd-trigger svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.cmd-trigger kbd {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-secondary);
+}
+
+/* ---------- Drawer scrim ---------- */
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 14, 0.72);
+  backdrop-filter: blur(3px);
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+body.drawer-open .drawer-scrim { opacity: 1; pointer-events: auto; }
+
+/* ==========================================================================
+   ≤ 1280px — tighten the shell
+   ========================================================================== */
+@media (max-width: 1280px) {
+  .page-content { padding: 26px 26px 40px; }
+  .topbar { padding: 0 24px; }
+  .cmd-trigger-label { display: none; }
+}
+
+/* ==========================================================================
+   ≤ 1024px — sidebar becomes an off-canvas drawer
+   ========================================================================== */
+@media (max-width: 1024px) {
+  :root { --sidebar-width: 288px; }
+
+  .hamburger { display: inline-flex; }
+  .sidebar-close { display: block; }
+
+  .sidebar {
+    transform: translateX(-104%);
+    transition: transform var(--transition-normal);
+    box-shadow: 24px 0 60px rgba(0, 0, 0, 0.6);
+    will-change: transform;
+  }
+  body.drawer-open .sidebar { transform: translateX(0); }
+
+  .main-wrapper { margin-left: 0 !important; width: 100%; }
+
+  .breadcrumb-path .crumb-root,
+  .breadcrumb-path .crumb-sep { display: none; }
+
+  .project-select-wrapper { display: none; }
+
+  body.landing-mode #main-sidebar,
+  body.auth-mode #main-sidebar { transform: translateX(-104%); }
+
+  /* content grids collapse */
+  .kpi-grid,
+  .grid-2,
+  .grid-3,
+  .grid-4 { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ==========================================================================
+   ≤ 768px — tablet / large phone
+   ========================================================================== */
+@media (max-width: 768px) {
+  .topbar { padding: 0 14px; gap: 10px; height: 62px; }
+  .topbar-left { gap: 10px; min-width: 0; flex: 1; }
+  .topbar-right { gap: 8px; }
+
+  .breadcrumb-path { font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .live-pill { padding: 4px 8px; }
+  .live-pill .status-text { display: none; }
+
+  .page-content { padding: 18px 14px 48px; }
+
+  .page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .page-title { font-size: 1.4rem; }
+  .page-subtitle { font-size: 0.86rem; }
+
+  .kpi-grid,
+  .grid-2,
+  .grid-3,
+  .grid-4 { grid-template-columns: 1fr !important; }
+
+  /* Tables: allow horizontal scroll instead of destroying layout */
+  .table-wrapper,
+  .data-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 620px; }
+
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 1.7rem; }
+
+  .btn { padding: 8px 14px; font-size: 0.82rem; }
+  .btn-lg { padding: 12px 22px !important; font-size: 0.9rem !important; }
+
+  .hide-sm { display: none !important; }
+
+  /* modal fits the screen */
+  .modal-dialog { width: calc(100vw - 24px) !important; max-width: none; max-height: 88vh; }
+  .cmdk-dialog { width: calc(100vw - 20px) !important; margin-top: 8vh; }
+  .cmdk-trigger-label { display: none; }
+
+  /* Sidebar nav gets roomier for thumbs */
+  .nav-item { padding: 11px 14px; font-size: 0.9rem; }
+}
+
+/* ==========================================================================
+   ≤ 560px — phone
+   ========================================================================== */
+@media (max-width: 560px) {
+  .hide-xs { display: none; }
+  .btn-plus { font-size: 1.05rem; }
+  #btn-new-assessment { padding: 8px 12px; }
+
+  .cmd-trigger { display: none; }
+
+  .page-title { font-size: 1.22rem; }
+  .card { padding: 16px !important; border-radius: var(--radius-md) !important; }
+
+  .toast { max-width: calc(100vw - 24px); }
+
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer .btn { width: 100%; }
+}
+
+/* ==========================================================================
+   ≤ 400px — small phone
+   ========================================================================== */
+@media (max-width: 400px) {
+  .page-content { padding: 14px 10px 40px; }
+  .live-pill { display: none; }
+  .stat-value { font-size: 1.5rem; }
+}
+
+/* ==========================================================================
+   Accessibility & motion preferences
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visibility for keyboard users */
+:focus-visible {
+  outline: 2px solid var(--cyan-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* Print: drop chrome, keep the report content */
+@media print {
+  .sidebar, .topbar, #toast-container, .cmdk-overlay, .drawer-scrim { display: none !important; }
+  .main-wrapper { margin: 0 !important; }
+  body { background: #fff; color: #000; }
+}

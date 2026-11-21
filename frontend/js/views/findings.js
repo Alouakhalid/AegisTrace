@@ -199,10 +199,10 @@ export async function renderFindings(container, navigate, state, api, showModal)
           <div>
             <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
               <div>
-                <strong style="color: #f87171; font-size: 0.95rem;">Cryptographic State Mutation Trapped!</strong>
-                <div style="font-size: 0.78rem; color: var(--cyan-accent); margin-top: 2px;">Cross-tenant unauthorized write succeeded with HTTP 200 OK.</div>
+                <strong style="color: #f87171; font-size: 0.95rem;">${evd.db_mutation_trapped ? "Cryptographic state mutation trapped" : "Replay recorded"}</strong>
+                <div style="font-size: 0.78rem; color: var(--cyan-accent); margin-top: 2px;">${evd.http_method || ""} ${evd.http_status ?? ""} as ${evd.identity_used || "recorded identity"}.</div>
               </div>
-              <span class="badge badge-success">3/3 Consistent Runs</span>
+              <span class="badge ${evd.reproduction_successes && evd.reproduction_successes === evd.reproduction_attempts ? 'badge-success' : 'badge-outline'}">${evd.reproduction_attempts ? `${evd.reproduction_successes}/${evd.reproduction_attempts} replays` : "no replay data"}</span>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">

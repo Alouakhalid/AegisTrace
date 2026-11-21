@@ -1,108 +1,146 @@
-export function renderRemediation(container, navigate, state) {
-  const diffLines = [
-    { type: "info", text: "--- a/target_app.py (Original AST Node)" },
-    { type: "info", text: "+++ b/target_app.py (Remediated AST Node)" },
-    { type: "info", text: "@@ -88,6 +88,9 @@ def update_order(order_id: int, payload: dict, user = Depends(get_current_user)):" },
-    { type: "ctx",  text: "     order = db.query(Order).filter(Order.id == order_id).first()" },
-    { type: "ctx",  text: "     if not order:" },
-    { type: "ctx",  text: "         raise HTTPException(status_code=404, detail=\"Order not found\")" },
-    { type: "add",  text: "+    if order.owner_id != user.id and user.role != \"admin\":" },
-    { type: "add",  text: "+        raise HTTPException(status_code=403, detail=\"Access forbidden: not resource owner\")" },
-    { type: "ctx",  text: "     order.delivery_address = payload.get(\"delivery_address\", order.delivery_address)" },
-    { type: "ctx",  text: "     db.commit()" },
-    { type: "ctx",  text: "     return order" }
-  ];
+/**
+ * Remediation center.
+ *
+ * Shows the patches the Remediation agent actually produced: the stored diff,
+ * its SHA-256, the branch it was committed to and the review decision. The test
+ * outcome is only reported when the pipeline recorded one — the old screen
+ * printed "10/10 PASSED" and a fabricated pytest log for every visit.
+ */
 
-  container.innerHTML = `
-    <div>
+function diffLineClass(line) {
+  if (line.startsWith("+++") || line.startsWith("---")) return "info";
+  if (line.startsWith("@@")) return "hunk";
+  if (line.startsWith("+")) return "add";
+  if (line.startsWith("-")) return "del";
+  return "ctx";
+}
+
+function renderDiff(diff) {
+  if (!diff || !String(diff).trim()) return `<p class="empty-row" style="border:0;">No diff was stored for this patch.</p>`;
+  return String(diff).split("\n").map(line => {
+    const cls = diffLineClass(line);
+    return `<div class="diff-line ${cls}">${line.replace(/</g, "&lt;") || "&nbsp;"}</div>`;
+  }).join("");
+}
+
+export async function renderRemediation(container, navigate, state, api, toast) {
+  let approvals = [];
+  try { approvals = (await api.listApprovals()) || []; } catch { /* offline */ }
+
+  const pending = approvals.filter(a => String(a.status || "").toLowerCase() === "pending");
+  const decided = approvals.filter(a => String(a.status || "").toLowerCase() !== "pending");
+  const list = pending.length ? pending : approvals;
+  const selected = list.find(a => a.patch_id === state.selectedPatchId) || list[0] || null;
+  if (selected) state.selectedPatchId = selected.patch_id;
+
+  if (!approvals.length) {
+    container.innerHTML = `
       <div class="page-header">
         <div>
-          <div style="font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cyan-accent); font-weight: 700; margin-bottom: 6px;">
-            Deterministic AST Patch Synthesis & Validation
-          </div>
-          <h1 class="page-title">Remediation Center & AST Patch Synthesis</h1>
-          <p class="page-subtitle">Deterministic code repair with AST grammar validation, dual test execution, and exploit closure proofs.</p>
-        </div>
-        <div style="display: flex; gap: 12px;">
-          <button class="btn btn-secondary btn-sm" id="remed-btn-evidence">
-            &larr; View Forensic Evidence
-          </button>
-          <button class="btn btn-primary btn-sm" id="remed-btn-approval">
-            Proceed to Human Approval &rarr;
-          </button>
+          <div class="page-eyebrow">Remediation</div>
+          <h1 class="page-title">Remediation Center</h1>
+          <p class="page-subtitle">Patches are only produced for findings that survived sandbox replay.</p>
         </div>
       </div>
+      <div class="card" style="padding:52px 32px;text-align:center;">
+        <div style="font-size:2.2rem;margin-bottom:12px;">🩹</div>
+        <h2 style="font-family:var(--font-serif);font-style:italic;font-size:1.35rem;color:#fff;margin-bottom:8px;">No patches yet</h2>
+        <p style="color:var(--text-muted);font-size:0.88rem;max-width:520px;margin:0 auto 20px;line-height:1.6;">
+          A patch requires a confirmed finding. Static-only assessments stop before this stage by design.
+        </p>
+        <button class="btn btn-primary" id="remed-new-scan">Run an assessment</button>
+      </div>`;
+    container.querySelector("#remed-new-scan")?.addEventListener("click", () => navigate("wizard"));
+    return;
+  }
 
-      <!-- Test Suites Validation Cards -->
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px;">
-        <div class="card card-glass" style="border-left: 3px solid var(--success);">
-          <div style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Unit Test Suite</div>
-          <div style="display: flex; align-items: baseline; gap: 10px;">
-            <div style="font-size: 2rem; font-weight: 800; color: var(--success); font-family: 'Inter', serif; font-style: italic;">10 / 10</div>
-            <span class="badge badge-success">PASSED</span>
-          </div>
-          <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 6px;">Zero regressions in existing business logic workflows.</div>
-        </div>
-
-        <div class="card card-glass" style="border-left: 3px solid var(--cyan-accent);">
-          <div style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Exploit Replay Test</div>
-          <div style="display: flex; align-items: baseline; gap: 10px;">
-            <div style="font-size: 2rem; font-weight: 800; color: var(--cyan-accent); font-family: 'Inter', serif; font-style: italic;">HTTP 403</div>
-            <span class="badge badge-cyan">EXPLOIT CLOSED</span>
-          </div>
-          <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 6px;">Unauthorized cross-tenant mutation strictly forbidden.</div>
-        </div>
-
-        <div class="card card-glass" style="border-left: 3px solid var(--cyan-accent);">
-          <div style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">AST Syntax Integrity</div>
-          <div style="display: flex; align-items: baseline; gap: 10px;">
-            <div style="font-size: 2rem; font-weight: 800; color: #fff; font-family: 'Inter', serif; font-style: italic;">100%</div>
-            <span class="badge badge-cyan-subtle">SYNTAX VALID</span>
-          </div>
-          <div style="font-size: 0.76rem; color: var(--cyan-accent); margin-top: 6px;">Isolated git branch: <code style="color: var(--cyan-accent);">aegis-remediation-branch</code></div>
-        </div>
+  container.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-eyebrow">Remediation</div>
+        <h1 class="page-title">Remediation Center</h1>
+        <p class="page-subtitle">${approvals.length} patch${approvals.length === 1 ? "" : "es"} in the vault · ${pending.length} awaiting review</p>
       </div>
-
-      <!-- Unified Diff Viewer -->
-      <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-          <div class="card-title">
-            Unified Code Diff — <code style="color: var(--cyan-accent);">target_app.py</code>
-          </div>
-          <div style="font-size: 0.76rem; color: var(--text-muted); font-family: monospace;">
-            Diff SHA-256: 7d1a2f64e29b01c3d4f88190e21bc5672901a88b1f5e8880291724ac661e8920
-          </div>
-        </div>
-
-        <div class="diff-container" style="background: #050505; padding: 16px; border-radius: var(--radius-sm); font-family: monospace; font-size: 0.82rem; line-height: 1.6;">
-          ${diffLines.map(line => `
-            <div class="diff-line ${line.type}" style="padding: 2px 8px; border-radius: 2px; ${line.type === 'add' ? 'background: rgba(32, 214, 160, 0.12); color: #38efbd; font-weight: 600;' : (line.type === 'info' ? 'color: var(--cyan-accent); font-weight: 700;' : 'color: #9ca3af;')}">
-              ${line.text}
-            </div>
-          `).join("")}
-        </div>
-      </div>
-
-      <!-- Test Runner Log -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Sandbox Automated Test Execution Log</div>
-          <span class="badge badge-success">pytest exit code 0</span>
-        </div>
-
-        <div style="background: #040404; padding: 16px; font-family: monospace; font-size: 0.76rem; color: #d1d5db; border-radius: var(--radius-sm); line-height: 1.6;">
-          <div style="color: var(--text-muted);">[pytest] running tests in sandbox jail sbx_remed_44...</div>
-          <div style="color: #38efbd;">✓ test_order_creation_valid PASSED [10%]</div>
-          <div style="color: #38efbd;">✓ test_order_retrieval_authorized PASSED [20%]</div>
-          <div style="color: #38efbd;">✓ test_order_update_by_owner PASSED [40%]</div>
-          <div style="color: #38efbd;">✓ test_order_update_by_admin PASSED [60%]</div>
-          <div style="color: var(--cyan-accent); font-weight: 700;">✓ test_cross_tenant_bola_exploit_blocked [HTTP 403 CONFIRMED] PASSED [100%]</div>
-          <div style="color: var(--success); margin-top: 8px; font-weight: 700;">==================== 5 passed in 0.42s ====================</div>
-        </div>
+      <div class="surface-tools">
+        ${list.length > 1 ? `
+          <select class="form-control" id="remed-select" style="max-width:300px;">
+            ${list.map(a => `<option value="${a.patch_id}" ${a.patch_id === selected.patch_id ? "selected" : ""}>${a.patch_id} · ${a.status}</option>`).join("")}
+          </select>` : ""}
+        <button class="btn btn-secondary" id="remed-btn-approval">Approval queue →</button>
       </div>
     </div>
+
+    <div class="kpi-grid kpi-grid-4">
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Patches</span><span class="stat-icon">🧾</span></div>
+        <div class="stat-value">${approvals.length}</div>
+        <div class="stat-desc">Synthesised by the agent</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Pending</span><span class="stat-icon">⏳</span></div>
+        <div class="stat-value" style="color:${pending.length ? "var(--warning)" : "var(--text-secondary)"};">${pending.length}</div>
+        <div class="stat-desc">Awaiting a human</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Approved</span><span class="stat-icon">✅</span></div>
+        <div class="stat-value">${approvals.filter(a => String(a.status).toLowerCase() === "approved").length}</div>
+        <div class="stat-desc">Merged by an operator</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header"><span class="stat-label">Rejected</span><span class="stat-icon">⛔</span></div>
+        <div class="stat-value">${approvals.filter(a => String(a.status).toLowerCase() === "rejected").length}</div>
+        <div class="stat-desc">Blocked by an operator</div>
+      </div>
+    </div>
+
+    ${selected ? `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Unified diff</div>
+        <div class="surface-tools">
+          <span class="badge badge-outline mono">${selected.patch_id}</span>
+          <span class="badge ${String(selected.status).toLowerCase() === "pending" ? "badge-medium" : "badge-outline"}">${selected.status}</span>
+        </div>
+      </div>
+
+      <div class="patch-meta">
+        <div class="patch-meta-cell"><span>Finding</span><b>${selected.finding_title || selected.finding_id || "—"}</b></div>
+        <div class="patch-meta-cell"><span>Branch</span><b>${selected.branch || "not recorded"}</b></div>
+        <div class="patch-meta-cell"><span>Target file</span><b>${selected.target_file || "not recorded"}</b></div>
+        <div class="patch-meta-cell"><span>SHA-256</span><b class="mono">${selected.patch_sha256 || "—"}</b></div>
+      </div>
+
+      <div class="diff-view">${renderDiff(selected.unified_diff)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">All patches</div></div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Patch</th><th>Finding</th><th>Branch</th><th>Status</th><th>Created</th><th></th></tr></thead>
+          <tbody>
+            ${approvals.map(a => `
+              <tr>
+                <td class="mono">${a.patch_id}</td>
+                <td>${a.finding_title || a.finding_id || "—"}</td>
+                <td class="mono dim">${a.branch || "—"}</td>
+                <td><span class="badge ${String(a.status).toLowerCase() === "pending" ? "badge-medium" : "badge-outline"}">${a.status}</span></td>
+                <td class="dim">${a.created_at || "—"}</td>
+                <td><button class="btn btn-outline btn-sm patch-pick" data-id="${a.patch_id}">View</button></td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>` : ""}
   `;
 
-  document.getElementById("remed-btn-evidence")?.addEventListener("click", () => navigate("finding_details"));
-  document.getElementById("remed-btn-approval")?.addEventListener("click", () => navigate("approvals"));
+  container.querySelector("#remed-select")?.addEventListener("change", e => {
+    state.selectedPatchId = e.target.value;
+    navigate("remediation");
+  });
+  container.querySelectorAll(".patch-pick").forEach(b => b.addEventListener("click", e => {
+    state.selectedPatchId = e.currentTarget.getAttribute("data-id");
+    navigate("remediation");
+  }));
+  container.querySelector("#remed-btn-approval")?.addEventListener("click", () => navigate("approvals"));
 }
