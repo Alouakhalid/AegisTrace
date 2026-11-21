@@ -183,6 +183,18 @@ def calculate_security_score(conn, project_id: Optional[str] = None) -> Optional
 
     return max(0, min(100, 100 - total_penalty))
 
+def _record_score(record: Dict[str, Any]) -> int:
+    """How much information a per-agent record carries."""
+    score = 0
+    if record.get("message"):
+        score += 4
+    if record.get("duration_ms") is not None:
+        score += 2
+    if record.get("finished_at"):
+        score += 1
+    return score
+
+
 def _task_message(row: Dict[str, Any]) -> str:
     """The agent's most recent message, taken from its stored task output."""
     raw = row.get("output")
@@ -250,7 +262,7 @@ def _scan_agent_states(scan_id: str, scan_status: str = "") -> Dict[str, Dict[st
         if scan_status in ('completed', 'failed') and status in ('queued', 'running'):
             # A finished scan cannot have a running agent.
             status = 'succeeded' if scan_status == 'completed' else 'failed'
-        states[stage] = {
+        record = {
             'stage': stage,
             'agent': row.get('agent'),
             'status': status,
@@ -261,6 +273,12 @@ def _scan_agent_states(scan_id: str, scan_status: str = "") -> Dict[str, Dict[st
             'duration_ms': _task_duration_ms(row),
             'message': _task_message(row),
         }
+        # Two rows can describe the same agent: one the pipeline owns and one
+        # the agent's own connector created. Keep whichever carries more
+        # information instead of whichever came last.
+        existing = states.get(stage)
+        if existing is None or _record_score(record) > _record_score(existing):
+            states[stage] = record
     return states
 
 
