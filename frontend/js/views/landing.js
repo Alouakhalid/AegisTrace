@@ -48,6 +48,7 @@ export function renderLanding(container, navigate, state, api) {
           <a class="lp-nav-link" href="#lp-agents">Agents</a>
           <a class="lp-nav-link" href="#lp-proof">Proof model</a>
           <a class="lp-nav-link" href="#lp-cta">Get started</a>
+          <a class="lp-nav-link" href="/">Public site</a>
         </div>
         <div class="lp-nav-actions">
           <button class="btn btn-secondary btn-sm" data-nav="dashboard">Open console</button>

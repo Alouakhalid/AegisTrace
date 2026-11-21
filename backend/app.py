@@ -21,7 +21,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Quer
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, RedirectResponse
 
 from backend.models import (
     ProjectCreate, ProjectResponse,
@@ -1579,8 +1579,15 @@ def _site_asset_version() -> str:
 if os.path.exists(frontend_dir):
     app.mount('/static', StaticFiles(directory=frontend_dir), name='static')
 
-    @app.get('/')
-    async def serve_index():
+    @app.get('/console', include_in_schema=False)
+    @app.get('/console/', include_in_schema=False)
+    async def serve_console():
+        """The operator console (the old root SPA), now living under /console.
+
+        The console is a hash-routed SPA, so /console/#dashboard and every
+        other view keeps working exactly as before - only the mount point
+        moved, so the marketing site can own the site root.
+        """
         idx_path = os.path.join(frontend_dir, 'index.html')
         if not os.path.exists(idx_path):
             return HTMLResponse('<h1>AegisTrace Backend Running</h1><p>Frontend index.html initializing...</p>')
@@ -1599,9 +1606,9 @@ if os.path.exists(site_dir):
     app.mount('/site/css', StaticFiles(directory=os.path.join(site_dir, 'css')), name='site-css')
     app.mount('/site/js', StaticFiles(directory=os.path.join(site_dir, 'js')), name='site-js')
 
-    @app.get('/site')
-    @app.get('/site/')
-    async def serve_site():
+    @app.get('/', include_in_schema=False)
+    async def serve_home():
+        """The site's home page is the public marketing site."""
         idx_path = os.path.join(site_dir, 'index.html')
         if not os.path.exists(idx_path):
             raise HTTPException(status_code=404, detail='Marketing site not found')
@@ -1611,3 +1618,9 @@ if os.path.exists(site_dir):
         except OSError:
             return FileResponse(idx_path)
         return HTMLResponse(markup.replace('__ASSET_V__', _site_asset_version()))
+
+    @app.get('/site', include_in_schema=False)
+    @app.get('/site/', include_in_schema=False)
+    async def site_to_root():
+        """The old /site address now resolves to the site root."""
+        return RedirectResponse(url='/', status_code=307)

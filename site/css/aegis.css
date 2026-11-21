@@ -360,6 +360,22 @@ p { margin: 0; }
 }
 .btn-outline:hover { border-color: var(--border-lit); color: var(--violet-hi); }
 
+/* Quiet secondary action - the console link in the header. */
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-2);
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover {
+  color: var(--ink);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
 .btn-icon {
   width: 44px;
   height: 44px;
