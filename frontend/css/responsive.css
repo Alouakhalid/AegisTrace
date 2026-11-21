@@ -255,3 +255,24 @@ body.drawer-open .drawer-scrim { opacity: 1; pointer-events: auto; }
   .terminal-box { border-radius: var(--radius-md); }
   .terminal-header { flex-wrap: wrap; gap: 8px; }
 }
+
+/* Workspace agent cards: the stage/timing row must wrap on narrow screens,
+   otherwise the timings push the card past the viewport. */
+@media (max-width: 560px) {
+  .ws-agent-stage { flex-wrap: wrap; row-gap: 2px; }
+  .ws-agent-stage > span:first-child { overflow-wrap: anywhere; }
+  .ws-agent-time { white-space: nowrap; }
+  .ws-agent-msg { font-size: 0.66rem; }
+}
+
+/* The live console is a flex row per line; on phones each line stacks so a
+   long agent name or message cannot widen the viewport. */
+@media (max-width: 560px) {
+  .log-entry {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    font-size: 0.76rem;
+  }
+  .log-text { flex-basis: 100%; }
+  .terminal-body { padding: 12px; height: 320px; }
+}
