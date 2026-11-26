@@ -1,0 +1,3 @@
+[submodule "skills/Claude-BugHunter"]
+	path = skills/Claude-BugHunter
+	url = https://github.com/elementalsouls/Claude-BugHunter.git

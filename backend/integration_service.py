@@ -175,21 +175,57 @@ class BifrostGatewayService:
         self.groq_model = _resolve_env_var("GROQ_MODEL") or "openai/gpt-oss-120b"
         self.bifrost_url = _resolve_env_var("BIFROST_GATEWAY_URL")
 
+    def _probe_groq(self) -> Dict[str, Any]:
+        """Ask Groq which models this key can use. Cached for 60 seconds."""
+        cached = getattr(self, "_probe_cache", None)
+        if cached and time.time() - cached[0] < 60:
+            return cached[1]
+        result: Dict[str, Any] = {"reachable": False, "models": [], "error": None}
+        try:
+            import httpx
+            r = httpx.get(
+                "https://api.groq.com/openai/v1/models",
+                headers={"Authorization": f"Bearer {self.groq_api_key}"},
+                timeout=5.0,
+            )
+            if r.status_code == 200:
+                result["reachable"] = True
+                result["models"] = sorted(m["id"] for m in r.json().get("data", []))
+            else:
+                result["error"] = f"HTTP {r.status_code}"
+        except Exception as exc:
+            result["error"] = str(exc)[:120]
+        self._probe_cache = (time.time(), result)
+        return result
+
     def check_health(self) -> Dict[str, Any]:
-        """Checks AI Gateway connectivity and model readiness."""
+        """Checks AI Gateway connectivity and model readiness with a live call."""
         is_configured = bool(self.groq_api_key or self.bifrost_url)
         active_mode = "bifrost_proxy" if self.bifrost_url else "direct_groq"
+        status = "not_configured"
+        models: List[str] = []
+        model_ok: Optional[bool] = None
+        error = None
+        if self.groq_api_key and not self.bifrost_url:
+            probe = self._probe_groq()
+            status = "connected" if probe["reachable"] else "unreachable"
+            models = probe["models"]
+            error = probe["error"]
+            if probe["reachable"]:
+                model_ok = self.groq_model in models
+                if not model_ok:
+                    status = "model_unavailable"
+        elif is_configured:
+            status = "configured"
 
         return {
-            "status": "connected" if is_configured else "not_configured",
+            "status": status,
             "gateway_mode": active_mode,
             "configured": is_configured,
             "active_model": self.groq_model,
-            "available_models": [
-                "openai/gpt-oss-120b",
-                "llama-3.3-70b-versatile",
-                "mixtral-8x7b-32768"
-            ],
+            "active_model_available": model_ok,
+            "available_models": models,
+            "error": error,
             "fallback_enabled": True,
             "rate_limit_policy": "adaptive_backoff",
             "last_checked_at": datetime.now(timezone.utc).isoformat()

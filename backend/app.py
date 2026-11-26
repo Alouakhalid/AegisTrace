@@ -1500,7 +1500,7 @@ async def get_settings():
             'groq_api': {
                 'configured': groq_configured,
                 'status': 'connected' if groq_configured else 'not configured',
-                'model': 'llama-3.3-70b-versatile'
+                'model': os.environ.get('GROQ_MODEL') or 'openai/gpt-oss-120b'
             },
             'tavily_search': {
                 'configured': tavily_configured,
