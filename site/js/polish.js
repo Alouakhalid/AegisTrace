@@ -130,4 +130,22 @@
     }, { threshold: .6 });
     nums.forEach(function (n) { io.observe(n); });
   } else nums.forEach(countUp);
+
+  /* 3D tilt on cards with depth layers */
+  if (!reduce && window.matchMedia('(hover: hover)').matches) {
+    var tiltSel = '.agent-card, .gate, .feature-card, .vl';
+    document.querySelectorAll(tiltSel).forEach(function (el) { el.classList.add('t3d'); });
+    document.addEventListener('pointermove', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('.t3d') : null;
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      el.classList.add('is-tilting');
+      el.style.transform = 'perspective(900px) rotateY(' + (x * 16).toFixed(2) + 'deg) rotateX(' + (-y * 16).toFixed(2) + 'deg) translateZ(14px)';
+    }, { passive: true });
+    document.addEventListener('pointerout', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('.t3d') : null;
+      if (el && !el.contains(e.relatedTarget)) { el.classList.remove('is-tilting'); el.style.transform = ''; }
+    });
+  }
 })();

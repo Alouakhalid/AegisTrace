@@ -86,3 +86,67 @@
 }
 .gate-num { white-space: nowrap; }
 .gate-num[data-text] { font-size: clamp(1.8rem, 3vw, 2.6rem); }
+
+/* ===================================================== real 3D layer */
+.scene3d { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
+body { position: relative; }
+.nav { z-index: 90; }
+main, section, footer, header.nav { position: relative; z-index: 1; }
+.scroll-progress { z-index: 100; }
+
+/* with the scene behind the page, section surfaces turn into frosted glass */
+.has-3d .hero-aurora, .has-3d .hero-grid { opacity: .35; }
+.has-3d .hero-mesh { display: none; }
+.has-3d .trust, .has-3d .section, .has-3d .final { background: rgba(8, 8, 13, .42); }
+.has-3d .section.band { background: rgba(14, 12, 28, .55); }
+.has-3d .section.void { background: rgba(0, 0, 0, .5); }
+.has-3d .footer { background: rgba(0, 0, 0, .8); }
+.has-3d .section-head, .has-3d .pipe-copy { text-shadow: 0 2px 24px rgba(8, 8, 13, .95); }
+.has-3d .agent-card, .has-3d .gate, .has-3d .vl { background: rgba(12, 11, 24, .62); backdrop-filter: blur(6px); }
+.has-3d .proof::before { opacity: .25; }
+
+/* hero: copy left, empty stage right so the shield owns that space */
+.hero { min-height: 100vh; }
+.hero-stage { min-height: 520px; }
+@media (max-width: 1024px) { .hero-stage { min-height: 300px; } }
+.hero-copy { position: relative; z-index: 2; }
+.has-3d .hero-copy .hero-sub { text-shadow: 0 2px 22px rgba(8, 8, 13, .9); }
+
+/* pipeline section */
+.pipe-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; }
+@media (max-width: 1024px) { .pipe-layout { grid-template-columns: 1fr; gap: 36px; } }
+.pipe-section .console-card { max-width: none; }
+
+/* section entrance: tilt up out of depth */
+.reveal { opacity: 0; transform: perspective(1400px) translateY(46px) translateZ(-120px) rotateX(16deg); transform-origin: 50% 100%;
+  transition: opacity .8s var(--ease), transform .9s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+.reveal.in > * { animation: none; }
+.section-head.reveal { transform-origin: 0 100%; transform: perspective(1400px) translateY(30px) translateZ(-80px) rotateY(-10deg) rotateX(8deg); }
+.section-head.reveal.in { transform: none; }
+.agent-card.reveal:nth-child(odd)  { transform: perspective(1200px) translateY(50px) translateZ(-140px) rotateY(18deg); }
+.agent-card.reveal:nth-child(even) { transform: perspective(1200px) translateY(50px) translateZ(-140px) rotateY(-18deg); }
+.agent-card.reveal.in { transform: none; }
+
+/* depth cards: tilt with layered children */
+.t3d { transform-style: preserve-3d; transition: transform .18s ease-out, border-color .3s ease; will-change: transform; }
+.t3d > * { transform: translateZ(28px); }
+.t3d .agent-ico, .t3d .gate-num { transform: translateZ(54px); }
+.t3d.is-tilting { transition: transform .05s linear; }
+.t3d::after { pointer-events: none; }
+
+/* floating chips in hero for depth cue */
+.hero-copy .eyebrow { backdrop-filter: blur(6px); }
+.stage-label { position: absolute; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--ink-mute); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .section-head.reveal, .agent-card.reveal { opacity: 1; transform: none; transition: none; }
+  .t3d, .t3d > * { transform: none !important; }
+}
+.no-3d .scene3d { display: none; }
+
+@media (max-width: 900px) {
+  .scene3d { opacity: .5; }
+  .has-3d .hero-copy::before { content: ''; position: absolute; inset: -20px -16px; z-index: -1; border-radius: 24px;
+    background: radial-gradient(ellipse at 40% 50%, rgba(8, 8, 13, .78), rgba(8, 8, 13, 0) 78%); }
+}

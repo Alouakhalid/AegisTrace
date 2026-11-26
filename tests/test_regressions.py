@@ -37,3 +37,10 @@ def test_site_has_no_invented_testimonials(client):
     html = client.get('/').text
     assert 'quote-grid' not in html
     assert 'security@aegistrace.io' not in html
+
+
+def test_3d_scene_assets_are_served(client):
+    html = client.get('/').text
+    assert 'id="scene3d"' in html
+    for path in ('/site/js/scene3d.js', '/site/js/vendor/three.module.min.js', '/site/css/polish.css'):
+        assert client.get(path).status_code == 200

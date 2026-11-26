@@ -548,7 +548,7 @@
       });
     }
 
-    var hero = document.querySelector('.hero');
+    var hero = document.querySelector('#pipeline') || document.querySelector('.hero');
     if (hero && 'IntersectionObserver' in window) {
       new IntersectionObserver(function (entries, obs) {
         entries.forEach(function (en) {
