@@ -15,7 +15,7 @@
   <a href="#"><img src="https://img.shields.io/badge/False%20Positives-0.00%25-10b981?style=for-the-badge&logo=shieldcheck&logoColor=white" alt="0.00% False Positives"></a>
   <a href="#"><img src="https://img.shields.io/badge/Precision-100.0%25-34d399?style=for-the-badge&logo=target&logoColor=white" alt="100.0% Precision"></a>
   <a href="#"><img src="https://img.shields.io/badge/Arbitration-3x%20Sandbox%20Replay-06b6d4?style=for-the-badge&logo=counterstrike&logoColor=white" alt="3x Sandbox Replay"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Inference-Groq%20LLaMA%203.3%2070B-f59e0b?style=for-the-badge&logo=speedtest&logoColor=white" alt="Groq LLaMA 3.3 70B"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Inference-Groq%20gpt--oss--120b-f59e0b?style=for-the-badge&logo=speedtest&logoColor=white" alt="Groq gpt-oss-120b"></a>
   <a href="#"><img src="https://img.shields.io/badge/Aesthetic-Violet%20Void%20%26%20Chrome-8b5cf6?style=for-the-badge" alt="Violet Void & Chrome"></a>
   <a href="#"><img src="https://img.shields.io/badge/License-Enterprise%20Proprietary-ef4444?style=for-the-badge" alt="Enterprise Proprietary"></a>
 </p>
@@ -347,7 +347,7 @@ AegisTrace has been rigorously evaluated against synthetic and real-world multi-
 ### 1. Prerequisites
 - **Python 3.11+** installed
 - **Git**
-- Optional: **Groq API Key** (for sub-second LLaMA 3.3 70B inference) &amp; **Tavily API Key** (for live CVE recon)
+- Optional: **Groq API Key** (for fast gpt-oss-120b inference on Groq) &amp; **Tavily API Key** (for live CVE recon)
 
 ### 2. Clone the Repository
 ```bash
@@ -371,7 +371,7 @@ Populate `.env` with your API configuration:
 ```ini
 # Inference Engine Configuration
 GROQ_API_KEY=gsk_your_groq_api_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-120b
 
 # External Vulnerability Reconnaissance (Optional)
 TAVILY_API_KEY=tvly-your_tavily_key_here

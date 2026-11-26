@@ -2,6 +2,8 @@ import os
 import sys
 import json
 import re
+import logging
+import sqlite3
 import uuid
 import hashlib
 from typing import Dict, Any, List, Optional, Tuple
@@ -20,6 +22,8 @@ from memory_models import (
     KnowledgeMemoryItem,
     RemediationMemoryItem
 )
+
+log = logging.getLogger(__name__)
 
 class AgentDatabaseConnector:
     def __init__(self, db: Optional[AegisDatabase] = None, memory_manager: Optional[MemoryManager] = None):
@@ -194,9 +198,10 @@ class AgentDatabaseConnector:
         else:
             rep_id = f"rep_{uuid.uuid4().hex[:10]}"
             try:
-                self.db.create_repository(rep_id, project_id, "github" if rep_url.startswith("http") else "local", rep_url)
-            except Exception:
-                pass
+                # repositories.source_type only allows github|zip; a local path is stored as zip
+                self.db.create_repository(rep_id, project_id, "github" if rep_url.startswith("http") else "zip", rep_url)
+            except Exception as exc:
+                log.warning('code-intel sync: %s', exc)
 
         ex_ran = self.db.conn.execute("SELECT id FROM repositories_analysis WHERE scan_id = ?;", (scan_id,)).fetchone()
         if ex_ran:
@@ -214,8 +219,8 @@ class AgentDatabaseConnector:
                     entry_points=entry_points,
                     warnings=warnings
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                log.warning('code-intel sync: %s', exc)
 
         node_map = {}
         for r in out.get("routes", []):
@@ -224,8 +229,8 @@ class AgentDatabaseConnector:
                 try:
                     nid = self.db.insert_code_node(ran_id, "route", r_name, r.get("file", "main.py"), r.get("line", 1), r)
                     node_map[r_name] = nid
-                except Exception:
-                    pass
+                except Exception as exc:
+                    log.warning('code-intel sync: %s', exc)
 
         models_list = out.get("db_models") or out.get("models") or []
         for m in models_list:
@@ -234,8 +239,8 @@ class AgentDatabaseConnector:
                 try:
                     nid = self.db.insert_code_node(ran_id, "db_model", m_name, m.get("file", "models.py"), 1, m)
                     node_map[m_name] = nid
-                except Exception:
-                    pass
+                except Exception as exc:
+                    log.warning('code-intel sync: %s', exc)
 
         candidate_invs = out.get("candidate_invariants") or out.get("candidate_security_invariants") or []
         # security_invariants.id is a global primary key, so an unscoped id
@@ -281,8 +286,10 @@ class AgentDatabaseConnector:
                 metadata={"frameworks": frameworks}
             )
             self.mem_mgr.store_project_memory(p_mem)
-        except Exception:
-            pass
+        except sqlite3.IntegrityError:
+            pass  # identical summary already stored for this project (re-scan)
+        except Exception as exc:
+            log.warning('code-intel sync: %s', exc)
 
     def sync_recon(self, request: Dict[str, Any], response: Dict[str, Any]) -> None:
         scan_id = request.get("scan_id")

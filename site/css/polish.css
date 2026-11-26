@@ -1,0 +1,152 @@
+/* AegisTrace site polish layer: loads after aegis.css and only adds or overrides. */
+
+/* scroll progress */
+.scroll-progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 100; background: transparent; pointer-events: none; }
+.scroll-progress span { display: block; height: 100%; width: 100%; transform-origin: 0 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, #22d3ee, #8b5cf6 55%, #d946ef); box-shadow: 0 0 12px rgba(139, 92, 246, .8); }
+
+/* hero: live agent mesh behind the copy */
+.hero { isolation: isolate; }
+.hero-mesh { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 1; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 60% 40%, #000 35%, transparent 100%);
+          mask-image: radial-gradient(ellipse 85% 75% at 60% 40%, #000 35%, transparent 100%); }
+.hero-layout { position: relative; z-index: 2; }
+.hero h1 { font-size: clamp(2.6rem, 5vw, 4.4rem); line-height: 1.04; letter-spacing: -0.035em; }
+.hero .grad-text { background-size: 220% 100%; animation: gradShift 7s ease-in-out infinite alternate; }
+@keyframes gradShift { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+
+/* console card: animated gradient border + 3D tilt */
+.console-card { position: relative; transform-style: preserve-3d; transition: transform .25s ease-out; will-change: transform; }
+.console-card::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; z-index: -1; pointer-events: none;
+  background: conic-gradient(from var(--spin, 0deg), transparent 0 60%, #8b5cf6 78%, #22d3ee 90%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; }
+@property --spin { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.console-card::before { animation: spin 6s linear infinite; }
+@keyframes spin { to { --spin: 360deg; } }
+
+/* trust strip: calm marquee */
+.trust-items { flex-wrap: nowrap; overflow: hidden; flex: 1 1 520px; min-width: 0; position: relative;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.trust-items .marquee-track { display: flex; width: max-content; animation: marquee 34s linear infinite; }
+.trust-items .marquee-strip { display: flex; gap: 44px; padding-right: 44px; white-space: nowrap; }
+.trust-items:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* agents: 4 + 3, second row centred; cursor spotlight on every card */
+.agent-grid { display: flex; flex-wrap: wrap; justify-content: center; }
+.agent-grid > .agent-card { flex: 1 1 calc(25% - 18px); max-width: calc(25% - 14px); min-width: 230px; }
+@media (max-width: 1080px) { .agent-grid > .agent-card { flex-basis: calc(50% - 18px); max-width: none; } }
+@media (max-width: 620px)  { .agent-grid > .agent-card { flex-basis: 100%; } }
+.agent-card, .gate, .feature-card, .faq-item { --mx: 50%; --my: 0%; }
+.agent-card::before, .gate::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s ease;
+  background: radial-gradient(260px circle at var(--mx) var(--my), rgba(139, 92, 246, .20), transparent 70%); }
+.agent-card:hover::before, .gate:hover::before { opacity: 1; }
+
+/* proof section */
+.proof { position: relative; overflow: hidden; }
+.proof::before { content: ''; position: absolute; width: 780px; height: 780px; left: 50%; top: -280px; transform: translateX(-50%);
+  background: var(--grad-aurora); opacity: .7; pointer-events: none; }
+.proof .section-head { position: relative; }
+.gate-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-gap); margin-top: 8px; }
+@media (max-width: 1000px) { .gate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px)  { .gate-grid { grid-template-columns: 1fr; } }
+.gate { position: relative; overflow: hidden; padding: 30px 26px 28px; border-radius: var(--r-lg); border: 1px solid var(--border);
+  background: rgba(255, 255, 255, .022); transition: transform .3s var(--ease), border-color .3s ease; }
+.gate:hover { transform: translateY(-4px); border-color: var(--border-lit); }
+.gate-num { font-size: clamp(2.2rem, 4vw, 3.2rem); font-weight: 800; letter-spacing: -.03em; line-height: 1; margin-bottom: 14px;
+  background: var(--grad-wordmark); -webkit-background-clip: text; background-clip: text; color: transparent; font-variant-numeric: tabular-nums; }
+.gate h3 { font-size: 17px; margin-bottom: 8px; }
+.gate p { font-size: 13.5px; color: var(--ink-mute); line-height: 1.6; }
+.verdict-ladder { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-gap); margin-top: var(--s-gap); }
+@media (max-width: 760px) { .verdict-ladder { grid-template-columns: 1fr; } }
+.vl { padding: 18px 22px; border-radius: var(--r-card); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px;
+  background: rgba(255, 255, 255, .02); }
+.vl span { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; font-weight: 700; }
+.vl small { color: var(--ink-mute); font-size: 13px; }
+.vl-ok span { color: var(--status-ok); } .vl-ok { border-color: rgba(16, 185, 129, .35); }
+.vl-warn span { color: var(--status-warn); } .vl-warn { border-color: rgba(245, 158, 11, .35); }
+.vl-bad span { color: var(--status-bad); } .vl-bad { border-color: rgba(244, 63, 94, .35); }
+
+/* section rhythm */
+.section { padding-block: clamp(72px, 9vw, 120px); }
+.headline-lg { letter-spacing: -0.03em; }
+.label { display: inline-flex; align-items: center; gap: 10px; }
+.label::before { content: ''; width: 22px; height: 1px; background: linear-gradient(90deg, transparent, var(--violet-hi)); }
+
+/* reveal: stagger children */
+.reveal.in > * { animation: riseIn .7s var(--ease) both; }
+.reveal.in > *:nth-child(2) { animation-delay: .08s; } .reveal.in > *:nth-child(3) { animation-delay: .16s; } .reveal.in > *:nth-child(4) { animation-delay: .24s; }
+@keyframes riseIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mesh { display: none; } .console-card::before, .hero .grad-text, .trust-items .marquee-track { animation: none; }
+  .reveal.in > * { animation: none; }
+}
+.gate-num { white-space: nowrap; }
+.gate-num[data-text] { font-size: clamp(1.8rem, 3vw, 2.6rem); }
+
+/* ===================================================== real 3D layer */
+.scene3d { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
+body { position: relative; }
+.nav { z-index: 90; }
+main, section, footer, header.nav { position: relative; z-index: 1; }
+.scroll-progress { z-index: 100; }
+
+/* with the scene behind the page, section surfaces turn into frosted glass */
+.has-3d .hero-aurora, .has-3d .hero-grid { opacity: .35; }
+.has-3d .hero-mesh { display: none; }
+.has-3d .trust, .has-3d .section, .has-3d .final { background: rgba(8, 8, 13, .42); }
+.has-3d .section.band { background: rgba(14, 12, 28, .55); }
+.has-3d .section.void { background: rgba(0, 0, 0, .5); }
+.has-3d .footer { background: rgba(0, 0, 0, .8); }
+.has-3d .section-head, .has-3d .pipe-copy { text-shadow: 0 2px 24px rgba(8, 8, 13, .95); }
+.has-3d .agent-card, .has-3d .gate, .has-3d .vl { background: rgba(12, 11, 24, .62); backdrop-filter: blur(6px); }
+.has-3d .proof::before { opacity: .25; }
+
+/* hero: copy left, empty stage right so the shield owns that space */
+.hero { min-height: 100vh; }
+.hero-stage { min-height: 520px; }
+@media (max-width: 1024px) { .hero-stage { min-height: 300px; } }
+.hero-copy { position: relative; z-index: 2; }
+.has-3d .hero-copy .hero-sub { text-shadow: 0 2px 22px rgba(8, 8, 13, .9); }
+
+/* pipeline section */
+.pipe-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; }
+@media (max-width: 1024px) { .pipe-layout { grid-template-columns: 1fr; gap: 36px; } }
+.pipe-section .console-card { max-width: none; }
+
+/* section entrance: tilt up out of depth */
+.reveal { opacity: 0; transform: perspective(1400px) translateY(46px) translateZ(-120px) rotateX(16deg); transform-origin: 50% 100%;
+  transition: opacity .8s var(--ease), transform .9s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+.reveal.in > * { animation: none; }
+.section-head.reveal { transform-origin: 0 100%; transform: perspective(1400px) translateY(30px) translateZ(-80px) rotateY(-10deg) rotateX(8deg); }
+.section-head.reveal.in { transform: none; }
+.agent-card.reveal:nth-child(odd)  { transform: perspective(1200px) translateY(50px) translateZ(-140px) rotateY(18deg); }
+.agent-card.reveal:nth-child(even) { transform: perspective(1200px) translateY(50px) translateZ(-140px) rotateY(-18deg); }
+.agent-card.reveal.in { transform: none; }
+
+/* depth cards: tilt with layered children */
+.t3d { transform-style: preserve-3d; transition: transform .18s ease-out, border-color .3s ease; will-change: transform; }
+.t3d > * { transform: translateZ(28px); }
+.t3d .agent-ico, .t3d .gate-num { transform: translateZ(54px); }
+.t3d.is-tilting { transition: transform .05s linear; }
+.t3d::after { pointer-events: none; }
+
+/* floating chips in hero for depth cue */
+.hero-copy .eyebrow { backdrop-filter: blur(6px); }
+.stage-label { position: absolute; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--ink-mute); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .section-head.reveal, .agent-card.reveal { opacity: 1; transform: none; transition: none; }
+  .t3d, .t3d > * { transform: none !important; }
+}
+.no-3d .scene3d { display: none; }
+
+@media (max-width: 900px) {
+  .scene3d { opacity: .5; }
+  .has-3d .hero-copy::before { content: ''; position: absolute; inset: -20px -16px; z-index: -1; border-radius: 24px;
+    background: radial-gradient(ellipse at 40% 50%, rgba(8, 8, 13, .78), rgba(8, 8, 13, 0) 78%); }
+}
